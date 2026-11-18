@@ -9,6 +9,7 @@ Platformun demosu **ayrı bir Supabase projesinde** çalışır. Gerçek öğren
    1. `kurslar/ortaokul/site/supabase/kurulum.sql`
    2. `kurslar/junior/supabase/junior.sql`
    3. `supabase/platform.sql`
+   4. `supabase/lab.sql`
 
    Ardından kurum kodunu belirle (kendi kodunla değiştir):
    ```sql

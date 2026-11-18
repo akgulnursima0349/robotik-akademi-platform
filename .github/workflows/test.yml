@@ -25,9 +25,9 @@ jobs:
         run: npm run tip
       - name: Birim testleri
         run: npm test
-      - name: Veritabanı senaryosu (kurulum.sql + junior.sql + platform.sql)
+      - name: Veritabanı senaryosu (kurulum.sql + junior.sql + platform.sql + lab.sql)
         env: { PGHOST: localhost, PGPORT: "5432" }
-        run: sh test/db/calistir.sh | tee /tmp/db.log && grep -q "Bütün veritabanı doğrulamaları geçti" /tmp/db.log && grep -q "Örnek veri doğru" /tmp/db.log
+        run: sh test/db/calistir.sh | tee /tmp/db.log && grep -q "Bütün veritabanı doğrulamaları geçti" /tmp/db.log && grep -q "Örnek veri doğru" /tmp/db.log && grep -q "Lab veritabanı doğrulamaları geçti" /tmp/db.log
       - name: Derle (portal + iki kurs)
         run: node scripts/derle.mjs --deneme
       - run: npx playwright install --with-deps chromium

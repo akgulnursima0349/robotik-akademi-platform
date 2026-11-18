@@ -20,8 +20,8 @@ const sunucu = spawn(process.execPath, [resolve(KOK, "scripts/sun.mjs")], { env:
 await new Promise((r) => setTimeout(r, 600));
 const tarayici = await chromium.launch();
 
-async function sayfaAc(genislik, yukseklik, ayar) {
-  const ctx = await tarayici.newContext({ viewport: { width: genislik, height: yukseklik } });
+async function sayfaAc(genislik, yukseklik, ayar, azHareket = false) {
+  const ctx = await tarayici.newContext({ viewport: { width: genislik, height: yukseklik }, reducedMotion: azHareket ? "reduce" : "no-preference" });
   const hatalar = [];
   await ctx.route(/\/ayarlar\.js$/, (r) => {
     const yol = new URL(r.request().url()).pathname;
@@ -45,7 +45,7 @@ for (const [ad, g, y] of BOYUTLAR) {
   const shot = (n) => p.screenshot({ path: `${EKRAN}/${ad}_${n}.png`, fullPage: true });
   await p.goto(ADRES); await hazir(p);
   ok((await p.$$(".sra-kurs")).length === 4, "dört kurs kartı");
-  ok((await p.$$("a.sra-kurs")).length === 2 && (await p.$$(".sra-kurs--yakinda")).length === 2, "iki açık kurs, iki 'yakında'");
+  ok((await p.$$("a.sra-kurs")).length === 3 && (await p.$$(".sra-kurs--yakinda")).length === 1, "üç açık kart (Junior, ortaokul, Lab), bir yakında");
   ok(await p.isVisible("#p-giris"), "üst barda Giriş yap");
   ok(await tasmaYok(p), "yatay taşma yok");
   await p.waitForFunction(() => [...document.images].every((i) => i.complete && i.naturalWidth > 0));
@@ -135,11 +135,98 @@ for (const [ad, g, y] of BOYUTLAR) {
   const y2 = await sayfaAc(g, y, {});
   await y2.p.goto(ADRES); await hazir(y2.p);
   ok(!(await y2.p.isVisible("#p-giris")), "hesapsız modda Giriş yap düğmesi yok");
-  ok((await y2.p.$$("a.sra-kurs")).length === 2, "hesapsız modda kurs kartları doğrudan kursa gidiyor");
+  ok((await y2.p.$$("a.sra-kurs")).length === 3, "hesapsız modda kartlar doğrudan kursa gidiyor");
   await y2.p.goto(ADRES + "#giris"); await hazir(y2.p);
   ok(/hesapsız/.test(await y2.p.textContent(".p-giris__kutu")), "hesapsız modda giriş ekranı açıklama gösteriyor");
   ok(y2.hatalar.length === 0, "hesapsız modda konsol hatası yok");
   await y2.ctx.close();
+}
+
+/* ---------------- Robotik Laboratuvarı ---------------- */
+const yaz = (p, kod) => p.evaluate((k) => { const a = document.querySelector(".e-alan"); a.value = k; a.dispatchEvent(new Event("input")); }, kod);
+for (const [ad, g, y] of BOYUTLAR) {
+  console.log(`\nlab · ${ad}`);
+  /* görsel kontrol: normal hareket */
+  {
+    const { ctx, p, hatalar } = await sayfaAc(g, y, { deneme: true });
+    const shot = (n) => p.screenshot({ path: `${EKRAN}/lab_${ad}_${n}.png`, fullPage: true });
+    await p.goto(ADRES); await hazir(p);
+    ok(await p.getAttribute('a.sra-kurs[data-kurs="lab"]', "href") === "lab/", "portal kartı Laboratuvar'a gidiyor");
+    await p.click('a.sra-kurs[data-kurs="lab"]'); await p.waitForURL(/\/lab\/$/); await hazir(p);
+    ok((await p.$$("a.sra-kurs")).length === 2, "Laboratuvar: iki etkinlik");
+    ok(await tasmaYok(p), "Laboratuvar ana sayfasında taşma yok");
+    await shot("1_ana");
+    await p.click('a.sra-kurs[data-kurs="kar"]'); await p.waitForSelector(".l-gorev");
+    ok((await p.$$("a.l-gorev")).length === 1 && (await p.$$(".l-gorev.kilitli")).length === 5, "ilk görev açık, diğerleri kilitli");
+    await p.click('a[data-gorev="ilk-sokak"]'); await p.waitForSelector(".l-sahne canvas");
+    await p.waitForTimeout(500);
+    await yaz(p, "ileri()\nileri()\nileri()\nileri()\n");
+    await p.click("#l-calistir");
+    await p.waitForTimeout(900);
+    await shot("2_oynuyor");
+    await p.waitForSelector(".l-sonuc.basarili", { timeout: 20000 });
+    ok((await p.$$(".l-sonuc .l-yildizlar i.dolu")).length === 3, "ilk görev 3 yıldız");
+    ok(await tasmaYok(p), "görev ekranında taşma yok");
+    await shot("3_sonuc");
+    ok(hatalar.length === 0, "Laboratuvar konsol hatası yok" + (hatalar.length ? ": " + hatalar.slice(0, 2).join(" | ") : ""));
+    await ctx.close();
+  }
+  /* işlev testleri: hareket azaltılmış (animasyonlar anında) */
+  {
+    const { ctx, p, hatalar } = await sayfaAc(g, y, { deneme: true }, true);
+    await p.goto(ADRES + "lab/#kar/ilk-sokak"); await p.waitForSelector(".l-sahne canvas");
+    await yaz(p, "ileri()\nileri(\n");
+    await p.click("#l-calistir"); await p.waitForSelector(".l-cikti .sra-uyari--hata");
+    ok(/2\. satır/.test(await p.textContent(".l-cikti")) && await p.isVisible(".e-no span.hata"), "yazım hatası: satır numarası ve vurgu");
+    await yaz(p, "ileri()\nsaga_don()\nileri()\n");
+    await p.click("#l-calistir"); await p.waitForSelector(".l-sonuc");
+    ok(/çarptı/.test(await p.textContent(".l-cikti")), "binaya çarpma anlatılıyor");
+    await yaz(p, "for i in range(4):\n    ileri()\n");
+    await p.click("#l-calistir"); await p.waitForSelector(".l-sonuc.basarili");
+    await p.goto(ADRES + "lab/#kar"); await p.waitForSelector(".l-gorev");
+    ok((await p.$$("a.l-gorev")).length === 2, "ilk görev bitince ikincisi açıldı");
+    await p.goto(ADRES + "lab/#kar/kose"); await p.waitForSelector(".l-sahne canvas");
+    ok(await p.inputValue(".e-alan").then((v) => v.startsWith("ileri()")), "görevin başlangıç kodu yüklendi");
+    /* sensör görevi üç haritada */
+    await p.evaluate(() => localStorage.setItem("sra-lab-v1", JSON.stringify({ gorevler: { "ilk-sokak": { yildiz: 3 }, kose: { yildiz: 3 }, "uzun-cadde": { yildiz: 3 }, "okul-yolu": { yildiz: 3 } }, lig: null })));
+    await p.goto(ADRES + "lab/?yenile#kar/sokak-sonu"); await p.waitForSelector(".l-haritalar button");
+    ok((await p.$$(".l-haritalar button")).length === 3, "sensör görevinde üç sokak sekmesi");
+    await yaz(p, "while onu_acik():\n    ileri()\n");
+    await p.click("#l-calistir"); await p.waitForSelector(".l-sonuc.basarili");
+    ok(true, "while + sensör çözümü üç sokakta da geçti");
+
+    /* lig */
+    await p.goto(ADRES + "lab/#lig"); await p.waitForSelector(".l-sahne canvas");
+    ok((await p.$$(".l-rakip")).length === 5, "beş rakibin kodu okunabilir");
+    await p.click("#l-turnuva"); await p.waitForSelector(".l-tablo tbody tr");
+    ok((await p.$$(".l-tablo tbody tr")).length === 6 && (await p.$$(".l-mac")).length === 15, "turnuva: 6 robot, 15 maç");
+    await p.click('.l-mac[data-mac="14"]');
+    await p.waitForFunction(() => /tur [1-9]/.test(document.querySelector(".l-skor__tur")?.textContent ?? ""));
+    ok(true, "maç tekrarı oynuyor");
+    await yaz(p, "def hamle(robot)\n    return 'ileri'\n");
+    await p.click("#l-turnuva"); await p.waitForSelector(".l-cikti .sra-uyari--hata");
+    ok(/iki nokta/.test(await p.textContent(".l-cikti")), "robot kodundaki hata turnuvadan önce gösteriliyor");
+
+    /* öğrenci robotunu sınıfına gönderir, öğretmen sınıf turnuvası yapar (tek giriş: portalda girildi) */
+    await p.goto(ADRES + "#giris"); await hazir(p);
+    await p.click("#g-ogrenci"); await p.fill("#g-kod", "JNR123"); await p.fill("#g-ad", "Ece"); await p.fill("#g-pin", "1234"); await p.click("button[type=submit]");
+    await p.waitForURL(/\/junior\/$/);
+    await p.goto(ADRES + "lab/#lig"); await p.waitForSelector("#l-gonder");
+    await yaz(p, "def hamle(robot):\n    if robot['onu_acik']:\n        return 'ileri'\n    return 'saga'\n");
+    await p.click("#l-gonder"); await p.waitForSelector(".l-cikti .sra-uyari--basari");
+    ok(true, "öğrenci robotunu sınıfına gönderdi (tek giriş Laboratuvar'da da geçerli)");
+    await p.goto(ADRES); await hazir(p); await p.click("#p-cikis"); await p.waitForSelector("#p-giris");
+    await p.goto(ADRES + "#giris"); await hazir(p);
+    await p.click("#g-ogretmen"); await p.fill("#g-eposta", "ogretmen@deneme.com"); await p.fill("#g-sifre", "deneme123"); await p.click("button[type=submit]");
+    await p.waitForSelector(".p-sinif[data-kod]");
+    await p.goto(ADRES + "lab/#lig"); await p.waitForSelector("#l-sinif option", { state: "attached" });
+    await p.selectOption("#l-sinif", "s1"); await p.click("#l-sinif-turnuva");
+    await p.waitForSelector(".l-tablo tbody tr");
+    ok((await p.$$(".l-tablo tbody tr")).length === 3, "öğretmen: sınıf turnuvası 3 öğrenci robotuyla oynandı");
+    await p.screenshot({ path: `${EKRAN}/lab_${ad}_4_sinif_turnuvasi.png`, fullPage: true });
+    ok(hatalar.length === 0, "Laboratuvar işlev testlerinde konsol hatası yok" + (hatalar.length ? ": " + hatalar.slice(0, 2).join(" | ") : ""));
+    await ctx.close();
+  }
 }
 
 /* tasarım sistemi örnek sayfası */

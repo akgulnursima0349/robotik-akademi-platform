@@ -1,1 +1,1 @@
-{ "extends": "./tsconfig.base.json", "compilerOptions": { "noEmit": true }, "include": ["packages/*/src", "packages/*/test", "apps/*/src"] }
+{ "extends": "./tsconfig.base.json", "compilerOptions": { "noEmit": true }, "include": ["packages/*/src", "packages/*/test", "apps/*/src"], "exclude": ["packages/python/test/kurulum.ts"] }

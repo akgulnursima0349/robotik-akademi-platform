@@ -5,14 +5,14 @@
 - **Blok Atölyesi** (1–3. sınıf) · sürükle-bırak bloklar, sesli yönergeler (planlanıyor)
 - **Python Atölyesi Junior** (4–6. sınıf) · [python-atolyesi-junior](https://github.com/akgulnursima0349/python-atolyesi-junior)
 - **Python Atölyesi** (ortaokul) · [python-atolyesi](https://github.com/akgulnursima0349/python-atolyesi)
-- **Robotik Laboratuvarı** · tarayıcıda robot simülasyonları (planlanıyor)
+- **Robotik Laboratuvarı** · Kar Küreme görevleri ve Sınıf Robot Ligi (Python, tarayıcıda)
 
 Geliştirme fazlar hâlinde ilerler; her fazın spec'i `docs/` klasöründedir.
 
 | Faz | Kapsam | Durum |
 |---|---|---|
 | P1 | Portal, tek giriş, ortak tasarım sistemi | Yapıldı |
-| P2 | Robotik Laboratuvarı MVP | Planlandı |
+| P2 | Robotik Laboratuvarı MVP | Yapıldı |
 | P3 | Blok Atölyesi MVP | Planlandı |
 | P4 | Öğrenme analitiği | Planlandı |
 | P5 | Demo cilası | Planlandı |
@@ -34,11 +34,14 @@ npm run demo          # derler ve http://localhost:4173 adresinde açar
 
 ```
 apps/portal        karşılama, tek giriş, Panellerim (Vite + TypeScript)
+apps/lab           Robotik Laboratuvarı: izometrik sahne (PixiJS/WebGL), kod editörü, lig
 packages/tasarim   ortak tasarım sistemi (örnekler: /ornekler.html)
 packages/bulut     oturum ve kurs yönlendirme (nesne yönelimli; Supabase ya da sahte sunucu)
+packages/robot-motoru  deterministik simülasyon: ızgara, Kar Küreme, lig, turnuva
+packages/python    Skulpt köprüsü: Türkçe hata mesajları, sonsuz döngü koruması, lig beyinleri
 kurslar/junior     python-atolyesi-junior  (submodule)
 kurslar/ortaokul   python-atolyesi         (submodule)
-supabase/          platform.sql, örnek veri, kurulum
+supabase/          platform.sql, lab.sql, örnek veri, kurulum
 test/              uçtan uca testler (Playwright), veritabanı senaryosu (Postgres 16)
 ```
 

@@ -13,6 +13,8 @@ interface BenCevabi {
 }
 interface SinifCevabi { id: string; ad: string; kod: string; kurs: string; ogrenci_sayisi: number; benim: boolean; sahip_ad: string }
 
+export interface SinifRobotu { sahip: string; ad: string; kod: string; guncelleme: string }
+
 /** Öğretmen hesabı açılmış ama ad ve kurum kodu girilmemiş (ya da erişimi kapatılmış). */
 export class TamamlanmamisHesap {
   constructor(readonly pasif: boolean) {}
@@ -86,6 +88,19 @@ export class Oturum {
 
   async sinifKursuAyarla(sinifId: string, kurs: KursKimligi): Promise<void> {
     await this.b.rpc("platform_sinif_kurs", { p_sinif: sinifId, p_kurs: kurs });
+  }
+
+  /* ---------- Robotik Laboratuvarı: lig robotları ---------- */
+  async labRobotKaydet(ad: string, kod: string): Promise<void> {
+    await this.b.rpc("lab_robot_kaydet", { p_ad: ad.trim(), p_kod: kod });
+  }
+  async labRobotum(): Promise<{ ad: string; kod: string } | null> {
+    const r = await this.b.rpc<{ ad: string; kod: string } | null>("lab_robotum");
+    return r && r.kod ? r : null;
+  }
+  async labSinifRobotlari(sinifId: string): Promise<SinifRobotu[]> {
+    const r = await this.b.rpc<{ takma_ad: string; ad: string; kod: string; guncelleme: string }[]>("lab_sinif_robotlari", { p_sinif: sinifId });
+    return (r ?? []).map((x) => ({ sahip: x.takma_ad, ad: x.ad, kod: x.kod, guncelleme: x.guncelleme }));
   }
 
   async cikis(): Promise<void> {

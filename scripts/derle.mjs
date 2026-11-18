@@ -1,5 +1,6 @@
 /* Platformu tek çıktıya derler:
      dist/            portal
+     dist/lab/        Robotik Laboratuvarı
      dist/junior/     Python Atölyesi Junior (submodule)
      dist/ortaokul/   Python Atölyesi (submodule, site/ klasörü)
    ve üç uygulamanın ayarlar.js dosyasını ayarlar/platform.json'dan yeniden yazar.
@@ -54,6 +55,13 @@ mkdirSync(DIST, { recursive: true });
 console.log("• Portal");
 sh(`npx vite build --outDir ${DIST} --emptyOutDir`, join(KOK, "apps/portal"));
 writeFileSync(join(DIST, "ayarlar.js"), ayarDosyasi("SRA_AYAR", ayar));
+
+/* platformun kendi uygulamaları: portalla aynı ayar ve aynı oturum */
+for (const u of ["lab"]) {
+  console.log(`• Uygulama: ${u}`);
+  sh(`npx vite build --outDir ${join(DIST, u)} --emptyOutDir`, join(KOK, "apps", u));
+  writeFileSync(join(DIST, u, "ayarlar.js"), ayarDosyasi("SRA_AYAR", ayar));
+}
 
 {
   for (const k of KURSLAR) {
