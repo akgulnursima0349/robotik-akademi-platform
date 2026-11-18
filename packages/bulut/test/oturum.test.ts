@@ -82,6 +82,37 @@ describe("öğretmen", () => {
   });
 });
 
+describe("Lab robotları", () => {
+  it("öğrenci robotunu kaydeder ve geri okur", async () => {
+    const { o } = yeni();
+    await o.ogrenciGiris("JNR123", "Ece", "1234");
+    expect(await o.labRobotum()).toBeNull();
+    await o.labRobotKaydet(" Kar Avcısı ", "def hamle(robot):\n    return 'ileri'\n");
+    expect(await o.labRobotum()).toMatchObject({ ad: "Kar Avcısı" });
+  });
+  it("çok uzun kod reddedilir", async () => {
+    const { o } = yeni();
+    await o.ogrenciGiris("JNR123", "Ece", "1234");
+    await expect(o.labRobotKaydet("x", "a".repeat(4001))).rejects.toMatchObject({ kod: "veri_gecersiz" });
+  });
+  it("öğretmen sınıfın robotlarını görür; başka sınıfı göremez", async () => {
+    const { b, o } = yeni();
+    await o.ogrenciGiris("JNR123", "Ece", "1234");
+    await o.labRobotKaydet("Ece'nin robotu", "def hamle(robot):\n    return 'bekle'\n");
+    await o.cikis();
+    await o.ogretmenGiris("ogretmen@deneme.com", "deneme123");
+    const r = await o.labSinifRobotlari("s1");
+    expect(r.map((x) => x.sahip).sort()).toEqual(["Deniz", "Ece", "Kuzey"]);
+    await expect(o.labSinifRobotlari("s3")).rejects.toMatchObject({ kod: "yetki_yok" });
+    void b;
+  });
+  it("öğrenci sınıf robotlarını göremez", async () => {
+    const { o } = yeni();
+    await o.ogrenciGiris("JNR123", "Ece", "1234");
+    await expect(o.labSinifRobotlari("s1")).rejects.toMatchObject({ kod: "yetki_yok" });
+  });
+});
+
 describe("oturum kapanınca", () => {
   it("kim() null döner", async () => {
     const { o } = yeni();

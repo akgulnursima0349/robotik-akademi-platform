@@ -16,6 +16,7 @@ const MESAJ: Record<string, string> = {
   giris_gerekli: "Bu işlem için giriş yapmanız gerekiyor.",
   ogretmen_hesabi: "Bu tarayıcıda açık bir öğretmen oturumu var. Öğrenci girişi için önce çıkış yapın.",
   kurs_gecersiz: "Bu kurs bulunamadı.",
+  veri_gecersiz: "Robotun adı 1–40 karakter, kodu en fazla 4000 karakter olmalı.",
   pasif: "Bu hesabın erişimi kurum yöneticisi tarafından kapatılmış.",
   ag: "Sunucuya bağlanılamadı. İnternet bağlantısını kontrol edip tekrar dene.",
   "Invalid login credentials": "E-posta adresi veya şifre hatalı.",

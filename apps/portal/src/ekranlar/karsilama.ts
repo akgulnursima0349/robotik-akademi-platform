@@ -26,7 +26,7 @@ const KARTLAR = (): KursKartiSecenek[] => [
   {
     kimlik: "lab", etiket: "Bütün kurslar", baslik: "Robotik Laboratuvarı", renk: "var(--sra-kurs-lab)",
     aciklama: "Kar Küreme görevleri, Sınıf Robot Ligi ve kendi kendine öğrenen robotlar. Hepsi tarayıcıda, kurulum yok.",
-    bilgi: "Hazırlanıyor", bilgiIkon: "robot", gorsel: labKapagi(), yakinda: true
+    bilgi: "6 görev · robot ligi", bilgiIkon: "robot", gorsel: labKapagi(), href: "lab/"
   }
 ];
 

@@ -13,10 +13,33 @@ interface Durum {
   ogrenciler: SOgrenci[];
   kurumKodu: string;
   mudurKodu: string;
+  labRobotlar: Record<string, { ad: string; kod: string; guncelleme: string }>;
   /** açık oturum: öğretmen kimliği ya da anonim öğrenci oturumu */
   oturum: { uid: string; anonim: boolean; ogrenciId?: string } | null;
   hatali: Record<string, number>;
 }
+
+/* deneme sınıfında hazır iki öğrenci robotu (öğretmenin sınıf turnuvası boş kalmasın) */
+const ORNEK_SINIF_ROBOTU_1 = `def hamle(robot):
+    hedef = robot["en_yakin_top"]
+    if hedef is None:
+        return "bekle"
+    if hedef[0] > robot["x"] and robot["yon"] != "doğu":
+        return "saga"
+    if hedef[0] < robot["x"] and robot["yon"] != "batı":
+        return "sola"
+    if hedef[0] == robot["x"] and hedef[1] != robot["y"]:
+        if robot["yon"] == "doğu" or robot["yon"] == "batı":
+            return "saga"
+    return "ileri"
+`;
+const ORNEK_SINIF_ROBOTU_2 = `def hamle(robot):
+    if robot["onu_acik"]:
+        return "ileri"
+    if robot["tur"] % 2 == 0:
+        return "saga"
+    return "sola"
+`;
 
 export const DENEME_HESAPLARI = {
   ogretmen: { eposta: "ogretmen@deneme.com", sifre: "deneme123" },
@@ -43,8 +66,14 @@ function tohum(): Durum {
     ogrenciler: [
       { id: "o1", sinifId: "s1", takmaAd: "Ece", pin: "1234" },
       { id: "o2", sinifId: "s2", takmaAd: "Mert", pin: "5678" },
-      { id: "o3", sinifId: "s3", takmaAd: "Ada", pin: "1111" }
+      { id: "o3", sinifId: "s3", takmaAd: "Ada", pin: "1111" },
+      { id: "o4", sinifId: "s1", takmaAd: "Deniz", pin: "2345" },
+      { id: "o5", sinifId: "s1", takmaAd: "Kuzey", pin: "3456" }
     ],
+    labRobotlar: {
+      o4: { ad: "Kar Kaplanı", kod: ORNEK_SINIF_ROBOTU_1, guncelleme: "2026-11-18T10:00:00Z" },
+      o5: { ad: "Buzkıran", kod: ORNEK_SINIF_ROBOTU_2, guncelleme: "2026-11-18T10:05:00Z" }
+    },
     kurumKodu: DENEME_HESAPLARI.kurumKodu,
     mudurKodu: "DENEME-MUDUR",
     oturum: null,
@@ -164,6 +193,26 @@ export class SahteBaglanti implements SunucuBaglantisi {
         if (!kursMu(p.p_kurs)) throw new BulutHatasi("kurs_gecersiz");
         s.kurs = p.p_kurs;
         return null;
+      }
+      case "lab_robot_kaydet": {
+        if (!o.ogrenciId) throw new BulutHatasi("oturum_yok");
+        const kod = String(p.p_kod ?? ""), ad = String(p.p_ad ?? "").trim();
+        if (!ad || ad.length > 40 || kod.length > 4000) throw new BulutHatasi("veri_gecersiz");
+        this.d.labRobotlar ??= {};
+        this.d.labRobotlar[o.ogrenciId] = { ad, kod, guncelleme: new Date().toISOString() };
+        return null;
+      }
+      case "lab_robotum": {
+        if (!o.ogrenciId) throw new BulutHatasi("oturum_yok");
+        const r = this.d.labRobotlar?.[o.ogrenciId];
+        return r ? { ad: r.ad, kod: r.kod } : null;
+      }
+      case "lab_sinif_robotlari": {
+        const t = this.aktifOgretmen();
+        const s = this.d.siniflar.find((x) => x.id === p.p_sinif);
+        if (!s || !(t.mudur || s.ogretmenId === t.id)) throw new BulutHatasi("yetki_yok");
+        return this.d.ogrenciler.filter((x) => x.sinifId === s.id && this.d.labRobotlar?.[x.id])
+          .map((x) => ({ takma_ad: x.takmaAd, ...this.d.labRobotlar[x.id] }));
       }
       default:
         throw new BulutHatasi("bilinmeyen_islev:" + ad);

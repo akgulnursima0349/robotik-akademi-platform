@@ -1,0 +1,8 @@
+{
+  "name": "@sra/lab",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": { "dev": "vite", "build": "vite build" },
+  "dependencies": { "@sra/tasarim": "*", "@sra/bulut": "*", "@sra/robot-motoru": "*", "@sra/python": "*", "pixi.js": "8.6.6" }
+}
