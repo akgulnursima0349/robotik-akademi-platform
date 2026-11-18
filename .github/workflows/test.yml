@@ -36,3 +36,13 @@ jobs:
       - if: always()
         uses: actions/upload-artifact@v4
         with: { name: ekran-goruntuleri, path: /tmp/ekran, if-no-files-found: ignore }
+      # İndirilebilir demo paketi: derlenmiş site (deneme modu) + sunucu betiği + başlatma talimatı
+      - name: Demo paketini hazırla
+        run: |
+          mkdir -p /tmp/demo-paketi/scripts
+          cp -r dist /tmp/demo-paketi/dist
+          cp scripts/sun.mjs /tmp/demo-paketi/scripts/
+          cp docs/DEMO.md /tmp/demo-paketi/
+          printf 'Sivas Robotik Akademi Eğitim Platformu · demo\r\n\r\nGereken: Node.js 20 ya da üstü (https://nodejs.org)\r\n\r\nBu klasörde bir terminal açıp şunu yaz:\r\n    node scripts/sun.mjs\r\n\r\nSonra tarayıcıda aç: http://localhost:4173\r\nİnternet gerekmez. Sunum akışı: DEMO.md\r\n' > /tmp/demo-paketi/BASLAT.txt
+      - uses: actions/upload-artifact@v4
+        with: { name: demo-paketi, path: /tmp/demo-paketi, retention-days: 30 }

@@ -15,7 +15,7 @@ Geliştirme fazlar hâlinde ilerler; her fazın spec'i `docs/` klasöründedir.
 | P2 | Robotik Laboratuvarı MVP | Yapıldı |
 | P3 | Blok Atölyesi MVP | Yapıldı |
 | P4 | Öğrenme analitiği | Yapıldı |
-| P5 | Demo cilası | Planlandı |
+| P5 | Demo cilası | Yapıldı |
 
 ## Çalıştırma
 
@@ -27,7 +27,8 @@ npm run demo          # derler ve http://localhost:4173 adresinde açar
 ```
 
 - **Hesapsız:** `ayarlar/platform.json` yoksa platform hesapsız çalışır; kurslara kartlardan girilir.
-- **Deneme (sahte sunucu):** `node scripts/derle.mjs --deneme && npm run sun`. Deneme hesapları giriş ekranında yazar.
+- **Deneme (sahte sunucu, internetsiz):** `npm run demo:deneme`. Deneme hesapları giriş ekranında yazar.
+- **Sunum:** adım adım akış `docs/DEMO.md`. Hazır paket: GitHub Actions → son yeşil çalışma → *demo-paketi* (yalnızca Node.js gerekir).
 - **Demo projesi (gerçek tek giriş):** `supabase/KURULUM.md`.
 
 ## Yapı
