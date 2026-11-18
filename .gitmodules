@@ -1,0 +1,6 @@
+[submodule "kurslar/junior"]
+	path = kurslar/junior
+	url = https://github.com/akgulnursima0349/python-atolyesi-junior
+[submodule "kurslar/ortaokul"]
+	path = kurslar/ortaokul
+	url = https://github.com/akgulnursima0349/python-atolyesi

@@ -1,0 +1,5 @@
+{
+  "_aciklama": "Bu dosyayı platform.json adıyla kopyala. Yalnızca DEMO Supabase projesinin adresi ve publishable anahtarı. Boş bırakılırsa platform hesapsız çalışır.",
+  "supabaseUrl": "https://DEMO-PROJE.supabase.co",
+  "supabaseKey": "sb_publishable_..."
+}

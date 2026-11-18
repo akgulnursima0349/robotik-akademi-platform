@@ -1,0 +1,12 @@
+{
+  "name": "@sra/tasarim",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts", "./stil.css": "./src/stil.css", "./logo.webp": "./src/logo.webp" },
+  "dependencies": {
+    "@fontsource/lexend": "5.1.1",
+    "@fontsource/jetbrains-mono": "5.1.1",
+    "lucide-static": "0.469.0"
+  }
+}
