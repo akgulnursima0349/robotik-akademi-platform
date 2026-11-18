@@ -35,7 +35,8 @@ export async function panellerim(root: HTMLElement): Promise<void> {
       const yol = panelYolu(kurs);
       bolum.append(el("header", "p-kursgrup__bas", {},
         el("div", "", {}, el("span", "sra-kurs__etiket", {}, KURSLAR[kurs].siniflar), el("h2", "", {}, KURSLAR[kurs].ad)),
-        yol ? el("a", "sra-dugme sra-dugme--ikincil sra-dugme--kucuk", { href: yol }, ikon("panel"), el("span", "", {}, "Kurs paneli")) : rozet("Yakında", "koyu")));
+        yol ? el("a", "sra-dugme sra-dugme--ikincil sra-dugme--kucuk", { href: yol }, ikon("panel"), el("span", "", {}, "Kurs paneli"))
+          : KURSLAR[kurs].yol ? el("a", "sra-dugme sra-dugme--ikincil sra-dugme--kucuk", { href: KURSLAR[kurs].yol! }, ikon("ok-sag"), el("span", "", {}, "Kursu aç")) : rozet("Yakında", "koyu")));
       if (!liste.length) bolum.append(el("p", "p-bos", {}, "Bu kursta sınıfın yok."));
       else {
         const tablo = el("div", "p-siniflar", { role: "table", "aria-label": KURSLAR[kurs].ad + " sınıfları" },

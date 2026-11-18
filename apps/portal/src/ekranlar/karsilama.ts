@@ -11,7 +11,7 @@ const KARTLAR = (): KursKartiSecenek[] => [
   {
     kimlik: "ilkokul", etiket: KURSLAR.ilkokul.siniflar, baslik: KURSLAR.ilkokul.ad, renk: "var(--sra-kurs-ilkokul)",
     aciklama: "Sürükle-bırak bloklarla Bit'i ızgarada yürüt. Her yönerge sesli okunur; okumayı yeni sökenler de rahat eder.",
-    bilgi: "Hazırlanıyor", bilgiIkon: "bloklar", gorsel: blokKapagi(), yakinda: true
+    bilgi: "3 dünya · 12 bölüm", bilgiIkon: "bloklar", gorsel: blokKapagi(), href: KURSLAR.ilkokul.yol!
   },
   {
     kimlik: "junior", etiket: KURSLAR.junior.siniflar, baslik: KURSLAR.junior.ad, renk: "var(--sra-kurs-junior)",

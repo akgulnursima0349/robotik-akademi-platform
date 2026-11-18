@@ -11,7 +11,7 @@ export interface KursBilgisi {
 }
 
 export const KURSLAR: Record<KursKimligi, KursBilgisi> = {
-  ilkokul: { kimlik: "ilkokul", ad: "Blok Atölyesi", siniflar: "1–3. sınıf", yol: null },
+  ilkokul: { kimlik: "ilkokul", ad: "Blok Atölyesi", siniflar: "1–3. sınıf", yol: "blok/" },
   junior: { kimlik: "junior", ad: "Python Atölyesi Junior", siniflar: "4–6. sınıf", yol: "junior/" },
   ortaokul: { kimlik: "ortaokul", ad: "Python Atölyesi", siniflar: "Ortaokul", yol: "ortaokul/" }
 };
@@ -25,5 +25,6 @@ export function panelYolu(kurs: KursKimligi, sinifId?: string): string | null {
   const yol = KURSLAR[kurs].yol;
   if (!yol) return null;
   if (kurs === "junior") return yol + (sinifId ? "#panel/" + encodeURIComponent(sinifId) : "#panel");
+  if (kurs === "ilkokul") return null; // Blok Atölyesi'nin kendi paneli yok; ilerleme P4'te Panellerim'de
   return yol;
 }
