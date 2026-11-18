@@ -4,5 +4,5 @@
   "private": true,
   "type": "module",
   "scripts": { "dev": "vite", "build": "vite build" },
-  "dependencies": { "@sra/tasarim": "*", "@sra/bulut": "*" }
+  "dependencies": { "@sra/tasarim": "*", "@sra/bulut": "*", "@sra/analitik": "*" }
 }

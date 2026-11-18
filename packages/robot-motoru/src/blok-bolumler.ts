@@ -1,5 +1,5 @@
 /* Blok Atölyesi bölümleri. Harita: '#' ağaç, '.' havuç, ' ' çimen yol, 'R' Bit'in başladığı yer. */
-import type { BlokTuru } from "./model";
+export type BlokTuru = "ileri" | "sol" | "sag" | "tekrar";
 
 export interface Bolum {
   kimlik: string; dunya: 1 | 2 | 3; sira: number; ad: string;

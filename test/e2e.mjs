@@ -105,7 +105,7 @@ for (const [ad, g, y] of BOYUTLAR) {
   await p.waitForSelector(".p-sinif[data-kod]");
   ok(await p.evaluate(() => location.hash) === "#panellerim", "öğretmen Panellerim'e gitti");
   ok((await p.$$('.p-kursgrup[data-kurs="junior"] .p-sinif[data-kod]')).length === 1 && (await p.$$('.p-kursgrup[data-kurs="ortaokul"] .p-sinif[data-kod]')).length === 1, "sınıflar kurslara göre gruplandı");
-  ok(await p.getAttribute('.p-sinif[data-kod="JNR123"] .p-sinif__git a', "href") === "junior/#panel/s1", "Junior sınıfının paneli Junior'ın kendi paneline gidiyor");
+  ok(await p.getAttribute('.p-sinif[data-kod="JNR123"] .p-sinif__git a:not([data-rapor])', "href") === "junior/#panel/s1", "Junior sınıfının paneli Junior'ın kendi paneline gidiyor");
   ok(await tasmaYok(p), "Panellerim'de yatay taşma yok");
   ok(await p.evaluate(() => document.querySelector(".sra-ustbar__ic").getBoundingClientRect().height < 80), "oturum açıkken üst bar tek satır");
   await shot("4_panellerim");
@@ -278,6 +278,46 @@ for (const [ad, g, y] of BOYUTLAR) {
   ok(await p.evaluate(() => speechSynthesis.getVoices().some((v) => v.lang.startsWith("tr"))) || await p.isHidden(".bk-ses"), "Türkçe ses yokken ses düğmesi gizli");
   ok(await tasmaYok(p), "bölüm ekranında taşma yok");
   ok(hatalar.length === 0, "Blok konsol hatası yok" + (hatalar.length ? ": " + hatalar.slice(0, 2).join(" | ") : ""));
+  await ctx.close();
+}
+
+/* ---------------- Öğrenme analitiği ve ilerleme eşitleme ---------------- */
+for (const [ad, g, y] of BOYUTLAR) {
+  console.log(`\nanalitik · ${ad}`);
+  const { ctx, p, hatalar } = await sayfaAc(g, y, { deneme: true }, true);
+  /* öğrenci: Blok'ta bir bölüm bitir → sunucuya yazılsın */
+  await p.goto(ADRES + "#giris"); await hazir(p);
+  await p.click("#g-ogrenci"); await p.fill("#g-kod", "JNR123"); await p.fill("#g-ad", "Ece"); await p.fill("#g-pin", "1234"); await p.click("button[type=submit]");
+  await p.waitForURL(/\/junior\/$/);
+  await p.goto(ADRES + "blok/#b/1-1"); await p.waitForSelector(".bahce");
+  await p.click('.bk-palet [data-tur="ileri"]'); await p.click('.bk-palet [data-tur="ileri"]');
+  await p.click("#bk-baslat"); await p.waitForSelector(".bk-sonuc.basarili");
+  await p.waitForFunction(() => { try { const d = JSON.parse(localStorage.getItem("sra-sahte-sunucu")); return d.ilerleme?.["o1|blok"]?.yildiz?.["1-1"] === 3; } catch { return false; } }, null, { timeout: 8000 });
+  ok(true, "Blok ilerlemesi sunucuya yazıldı");
+  /* başka cihaz: yerel ilerleme silinir, sunucudan geri gelir */
+  await p.evaluate(() => localStorage.removeItem("sra-blok-v1"));
+  await p.goto(ADRES + "blok/?yeni"); await p.waitForSelector(".bk-dunya");
+  ok(await p.isVisible('a.bk-durak[data-bolum="1-2"]'), "başka cihazda ilerleme sunucudan geri geldi (ikinci bölüm açık)");
+  await p.goto(ADRES); await hazir(p); await p.click("#p-cikis"); await p.waitForSelector("#p-giris");
+  /* öğretmen raporu */
+  await p.goto(ADRES + "#giris"); await hazir(p);
+  await p.click("#g-ogretmen"); await p.fill("#g-eposta", "ogretmen@deneme.com"); await p.fill("#g-sifre", "deneme123"); await p.click("button[type=submit]");
+  await p.waitForSelector('[data-rapor="s1"]'); await p.click('[data-rapor="s1"]');
+  await p.waitForSelector(".r-isi tbody tr");
+  ok((await p.$$(".r-isi tbody tr")).length === 12, "ısı haritası: 12 öğrenci");
+  ok((await p.$$(".r-isi tbody tr:first-child td")).length === 12, "ısı haritası: 12 kazanım");
+  ok((await p.$$(".r-cs:not(.r-cs--eksen)")).length === 12, "kazanım grafiği: 12 satır");
+  ok(/Etki büyüklüğü/.test(await p.textContent(".r-etki")), "kursun etkisi hesaplandı");
+  ok((await p.$$(".r-destek li")).length > 0 && (await p.$$(".r-zor li")).length > 0, "destek listesi ve zor bölümler dolu");
+  ok(/Ece/.test(await p.textContent(".r-isi")) && !/Henüz hiç giriş yapmadı/.test(await p.$$eval(".r-destek li", (l) => l.filter((x) => x.textContent.includes("Ece")).map((x) => x.textContent).join(""))), "öğrencinin son girişi rapora yansıdı");
+  const indirme = p.waitForEvent("download"); await p.click("#r-csv"); const dosya = await indirme;
+  ok(/rapor\.csv$/.test(dosya.suggestedFilename()), "CSV indirildi: " + dosya.suggestedFilename());
+  await p.hover(".r-cb.son"); await p.waitForSelector(".r-ipucu:not([hidden])");
+  ok(true, "grafikte ipucu görünüyor");
+  ok(await tasmaYok(p), "rapor ekranında yatay taşma yok");
+  await p.screenshot({ path: `${EKRAN}/rapor_${ad}.png`, fullPage: true });
+  if (ad === "masaustu") { await p.emulateMedia({ media: "print" }); await p.screenshot({ path: `${EKRAN}/rapor_yazdir.png`, fullPage: true }); await p.emulateMedia({ media: "screen" }); }
+  ok(hatalar.length === 0, "analitik konsol hatası yok" + (hatalar.length ? ": " + hatalar.slice(0, 2).join(" | ") : ""));
   await ctx.close();
 }
 

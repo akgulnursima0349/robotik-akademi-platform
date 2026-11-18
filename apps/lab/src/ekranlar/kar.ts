@@ -111,6 +111,7 @@ export async function karGorev(root: HTMLElement, kimlik: string) {
   calistirB.addEventListener("click", async () => {
     if (oynuyor) return;
     oynuyor = true; calistirB.disabled = true; editor.temizle(); cikti.replaceChildren();
+    ilerleme.denemeArttir(g.kimlik);
     const r: KarKuremeSonucu = karKuremeCalistir(g, editor.kod);
     if (r.cikti.length) cikti.append(el("pre", "l-print", {}, r.cikti.join("\n")));
     if (r.hata && r.hata.tur !== "Robot" && r.simler[0].iz.length <= 1) {

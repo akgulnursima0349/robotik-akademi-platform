@@ -3,7 +3,7 @@ import { dugme, el, ikon, ustBar } from "@sra/tasarim";
 import { Ogretmen } from "@sra/bulut";
 import { Bahce } from "./bahce";
 import { bitSvg } from "./bit";
-import { BOLUMLER, DUNYALAR, type Bolum } from "./bolumler";
+import { BOLUMLER, DUNYALAR, type Bolum } from "@sra/robot-motoru";
 import { Duzenleyici } from "./duzenleyici";
 import { ilerleme } from "./ilerleme";
 import { blokSay, calistir, pythona, yildizHesapla } from "./model";
@@ -97,6 +97,7 @@ export function bolumEkrani(root: HTMLElement, kimlik: string) {
     if (oynuyor) return;
     if (!duz.program.length) { ses.oku("Önce blok ekle!", true); duz.alan.classList.add("bk-salla"); setTimeout(() => duz.alan.classList.remove("bk-salla"), 500); return; }
     oynuyor = true; duz.kilitli = true; baslat.disabled = true; sonuc.replaceChildren();
+    ilerleme.denemeArttir(b.kimlik);
     bahce.yukle(b.harita, b.yon);
     const r = calistir(duz.program, b.harita, b.yon);
     const tamam = await bahce.oynat(r.sim.iz, (i) => duz.vurgula(r.bloklar[i]));

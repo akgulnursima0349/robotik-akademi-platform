@@ -3,6 +3,8 @@ import "@sra/tasarim";
 import "./blok.css";
 import { bolumEkrani, harita } from "./ekranlar";
 import { uygulama } from "./uygulama";
+import { ilerleme } from "./ilerleme";
+import { IlerlemeEsitleyici, Ogrenci } from "@sra/bulut";
 
 const root = document.getElementById("app")!;
 function yonlendir() {
@@ -13,4 +15,12 @@ function yonlendir() {
   document.body.dataset.hazir = "1";
 }
 addEventListener("hashchange", yonlendir);
-uygulama.yenile().finally(yonlendir);
+uygulama.yenile().finally(async () => {
+  /* giriş yapmış öğrenci: ilerleme her cihazda aynı */
+  if (uygulama.kullanici instanceof Ogrenci && uygulama.oturum) {
+    const e = new IlerlemeEsitleyici(uygulama.oturum, "blok", ilerleme);
+    ilerleme.dinle(() => e.degisti());
+    await e.baslat();
+  }
+  yonlendir();
+});

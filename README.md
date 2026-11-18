@@ -14,7 +14,7 @@ Geliştirme fazlar hâlinde ilerler; her fazın spec'i `docs/` klasöründedir.
 | P1 | Portal, tek giriş, ortak tasarım sistemi | Yapıldı |
 | P2 | Robotik Laboratuvarı MVP | Yapıldı |
 | P3 | Blok Atölyesi MVP | Yapıldı |
-| P4 | Öğrenme analitiği | Planlandı |
+| P4 | Öğrenme analitiği | Yapıldı |
 | P5 | Demo cilası | Planlandı |
 
 ## Çalıştırma
@@ -39,10 +39,11 @@ apps/lab           Robotik Laboratuvarı: izometrik sahne (PixiJS/WebGL), kod ed
 packages/tasarim   ortak tasarım sistemi (örnekler: /ornekler.html)
 packages/bulut     oturum ve kurs yönlendirme (nesne yönelimli; Supabase ya da sahte sunucu)
 packages/robot-motoru  deterministik simülasyon: ızgara, Kar Küreme, lig, turnuva
+packages/analitik  ısı haritası, kazanım özeti, etki büyüklüğü, zor bölümler, destek listesi, CSV
 packages/python    Skulpt köprüsü: Türkçe hata mesajları, sonsuz döngü koruması, lig beyinleri
 kurslar/junior     python-atolyesi-junior  (submodule)
 kurslar/ortaokul   python-atolyesi         (submodule)
-supabase/          platform.sql, lab.sql, örnek veri, kurulum
+supabase/          platform.sql, lab.sql, analitik.sql, örnek veri, kurulum
 test/              uçtan uca testler (Playwright), veritabanı senaryosu (Postgres 16)
 ```
 
