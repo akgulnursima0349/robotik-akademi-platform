@@ -112,14 +112,14 @@ Tek adresten açılan bir karşılama ekranı kuruyoruz. Çocuk kursunu seçiyor
 
 ## Bitti tanımı
 
-- [ ] `npm install && npm run demo` temiz bir bilgisayarda portalı, Junior'ı ve ortaokul sitesini tek adresten açıyor.
-- [ ] Karşılama ekranı masaüstü, tablet ve telefonda göz kontrolünden geçti (ekran görüntüsü).
-- [ ] Demo projesiyle öğrenci girişi öğrenciyi doğru kursa götürüyor; kursta tekrar giriş istenmiyor (tek giriş).
-- [ ] Öğretmen girişi "Panellerim" ekranını açıyor ve kurs panellerine geçiş çalışıyor.
-- [ ] Ayar dosyası boşken her şey hesapsız çalışıyor.
-- [ ] İki sitedeki `storageKey` değişikliği yayındaki siteleri etkilemedi (o sitelerin testleri yeşil).
-- [ ] `ornekler.html` bütün bileşenleri gösteriyor.
-- [ ] Birim ve uçtan uca testler GitHub Actions'ta yeşil.
+- [x] `npm install && npm run demo` temiz bir bilgisayarda portalı, Junior'ı ve ortaokul sitesini tek adresten açıyor.
+- [x] Karşılama ekranı masaüstü, tablet ve telefonda göz kontrolünden geçti (ekran görüntüsü).
+- [ ] Demo projesiyle öğrenci girişi (sahte sunucuyla test edildi; gerçek demo projesi bekleniyor) öğrenciyi doğru kursa götürüyor; kursta tekrar giriş istenmiyor (tek giriş).
+- [x] Öğretmen girişi "Panellerim" ekranını açıyor ve kurs panellerine geçiş çalışıyor.
+- [x] Ayar dosyası boşken her şey hesapsız çalışıyor.
+- [x] İki sitedeki `storageKey` değişikliği yayındaki siteleri etkilemedi (o sitelerin testleri yeşil).
+- [x] `ornekler.html` bütün bileşenleri gösteriyor.
+- [x] Birim ve uçtan uca testler GitHub Actions'ta yeşil.
 
 ## Senden gerekenler (başlamadan önce değil, giriş adımına gelince)
 
