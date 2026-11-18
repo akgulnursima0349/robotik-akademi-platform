@@ -14,6 +14,9 @@ interface Durum {
   kurumKodu: string;
   mudurKodu: string;
   labRobotlar: Record<string, { ad: string; kod: string; guncelleme: string }>;
+  ilerleme: Record<string, Record<string, unknown>>; // "ogrenciId|uygulama" → veri
+  junior: Record<string, Record<string, unknown>>;
+  sonGiris: Record<string, string>;
   /** açık oturum: öğretmen kimliği ya da anonim öğrenci oturumu */
   oturum: { uid: string; anonim: boolean; ogrenciId?: string } | null;
   hatali: Record<string, number>;
@@ -41,6 +44,38 @@ const ORNEK_SINIF_ROBOTU_2 = `def hamle(robot):
     return "sola"
 `;
 
+/* ---------- deneme sınıfı: rapor ekranı sunumda dolu görünsün diye sabit tohumla üretilmiş veri ----------
+   Takma adlar uydurmadır; gerçek çocuk verisi yok. */
+const ORNEK_ADLAR = ["Bora", "Defne", "Çınar", "Eylül", "Kerem", "Nil", "Toprak", "Zeynep", "Arda"];
+/* Junior test cevap anahtarı (kurslar/junior/src/data/testler.js ile aynı sıra) */
+export const DENEME_TEST_ANAHTARI = { on: [0, 1, 0, 1, 2, 1, 3, 1, 1, 2, 3, 0], son: [2, 0, 1, 0, 2, 3, 1, 2, 2, 0, 1, 1] };
+function ornekSinif() {
+  let a = 20261118;
+  const r = () => { a = (a + 0x6d2b79f5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  const ogrenciler: SOgrenci[] = [], junior: Record<string, Record<string, unknown>> = {}, ilerleme: Record<string, Record<string, unknown>> = {}, sonGiris: Record<string, string> = {};
+  /* kazanım zorluğu: döngü, sınıf-nesne ve model türleri zor */
+  const zor = [0.2, 0.3, 0.35, 0.3, 0.6, 0.45, 0.5, 0.4, 0.7, 0.35, 0.55, 0.65];
+  const blokSira = ["1-1", "1-2", "1-3", "1-4", "2-1", "2-2", "2-3", "2-4"];
+  ORNEK_ADLAR.forEach((ad, i) => {
+    const id = "d" + (i + 1), yetenek = 0.3 + r() * 0.6;
+    ogrenciler.push({ id, sinifId: "s1", takmaAd: ad, pin: String(4000 + i * 111).slice(0, 4) });
+    const cevap = (tur: "on" | "son", ek: number) => DENEME_TEST_ANAHTARI[tur].map((d, k) => (r() < Math.min(0.95, yetenek + ek - zor[k] * 0.6) ? d : (d + 1 + Math.floor(r() * 3)) % 4));
+    const sonVar = i !== 7;
+    junior[id] = { testler: { on: { bitti: true, cevaplar: cevap("on", 0) }, ...(sonVar ? { son: { bitti: true, cevaplar: cevap("son", i === 4 ? -0.35 : 0.3) } } : {}) },
+      worlds: Object.fromEntries(Array.from({ length: sonVar ? 10 : 4 }, (_, w) => [`d${w + 1}`, { done: true, stars: 4 + Math.floor(r() * 5) }])) };
+    const yildiz: Record<string, number> = {}, deneme: Record<string, number> = {};
+    const kac = 3 + Math.floor(yetenek * 6);
+    blokSira.slice(0, kac).forEach((b, k) => { deneme[b] = 1 + Math.floor(r() * (b === "1-4" || b === "2-3" ? 6 : 3)); if (k < kac - 1 || r() < 0.6) yildiz[b] = 1 + Math.floor(r() * 3); });
+    if (i === 2) { deneme["2-3"] = 7; delete yildiz["2-3"]; }
+    ilerleme[`${id}|blok`] = { yildiz, deneme };
+    const lab: Record<string, { yildiz: number; deneme: number }> = {};
+    ["ilk-sokak", "kose", "uzun-cadde", "okul-yolu", "sokak-sonu"].slice(0, 2 + Math.floor(yetenek * 4)).forEach((g) => { lab[g] = { yildiz: 1 + Math.floor(r() * 3), deneme: 1 + Math.floor(r() * (g === "okul-yolu" ? 7 : 3)) }; });
+    ilerleme[`${id}|lab`] = { gorevler: lab };
+    sonGiris[id] = new Date(Date.UTC(2026, 10, 18 - (i === 6 ? 12 : Math.floor(r() * 4)), 9 + i)).toISOString();
+  });
+  return { ornekOgrenciler: ogrenciler, junior, ilerleme, sonGiris };
+}
+
 export const DENEME_HESAPLARI = {
   ogretmen: { eposta: "ogretmen@deneme.com", sifre: "deneme123" },
   mudur: { eposta: "mudur@deneme.com", sifre: "deneme123" },
@@ -53,6 +88,7 @@ export const DENEME_HESAPLARI = {
 } as const;
 
 function tohum(): Durum {
+  const ornek = ornekSinif();
   return {
     ogretmenler: [
       { id: "t1", eposta: DENEME_HESAPLARI.ogretmen.eposta, sifre: DENEME_HESAPLARI.ogretmen.sifre, ad: "Deneme Öğretmen", mudur: false, aktif: true },
@@ -68,8 +104,12 @@ function tohum(): Durum {
       { id: "o2", sinifId: "s2", takmaAd: "Mert", pin: "5678" },
       { id: "o3", sinifId: "s3", takmaAd: "Ada", pin: "1111" },
       { id: "o4", sinifId: "s1", takmaAd: "Deniz", pin: "2345" },
-      { id: "o5", sinifId: "s1", takmaAd: "Kuzey", pin: "3456" }
+      { id: "o5", sinifId: "s1", takmaAd: "Kuzey", pin: "3456" },
+      ...ornek.ornekOgrenciler
     ],
+    junior: ornek.junior,
+    ilerleme: ornek.ilerleme,
+    sonGiris: ornek.sonGiris,
     labRobotlar: {
       o4: { ad: "Kar Kaplanı", kod: ORNEK_SINIF_ROBOTU_1, guncelleme: "2026-11-18T10:00:00Z" },
       o5: { ad: "Buzkıran", kod: ORNEK_SINIF_ROBOTU_2, guncelleme: "2026-11-18T10:05:00Z" }
@@ -165,6 +205,7 @@ export class SahteBaglanti implements SunucuBaglantisi {
         }
         delete this.d.hatali[anahtar];
         o.ogrenciId = og.id;
+        (this.d.sonGiris ??= {})[og.id] = new Date().toISOString();
         return { rol: "ogrenci", takma_ad: og.takmaAd, sinif: s.ad, sinif_kod: s.kod };
       }
       case "ogrenci_cikis": { delete o.ogrenciId; return null; }
@@ -213,6 +254,30 @@ export class SahteBaglanti implements SunucuBaglantisi {
         if (!s || !(t.mudur || s.ogretmenId === t.id)) throw new BulutHatasi("yetki_yok");
         return this.d.ogrenciler.filter((x) => x.sinifId === s.id && this.d.labRobotlar?.[x.id])
           .map((x) => ({ takma_ad: x.takmaAd, ...this.d.labRobotlar[x.id] }));
+      }
+      case "platform_ilerleme_getir": {
+        if (!o.ogrenciId) throw new BulutHatasi("oturum_yok");
+        const v = this.d.ilerleme?.[`${o.ogrenciId}|${p.p_uygulama}`];
+        return v ? { veri: v, guncelleme: this.d.sonGiris?.[o.ogrenciId] } : null;
+      }
+      case "platform_ilerleme_kaydet": {
+        if (!o.ogrenciId) throw new BulutHatasi("oturum_yok");
+        if (!["lab", "blok"].includes(String(p.p_uygulama)) || typeof p.p_veri !== "object" || Array.isArray(p.p_veri) || !p.p_veri) throw new BulutHatasi("veri_gecersiz");
+        this.d.ilerleme ??= {}; this.d.sonGiris ??= {};
+        this.d.ilerleme[`${o.ogrenciId}|${p.p_uygulama}`] = JSON.parse(JSON.stringify(p.p_veri));
+        const t = new Date().toISOString();
+        this.d.sonGiris[o.ogrenciId] = t;
+        return t;
+      }
+      case "platform_sinif_raporu": {
+        const t = this.aktifOgretmen();
+        const s = this.d.siniflar.find((x) => x.id === p.p_sinif);
+        if (!s || !(t.mudur || s.ogretmenId === t.id)) throw new BulutHatasi("yetki_yok");
+        return this.d.ogrenciler.filter((x) => x.sinifId === s.id).sort((a, b) => a.takmaAd.localeCompare(b.takmaAd, "tr")).map((x) => ({
+          id: x.id, takma_ad: x.takmaAd, son_giris: this.d.sonGiris?.[x.id] ?? null,
+          junior: this.d.junior?.[x.id] ?? {}, ortaokul: {},
+          lab: this.d.ilerleme?.[`${x.id}|lab`] ?? {}, blok: this.d.ilerleme?.[`${x.id}|blok`] ?? {}
+        }));
       }
       default:
         throw new BulutHatasi("bilinmeyen_islev:" + ad);

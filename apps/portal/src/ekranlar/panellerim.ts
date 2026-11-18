@@ -67,7 +67,9 @@ export async function panellerim(root: HTMLElement): Promise<void> {
       el("code", "p-sinif__kod", { role: "cell" }, s.kod),
       el("span", "", { role: "cell" }, String(s.ogrenciSayisi)),
       el("span", "", { role: "cell" }, secim),
-      el("span", "p-sinif__git", { role: "cell" }, yol ? el("a", "p-baglanti", { href: yol }, "Paneli aç", ikon("sag-ok")) : el("span", "p-sessiz", {}, "—")));
+      el("span", "p-sinif__git", { role: "cell" },
+        el("a", "p-baglanti", { href: `#rapor/${encodeURIComponent(s.id)}`, "data-rapor": s.id }, ikon("grafik"), "Rapor"),
+        yol ? el("a", "p-baglanti", { href: yol }, "Paneli aç", ikon("sag-ok")) : null));
   };
   ciz();
 }

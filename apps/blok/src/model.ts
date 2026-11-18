@@ -3,7 +3,8 @@
 import { KarKureme, RobotDurdu, type DurmaSebebi, type Kare } from "@sra/robot-motoru";
 
 export type KomutTuru = "ileri" | "sol" | "sag";
-export type BlokTuru = KomutTuru | "tekrar";
+export type { BlokTuru } from "@sra/robot-motoru";
+import type { BlokTuru } from "@sra/robot-motoru";
 export interface KomutBlogu { id: string; tur: KomutTuru }
 export interface TekrarBlogu { id: string; tur: "tekrar"; sayi: number; ic: Blok[] }
 export type Blok = KomutBlogu | TekrarBlogu;

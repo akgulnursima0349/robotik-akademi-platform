@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { GOREVLER } from "@sra/robot-motoru";
-import { BOLUMLER } from "../src/bolumler";
+import { BOLUMLER } from "@sra/robot-motoru";
 import { blokSay, bul, calistir, pythona, yeniBlok, yildizHesapla, type Blok } from "../src/model";
 
 /** "4(3(i)r)" → blok programı */

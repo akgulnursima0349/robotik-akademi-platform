@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { BulutHatasi, hataMetni, KURSLAR, modBul, Ogrenci, Ogretmen, Oturum, panelYolu, SahteBaglanti, TamamlanmamisHesap } from "../src";
+import { FORM } from "../../../kurslar/junior/src/data/testler.js";
+import { DENEME_TEST_ANAHTARI, IlerlemeEsitleyici, BulutHatasi, hataMetni, KURSLAR, modBul, Ogrenci, Ogretmen, Oturum, panelYolu, SahteBaglanti, TamamlanmamisHesap } from "../src";
 
 const yeni = () => { const b = new SahteBaglanti(); return { b, o: new Oturum(b) }; };
 
@@ -110,6 +111,41 @@ describe("Lab robotları", () => {
     const { o } = yeni();
     await o.ogrenciGiris("JNR123", "Ece", "1234");
     await expect(o.labSinifRobotlari("s1")).rejects.toMatchObject({ kod: "yetki_yok" });
+  });
+});
+
+describe("ilerleme ve rapor", () => {
+  it("deneme verisinin test anahtarı Junior'ınkiyle aynı", () => {
+    expect(DENEME_TEST_ANAHTARI.on).toEqual(FORM.on.map((x) => x.dogru));
+    expect(DENEME_TEST_ANAHTARI.son).toEqual(FORM.son.map((x) => x.dogru));
+  });
+  it("eşitleyici: buluttakini birleştirir, değişikliği yazar; başka cihaz geri okur", async () => {
+    const b = new SahteBaglanti();
+    const o = new Oturum(b);
+    await o.ogrenciGiris("JNR123", "Ece", "1234");
+    let yerel: { yildiz: Record<string, number> } = { yildiz: { "1-1": 2 } };
+    const e = new IlerlemeEsitleyici(o, "blok", { veri: () => yerel, birlestir: (u: typeof yerel) => { yerel = { yildiz: { ...u.yildiz, ...yerel.yildiz } }; } }, 0);
+    await e.baslat();
+    await new Promise((r) => setTimeout(r, 5));
+    expect(e.durum).toBe("kaydedildi");
+    yerel.yildiz["1-2"] = 3; e.degisti(0);
+    await new Promise((r) => setTimeout(r, 5));
+    expect(await o.ilerlemeGetir("blok")).toEqual({ yildiz: { "1-1": 2, "1-2": 3 } });
+  });
+  it("öğretmen sınıf raporunu alır; PIN yok; deneme sınıfı dolu", async () => {
+    const { o } = yeni();
+    await o.ogretmenGiris("ogretmen@deneme.com", "deneme123");
+    const r = await o.sinifRaporu("s1");
+    expect(r.length).toBe(12);
+    expect(Object.keys(r[0])).not.toContain("pin");
+    expect(r.filter((x) => (x.junior as { testler?: unknown }).testler).length).toBe(9);
+    await expect(o.sinifRaporu("s3")).rejects.toMatchObject({ kod: "yetki_yok" });
+  });
+  it("öğrenci rapor alamaz, ilerleme yazamaz başka uygulamaya", async () => {
+    const { o } = yeni();
+    await o.ogrenciGiris("JNR123", "Ece", "1234");
+    await expect(o.sinifRaporu("s1")).rejects.toMatchObject({ kod: "yetki_yok" });
+    await expect(o.ilerlemeKaydet("junior" as "lab", {})).rejects.toMatchObject({ kod: "veri_gecersiz" });
   });
 });
 

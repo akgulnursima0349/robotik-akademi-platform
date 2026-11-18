@@ -2,6 +2,8 @@
 import "@sra/tasarim";
 import "./lab.css";
 import { uygulama } from "./uygulama";
+import { ilerleme } from "./ilerleme";
+import { IlerlemeEsitleyici, Ogrenci } from "@sra/bulut";
 import { ana } from "./ekranlar/ana";
 import { karGorev, karListe } from "./ekranlar/kar";
 import { lig } from "./ekranlar/lig";
@@ -19,4 +21,11 @@ async function yonlendir() {
   document.body.dataset.hazir = "1";
 }
 addEventListener("hashchange", () => void yonlendir());
-uygulama.yenile().finally(() => void yonlendir());
+uygulama.yenile().finally(async () => {
+  if (uygulama.kullanici instanceof Ogrenci && uygulama.oturum) {
+    const e = new IlerlemeEsitleyici(uygulama.oturum, "lab", ilerleme);
+    ilerleme.dinle(() => e.degisti());
+    await e.baslat();
+  }
+  void yonlendir();
+});

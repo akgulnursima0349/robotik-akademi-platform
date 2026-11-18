@@ -13,6 +13,8 @@ interface BenCevabi {
 }
 interface SinifCevabi { id: string; ad: string; kod: string; kurs: string; ogrenci_sayisi: number; benim: boolean; sahip_ad: string }
 
+export type Uygulama = "lab" | "blok";
+export interface RaporSatiri { id: string; takma_ad: string; son_giris: string | null; junior: Record<string, unknown>; ortaokul: Record<string, unknown>; lab: Record<string, unknown>; blok: Record<string, unknown> }
 export interface SinifRobotu { sahip: string; ad: string; kod: string; guncelleme: string }
 
 /** Öğretmen hesabı açılmış ama ad ve kurum kodu girilmemiş (ya da erişimi kapatılmış). */
@@ -101,6 +103,18 @@ export class Oturum {
   async labSinifRobotlari(sinifId: string): Promise<SinifRobotu[]> {
     const r = await this.b.rpc<{ takma_ad: string; ad: string; kod: string; guncelleme: string }[]>("lab_sinif_robotlari", { p_sinif: sinifId });
     return (r ?? []).map((x) => ({ sahip: x.takma_ad, ad: x.ad, kod: x.kod, guncelleme: x.guncelleme }));
+  }
+
+  /* ---------- Lab ve Blok ilerlemesi, sınıf raporu ---------- */
+  async ilerlemeGetir<T = Record<string, unknown>>(uygulama: Uygulama): Promise<T | null> {
+    const r = await this.b.rpc<{ veri: T } | null>("platform_ilerleme_getir", { p_uygulama: uygulama });
+    return r?.veri ?? null;
+  }
+  async ilerlemeKaydet(uygulama: Uygulama, veri: unknown): Promise<void> {
+    await this.b.rpc("platform_ilerleme_kaydet", { p_uygulama: uygulama, p_veri: veri });
+  }
+  async sinifRaporu(sinifId: string): Promise<RaporSatiri[]> {
+    return (await this.b.rpc<RaporSatiri[]>("platform_sinif_raporu", { p_sinif: sinifId })) ?? [];
   }
 
   async cikis(): Promise<void> {

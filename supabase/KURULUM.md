@@ -10,6 +10,7 @@ Platformun demosu **ayrı bir Supabase projesinde** çalışır. Gerçek öğren
    2. `kurslar/junior/supabase/junior.sql`
    3. `supabase/platform.sql`
    4. `supabase/lab.sql`
+   5. `supabase/analitik.sql`
 
    Ardından kurum kodunu belirle (kendi kodunla değiştir):
    ```sql
