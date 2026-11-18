@@ -1,0 +1,8 @@
+{
+  "name": "@sra/bulut",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": { "@supabase/supabase-js": "2.48.1" }
+}

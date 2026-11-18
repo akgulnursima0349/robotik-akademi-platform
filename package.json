@@ -1,0 +1,21 @@
+{
+  "name": "robotik-akademi-platform",
+  "private": true,
+  "type": "module",
+  "workspaces": ["packages/*", "apps/*"],
+  "scripts": {
+    "dev": "npm run dev -w apps/portal",
+    "derle": "node scripts/derle.mjs",
+    "demo": "node scripts/derle.mjs && node scripts/sun.mjs",
+    "sun": "node scripts/sun.mjs",
+    "test": "vitest run",
+    "tip": "tsc -p tsconfig.json",
+    "e2e": "node test/e2e.mjs"
+  },
+  "devDependencies": {
+    "typescript": "5.6.3",
+    "vite": "5.4.11",
+    "vitest": "2.1.8",
+    "playwright": "1.63.0"
+  }
+}

@@ -1,0 +1,38 @@
+# Her push ve PR'da: tip denetimi, birim testleri, veritabanı senaryosu, derleme ve uçtan uca testler.
+# Yayın YOK: platform akademinin onayına kadar hiçbir yere yayınlanmıyor.
+name: Test
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+concurrency: { group: "test-${{ github.ref }}", cancel-in-progress: true }
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_HOST_AUTH_METHOD: trust }
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U postgres" --health-interval 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+        with: { submodules: true }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - name: Tip denetimi
+        run: npm run tip
+      - name: Birim testleri
+        run: npm test
+      - name: Veritabanı senaryosu (kurulum.sql + junior.sql + platform.sql)
+        env: { PGHOST: localhost, PGPORT: "5432" }
+        run: sh test/db/calistir.sh | tee /tmp/db.log && grep -q "Bütün veritabanı doğrulamaları geçti" /tmp/db.log && grep -q "Örnek veri doğru" /tmp/db.log
+      - name: Derle (portal + iki kurs)
+        run: node scripts/derle.mjs --deneme
+      - run: npx playwright install --with-deps chromium
+      - name: Uçtan uca testler (masaüstü, tablet, telefon)
+        run: EKRAN=/tmp/ekran node test/e2e.mjs
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with: { name: ekran-goruntuleri, path: /tmp/ekran, if-no-files-found: ignore }
