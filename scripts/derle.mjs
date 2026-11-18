@@ -40,9 +40,25 @@ const KURSLAR = [
   { ad: "ortaokul", dizin: join(KOK, "kurslar/ortaokul/site"), degisken: "ATOLYE_AYAR" }
 ];
 
-function ayarDosyasi(degisken, deger) {
-  return `/* Platform derlemesi tarafından üretildi (scripts/derle.mjs). Elle düzenleme; ayarlar/platform.json'u değiştir. */\nwindow.${degisken} = ${JSON.stringify(deger, null, 2)};\n`;
+function ayarDosyasi(degisken, deger, platformDugmesi = false) {
+  return `/* Platform derlemesi tarafından üretildi (scripts/derle.mjs). Elle düzenleme; ayarlar/platform.json'u değiştir. */\nwindow.${degisken} = ${JSON.stringify(deger, null, 2)};\n` + (platformDugmesi ? PLATFORM_DUGMESI : "");
 }
+
+/* Kursların sağ alt köşesine "← Platform" düğmesi: kursların koduna dokunmadan, yalnızca platform altında. */
+const PLATFORM_DUGMESI = `
+(function () {
+  function ekle() {
+    if (document.getElementById("sra-platform-don")) return;
+    var a = document.createElement("a");
+    a.id = "sra-platform-don"; a.href = "../"; a.textContent = "\u2190 Platform"; a.setAttribute("aria-label", "Sivas Robotik Akademi platformuna dön");
+    a.style.cssText = "position:fixed;left:14px;bottom:14px;z-index:2147483000;padding:9px 14px;border-radius:999px;background:#141821;color:#fff;" +
+      "font:600 14px/1 system-ui,-apple-system,'Segoe UI',sans-serif;text-decoration:none;box-shadow:0 6px 18px rgba(20,24,33,.25);opacity:.92";
+    a.onmouseenter = function () { a.style.opacity = "1"; }; a.onmouseleave = function () { a.style.opacity = ".92"; };
+    document.body.appendChild(a);
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", ekle); else ekle();
+})();
+`;
 
 const ayar = ayarOku();
 const mod = ayar.deneme ? "deneme" : ayar.supabaseUrl && ayar.supabaseKey ? "bulut" : "yerel";
@@ -71,7 +87,7 @@ for (const u of ["lab", "blok"]) {
     if (!existsSync(join(k.dizin, "node_modules"))) sh("npm ci --no-audit --no-fund", k.dizin);
     const hedef = join(DIST, k.ad);
     sh(`npx vite build --outDir ${hedef} --emptyOutDir`, k.dizin);
-    writeFileSync(join(hedef, "ayarlar.js"), ayarDosyasi(k.degisken, kursAyari));
+    writeFileSync(join(hedef, "ayarlar.js"), ayarDosyasi(k.degisken, kursAyari, true));
   }
 }
 console.log(`\n✓ Hazır: dist/  (npm run sun ile aç)\n`);

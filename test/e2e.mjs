@@ -321,6 +321,31 @@ for (const [ad, g, y] of BOYUTLAR) {
   await ctx.close();
 }
 
+/* ---------------- demo cilası ---------------- */
+for (const [ad, g, y] of BOYUTLAR) {
+  console.log(`\ndemo · ${ad}`);
+  const { ctx, p, hatalar } = await sayfaAc(g, y, { deneme: true }, true);
+  await p.route(/\/(junior|ortaokul)\/ayarlar\.js$/, (r) => r.fallback());
+  await p.goto(ADRES); await hazir(p);
+  await p.click("#p-nasil"); await p.waitForSelector(".n-sema");
+  ok((await p.$$(".n-ozellik")).length === 6, "Nasıl kuruldu: altı mühendislik kartı ve şema");
+  ok(await tasmaYok(p), "Nasıl kuruldu sayfasında yatay taşma yok");
+  await p.screenshot({ path: `${EKRAN}/nasil_${ad}.png`, fullPage: true });
+  ok(hatalar.length === 0, "demo sayfalarında konsol hatası yok");
+  await ctx.close();
+  /* kurslardaki "← Platform" düğmesi: gerçek ayarlar.js ile (ağ katmanında değiştirmeden) */
+  const ctx2 = await tarayici.newContext({ viewport: { width: g, height: y } });
+  await ctx2.route(/fonts\.(googleapis|gstatic)\.com|github\.io/, (r) => r.abort());
+  const p2 = await ctx2.newPage();
+  for (const kurs of ["junior", "ortaokul"]) {
+    await p2.goto(ADRES + kurs + "/"); await p2.waitForSelector("#sra-platform-don");
+    ok(await p2.getAttribute("#sra-platform-don", "href") === "../", `${kurs}: "← Platform" düğmesi var`);
+  }
+  await p2.click("#sra-platform-don"); await p2.waitForSelector("body[data-hazir]");
+  ok(/\/$/.test(new URL(p2.url()).pathname) && !/ortaokul/.test(p2.url()), "düğme portala döndü");
+  await ctx2.close();
+}
+
 /* tasarım sistemi örnek sayfası */
 {
   const { ctx, p, hatalar } = await sayfaAc(1280, 860, {});

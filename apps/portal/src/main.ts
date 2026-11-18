@@ -6,6 +6,7 @@ import { karsilama } from "./ekranlar/karsilama";
 import { giris } from "./ekranlar/giris";
 import { panellerim, yakinda } from "./ekranlar/panellerim";
 import { rapor } from "./ekranlar/rapor";
+import { nasil } from "./ekranlar/nasil";
 
 const root = document.getElementById("app")!;
 let ilk = true;
@@ -17,10 +18,11 @@ async function yonlendir(): Promise<void> {
   if (h === "giris") giris(root);
   else if (h === "panellerim") await panellerim(root);
   else if (h.startsWith("yakinda/")) yakinda(root, h.slice(8));
+  else if (h === "nasil") nasil(root);
   else if (h.startsWith("rapor/")) await rapor(root, decodeURIComponent(h.slice(6)));
   else karsilama(root);
   if (h !== "kurslar") window.scrollTo({ top: 0 });
-  if (!h.startsWith("rapor/")) document.title = h === "giris" ? "Giriş · Sivas Robotik Akademi" : h === "panellerim" ? "Panellerim · Sivas Robotik Akademi" : "Sivas Robotik Akademi · Eğitim Platformu";
+  if (!h.startsWith("rapor/")) document.title = h === "giris" ? "Giriş · Sivas Robotik Akademi" : h === "panellerim" ? "Panellerim · Sivas Robotik Akademi" : h === "nasil" ? "Nasıl kuruldu? · Sivas Robotik Akademi" : "Sivas Robotik Akademi · Eğitim Platformu";
 }
 
 addEventListener("hashchange", () => { void yonlendir(); });

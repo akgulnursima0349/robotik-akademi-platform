@@ -73,6 +73,9 @@ export function karsilama(root: HTMLElement): void {
     el("span", "p-adim__no", {}, String(n + 1)), ikon(i, "p-adim__ikon"), el("h3", "", {}, b), el("p", "", {}, a))));
   nasil.append(liste);
 
-  ana.append(kahraman, kurslar, nasil);
+  const muhendislik = el("section", "p-nasil-bag sra-sarmal", {},
+    el("a", "p-nasil-kart sra-kart", { href: "#nasil", id: "p-nasil" }, ikon("kod", "p-adim__ikon"),
+      el("span", "", {}, el("b", "", {}, "Nasıl kuruldu?"), el("small", "", {}, "Mimari, testler, çocuk verisi ilkeleri ve internetsiz çalışma")), ikon("ok-sag")));
+  ana.append(kahraman, kurslar, nasil, muhendislik);
   root.replaceChildren(ustKisim(), ana, altBilgi());
 }

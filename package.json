@@ -7,6 +7,7 @@
     "dev": "npm run dev -w apps/portal",
     "derle": "node scripts/derle.mjs",
     "demo": "node scripts/derle.mjs && node scripts/sun.mjs",
+    "demo:deneme": "node scripts/derle.mjs --deneme && node scripts/sun.mjs",
     "sun": "node scripts/sun.mjs",
     "test": "vitest run",
     "tip": "tsc -p tsconfig.json",
