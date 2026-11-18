@@ -2,7 +2,7 @@
 
 İlkokuldan ortaokula kodlama, yapay zekâ ve robotik eğitimi için tek adresli bir platform.
 
-- **Blok Atölyesi** (1–3. sınıf) · sürükle-bırak bloklar, sesli yönergeler (planlanıyor)
+- **Blok Atölyesi** (1–3. sınıf) · büyük bloklar, sesli yönergeler, "Bunun Python'u"
 - **Python Atölyesi Junior** (4–6. sınıf) · [python-atolyesi-junior](https://github.com/akgulnursima0349/python-atolyesi-junior)
 - **Python Atölyesi** (ortaokul) · [python-atolyesi](https://github.com/akgulnursima0349/python-atolyesi)
 - **Robotik Laboratuvarı** · Kar Küreme görevleri ve Sınıf Robot Ligi (Python, tarayıcıda)
@@ -13,7 +13,7 @@ Geliştirme fazlar hâlinde ilerler; her fazın spec'i `docs/` klasöründedir.
 |---|---|---|
 | P1 | Portal, tek giriş, ortak tasarım sistemi | Yapıldı |
 | P2 | Robotik Laboratuvarı MVP | Yapıldı |
-| P3 | Blok Atölyesi MVP | Planlandı |
+| P3 | Blok Atölyesi MVP | Yapıldı |
 | P4 | Öğrenme analitiği | Planlandı |
 | P5 | Demo cilası | Planlandı |
 
@@ -34,6 +34,7 @@ npm run demo          # derler ve http://localhost:4173 adresinde açar
 
 ```
 apps/portal        karşılama, tek giriş, Panellerim (Vite + TypeScript)
+apps/blok          Blok Atölyesi: kendi blok düzenleyicisi, SVG bahçe, sesli yönerge
 apps/lab           Robotik Laboratuvarı: izometrik sahne (PixiJS/WebGL), kod editörü, lig
 packages/tasarim   ortak tasarım sistemi (örnekler: /ornekler.html)
 packages/bulut     oturum ve kurs yönlendirme (nesne yönelimli; Supabase ya da sahte sunucu)

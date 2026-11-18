@@ -45,7 +45,7 @@ for (const [ad, g, y] of BOYUTLAR) {
   const shot = (n) => p.screenshot({ path: `${EKRAN}/${ad}_${n}.png`, fullPage: true });
   await p.goto(ADRES); await hazir(p);
   ok((await p.$$(".sra-kurs")).length === 4, "dört kurs kartı");
-  ok((await p.$$("a.sra-kurs")).length === 3 && (await p.$$(".sra-kurs--yakinda")).length === 1, "üç açık kart (Junior, ortaokul, Lab), bir yakında");
+  ok((await p.$$("a.sra-kurs")).length === 4 && (await p.$$(".sra-kurs--yakinda")).length === 0, "dört kart da açık: Blok, Junior, ortaokul, Lab");
   ok(await p.isVisible("#p-giris"), "üst barda Giriş yap");
   ok(await tasmaYok(p), "yatay taşma yok");
   await p.waitForFunction(() => [...document.images].every((i) => i.complete && i.naturalWidth > 0));
@@ -91,10 +91,9 @@ for (const [ad, g, y] of BOYUTLAR) {
   await p.goto(ADRES + "#giris"); await hazir(p);
   await p.click("#g-ogrenci");
   await p.fill("#g-kod", "BLK789"); await p.fill("#g-ad", "Ada"); await p.fill("#g-pin", "1111"); await p.click("button[type=submit]");
-  await p.waitForSelector(".p-yakinda");
-  ok(/Blok Atölyesi hazırlanıyor/.test(await p.textContent(".p-yakinda h1")), "henüz açılmamış kursun öğrencisi 'hazırlanıyor' ekranına gitti");
-  await shot("3_yakinda");
-  await p.click("#p-cikis"); await p.waitForSelector("#p-giris");
+  await p.waitForURL(/\/blok\/$/);
+  ok(true, "ilkokul sınıfındaki öğrenci /blok/ adresine gitti");
+  await p.goto(ADRES); await hazir(p); await p.click("#p-cikis"); await p.waitForSelector("#p-giris");
 
   /* öğretmen girişi ve Panellerim */
   await p.goto(ADRES + "#giris"); await hazir(p);
@@ -135,7 +134,7 @@ for (const [ad, g, y] of BOYUTLAR) {
   const y2 = await sayfaAc(g, y, {});
   await y2.p.goto(ADRES); await hazir(y2.p);
   ok(!(await y2.p.isVisible("#p-giris")), "hesapsız modda Giriş yap düğmesi yok");
-  ok((await y2.p.$$("a.sra-kurs")).length === 3, "hesapsız modda kartlar doğrudan kursa gidiyor");
+  ok((await y2.p.$$("a.sra-kurs")).length === 4, "hesapsız modda kartlar doğrudan kursa gidiyor");
   await y2.p.goto(ADRES + "#giris"); await hazir(y2.p);
   ok(/hesapsız/.test(await y2.p.textContent(".p-giris__kutu")), "hesapsız modda giriş ekranı açıklama gösteriyor");
   ok(y2.hatalar.length === 0, "hesapsız modda konsol hatası yok");
@@ -227,6 +226,59 @@ for (const [ad, g, y] of BOYUTLAR) {
     ok(hatalar.length === 0, "Laboratuvar işlev testlerinde konsol hatası yok" + (hatalar.length ? ": " + hatalar.slice(0, 2).join(" | ") : ""));
     await ctx.close();
   }
+}
+
+/* ---------------- Blok Atölyesi ---------------- */
+for (const [ad, g, y] of BOYUTLAR) {
+  console.log(`\nblok · ${ad}`);
+  const { ctx, p, hatalar } = await sayfaAc(g, y, { deneme: true }, true);
+  const shot = (n) => p.screenshot({ path: `${EKRAN}/blok_${ad}_${n}.png`, fullPage: true });
+  await p.goto(ADRES); await hazir(p);
+  await p.click('a.sra-kurs[data-kurs="ilkokul"]'); await p.waitForURL(/\/blok\/$/); await hazir(p);
+  ok((await p.$$(".bk-dunya")).length === 3 && (await p.$$("a.bk-durak")).length === 1, "Blok: 3 dünya, ilk bölüm açık");
+  ok(await tasmaYok(p), "Blok haritasında taşma yok");
+  await shot("1_harita");
+  await p.click('[data-bolum="1-1"]'); await p.waitForSelector(".bahce");
+  await p.click("#bk-baslat");
+  ok(true, "boş programla başlatınca uyarı (çökme yok)");
+  await p.click('.bk-palet [data-tur="ileri"]');
+  ok((await p.$$(".bk-alan .bk-programda")).length === 1, "palete dokununca blok eklendi");
+  await p.click("#bk-baslat"); await p.waitForSelector(".bk-sonuc");
+  ok(!(await p.isVisible(".bk-sonuc.basarili")), "eksik programla havuç kaldı");
+  await p.click('.bk-palet [data-tur="ileri"]');
+  await p.click("#bk-python");
+  ok((await p.textContent(".bk-python")).trim() === "ileri()\nileri()", "Bunun Python'u doğru");
+  await p.click("#bk-baslat"); await p.waitForSelector(".bk-sonuc.basarili");
+  ok((await p.$$(".bk-sonuc .bk-yildizlar i.dolu")).length === 3, "1-1: 3 yıldız");
+  await shot("2_bolum");
+  /* tekrar bloğu: 2-1 (altı havuç) */
+  await p.evaluate(() => localStorage.setItem("sra-blok-v1", JSON.stringify({ yildiz: { "1-1": 3, "1-2": 3, "1-3": 3, "1-4": 3 }, program: {} })));
+  await p.goto(ADRES + "blok/?y#b/2-1"); await p.waitForSelector(".bahce");
+  await p.click('.bk-palet [data-tur="tekrar"]');
+  await p.click('.bk-palet [data-tur="ileri"]');
+  ok((await p.$$(".bk-tekrar .bk-ic .bk-programda")).length === 1, "tekrar bloğunun içine eklendi");
+  for (let i = 0; i < 4; i++) await p.click('.bk-tekrar .bk-arti[aria-label="Bir artır"]');
+  ok((await p.textContent(".bk-tekrar .bk-sayi")) === "6", "tekrar sayısı 6 yapıldı");
+  await p.click("#bk-python");
+  ok((await p.textContent(".bk-python")).includes("for i in range(6):\n    ileri()"), "tekrar Python'da for döngüsü");
+  await p.click("#bk-baslat"); await p.waitForSelector(".bk-sonuc.basarili");
+  ok((await p.$$(".bk-sonuc .bk-yildizlar i.dolu")).length === 3, "2-1: tekrarla 3 yıldız");
+  await shot("3_tekrar");
+  /* sil */
+  await p.click('.bk-tekrar .bk-ic .bk-sil');
+  ok((await p.$$(".bk-tekrar .bk-ic .bk-programda")).length === 0, "blok silindi");
+  /* sürükle-bırak: paletten programın en başına */
+  await p.click("#bk-temizle");
+  await p.click('.bk-palet [data-tur="sag"]');
+  const kaynak = await p.locator('.bk-palet [data-tur="ileri"]').boundingBox();
+  const hedef = await p.locator(".bk-alan .bk-programda").first().boundingBox();
+  await p.mouse.move(kaynak.x + 20, kaynak.y + 20); await p.mouse.down();
+  await p.mouse.move(hedef.x + 30, hedef.y + 4, { steps: 8 }); await p.mouse.up();
+  ok((await p.$$eval(".bk-alan .bk-programda", (e) => e.map((x) => x.getAttribute("aria-label")))).join(",") === "ileri git,sağa dön", "sürükleyerek araya blok bırakıldı");
+  ok(await p.evaluate(() => speechSynthesis.getVoices().some((v) => v.lang.startsWith("tr"))) || await p.isHidden(".bk-ses"), "Türkçe ses yokken ses düğmesi gizli");
+  ok(await tasmaYok(p), "bölüm ekranında taşma yok");
+  ok(hatalar.length === 0, "Blok konsol hatası yok" + (hatalar.length ? ": " + hatalar.slice(0, 2).join(" | ") : ""));
+  await ctx.close();
 }
 
 /* tasarım sistemi örnek sayfası */

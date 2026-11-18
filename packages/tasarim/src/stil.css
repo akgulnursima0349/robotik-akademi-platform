@@ -166,5 +166,5 @@ a.sra-kurs:hover .sra-kurs__ok { background: var(--renk); color: #fff }
   .sra-marka { font-size: 15px; gap: var(--sra-bosluk-2) }
   .sra-marka img { width: 34px; height: 34px }
   .sra-ustbar:has(.sra-ustbar__sag > :nth-child(2)) .sra-marka > span { display: none } /* oturum açıkken telefonda yalnızca logo */
-  .sra-ustbar__sag .sra-dugme--hayalet .sra-dugme__yazi { display: none }
+  .sra-ustbar__sag .sra-dugme--hayalet:has(.sra-ikon) .sra-dugme__yazi { display: none }
 }

@@ -15,9 +15,9 @@ describe("öğrenci girişi ve kursa yönlendirme", () => {
     const { o } = yeni();
     expect((await o.ogrenciGiris("ORT456", "mert", "5678")).hedef()).toBe("ortaokul/");
   });
-  it("henüz yayında olmayan kurs 'yakında' ekranına gider", async () => {
+  it("ilkokul sınıfı Blok Atölyesi'ne gider", async () => {
     const { o } = yeni();
-    expect((await o.ogrenciGiris("BLK789", "Ada", "1111")).hedef()).toBe("#yakinda/ilkokul");
+    expect((await o.ogrenciGiris("BLK789", "Ada", "1111")).hedef()).toBe("blok/");
   });
   it("yanlış PIN sade bir mesajla reddedilir", async () => {
     const { o } = yeni();
@@ -128,7 +128,7 @@ describe("katalog ve mod", () => {
     expect(panelYolu("junior", "s1")).toBe("junior/#panel/s1");
     expect(panelYolu("ortaokul")).toBe("ortaokul/");
     expect(panelYolu("ilkokul")).toBeNull();
-    expect(KURSLAR.ilkokul.yol).toBeNull();
+    expect(KURSLAR.ilkokul.yol).toBe("blok/");
   });
   it("ayar dosyasından mod", () => {
     expect(modBul(undefined)).toBe("yerel");
