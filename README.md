@@ -20,7 +20,7 @@ Geliştirme fazlar hâlinde ilerler; her fazın spec'i `docs/` klasöründedir.
 | P6b | SiroLine Ayar Atölyesi ve 3D kurulum rehberi | Yapıldı |
 | P6c | Kenshin Mini Sumo Ligi (3D) | Yapıldı, Nur'un onayında |
 | P6d | Kar Küreme 3D | Yapıldı, Nur'un onayında |
-| P6e | RizBot labirent | Sırada |
+| P6e | RizBot labirent | Spec taslağı, Nur'un onayında |
 
 ## Çalıştırma
 

@@ -93,6 +93,13 @@ def hamle(robot):
 - **Hazır rakiplerle turnuva:** 6 robot, 15 maç, Python ile tarayıcıda yaklaşık 3,5 saniye sürüyor ("Maçlar oynanıyor…" yazısı görünüyor).
 - **Eski kod:** Eski kar topu ligi kodu (yazı döndüren `hamle`) editöre yüklenmiyor; yerine başlangıç kodu geliyor.
 - **Görsel:** Kıvılcım ve kamera sarsıntısı yalnızca görsel; simülasyonu etkilemiyor. Hareketi azalt açıksa kapalı.
-- **Kenshin modeli:** fotoğraflardan; ölçü 10 × 10 cm.
-  - Bayrak mekanizması (mor kutu) ve iç yerleşim yaklaşık.
-  - Sınıfta Kenshin varsa kumpasla ölçüm ve fotoğraf istenecek.
+- **Kenshin modeli:** ilk sürüm ürün fotoğraflarından. 23 Kasım'da sınıftaki robotun fotoğrafları ve kumpas ölçüleriyle yeniden yapıldı.
+  - **Ölçüler:** boy 98,4 mm (tekerlek arkası → bıçak ucu), bıçak eni 100,0 mm, bayrak boyu 149,4 mm.
+  - **Gövde:** yanlar açık (yan plaka yok); alt plaka ve yeşil ana kart.
+  - **Tekerler:** arkada iki geniş lastik teker, alüminyum göbekli.
+  - **İç yerleşim:** ortada dik duran mikro servo; servo ile bıçak arasında yatay 2S LiPo; sağda kızılötesi başlatma modülü; iki yanda yan rakip sensörü.
+  - **Bıçak:** bükülmüş çelik; üç sensör penceresi ve aralarında dört vida; üst kenarda iki çentik, köşelerde geriye bükük kanat; alt kenarda parlak şerit ve kapton bant.
+  - **Bayraklar:** servonun döndürdüğü iki siyah kolun ucunda beyaz levha. Maç başlamadan dik (yukarıda) durur, başlama işaretiyle ≈0,3 sn'de yana açılır.
+    - Gerçekte levhanın ortasında kolun gölgesi gri bir şerit olarak görünür; sahnede bu şerit takım renginde (kırmızı/mavi), iki robot ayırt edilsin diye.
+  - Marka yazıları (servo, pil) çizilmez.
+  - Kumpasla ölçülen 21,4 mm'nin neyin ölçüsü olduğu Nur'a soruldu.

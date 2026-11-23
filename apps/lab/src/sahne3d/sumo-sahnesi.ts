@@ -58,7 +58,7 @@ export class SumoSahnesi {
     this.studyo.golgeyiTasi(new THREE.Vector3(0, 0, 0));
     this.genelBakis();
     /* maç başlamadan: karşı karşıya başlangıç dizilişi */
-    baslangic("karsi", 0).forEach(([x, y, yon], i) => { const m = this.robotlar[i].kok; m.position.set(x / 1000, RING_YUK, -y / 1000); m.rotation.set(0, yon, 0); });
+    baslangic("karsi", 0).forEach(([x, y, yon], i) => { const m = this.robotlar[i].kok; m.position.set(x / 1000, RING_YUK, -y / 1000); m.rotation.set(0, yon, 0); this.robotlar[i].bayraklar(0); });
     this.studyo.guncelle = (dt) => this.kare(dt);
   }
 
@@ -74,6 +74,8 @@ export class SumoSahnesi {
       m.position.set(r.x / 1000, y, -r.y / 1000);
       m.rotation.set(0, r.yon, 0); m.rotateX(egim * (i ? -1 : 1));
       this.robotlar[i].tekerleriDondur(r.solYol, r.sagYol);
+      /* başlama işaretiyle servo bayrakları yukarıdan yana açar (≈0,3 sn) */
+      this.robotlar[i].bayraklar(k.t / 0.3);
     });
   }
 
