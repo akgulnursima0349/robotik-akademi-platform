@@ -1,7 +1,7 @@
 /* Çizgi izleyen sahnesi: halı, SiroLine, tur oynatma ve kamera kipleri.
    Simülasyon önceden koşturulur (deterministik); sahne kareleri zamana göre ara değerleyerek oynatır. */
 import * as THREE from "three";
-import type { CizgiKaresi, CizgiSonucu, Pist } from "@sra/robot-motoru";
+import { DONGU_ARALIGI, type CizgiKaresi, type CizgiSonucu, type Pist } from "@sra/robot-motoru";
 import { Studyo, type Kalite } from "./studyo";
 import { siroline, type SiroLineModeli } from "./siroline";
 import { HALI_KALINLIK, pistHalisi } from "./pist";
@@ -21,6 +21,10 @@ export class CizgiSahnesi {
   private pist?: Pist;
   private oynatma: { kareler: CizgiKaresi[]; t: number; bitir: (tamam: boolean) => void } | null = null;
   private kamHedef = new THREE.Vector3();
+  /** Yarış başlangıcı: robotun önüne konan blok; kaldırılınca engel sensörü yolu boş görür ve robot kalkar */
+  private blok: THREE.Mesh;
+  private blokKalkis = -1;
+  baslangicBlogu = false;
   private kamKonum = new THREE.Vector3();
 
   constructor(kap: HTMLElement, kalite?: Kalite) {
@@ -29,6 +33,22 @@ export class CizgiSahnesi {
     this.studyo.sahne.add(this.robot.kok);
     this.studyo.guncelle = (dt) => this.kare(dt);
     this.studyo.kontrol.autoRotateSpeed = 0.7;
+    const bd = document.createElement("canvas"); bd.width = bd.height = 128;
+    const c = bd.getContext("2d")!; c.fillStyle = "#d9b98c"; c.fillRect(0, 0, 128, 128);
+    for (let i = 0; i < 14; i++) { c.strokeStyle = `rgba(120,80,40,${0.12 + (i % 3) * 0.05})`; c.lineWidth = 2; c.beginPath(); c.moveTo(0, i * 9 + 4); c.bezierCurveTo(40, i * 9 + 8, 90, i * 9, 128, i * 9 + 5); c.stroke(); }
+    const dk = new THREE.CanvasTexture(bd); dk.colorSpace = THREE.SRGBColorSpace;
+    this.blok = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.05, 0.08), new THREE.MeshStandardMaterial({ map: dk, roughness: 0.8 }));
+    this.blok.castShadow = true; this.blok.visible = false;
+    this.studyo.sahne.add(this.blok);
+  }
+
+  /** Bloğu robotun önüne koyar (robotun başlangıç konumuna göre) */
+  private blokKoy() {
+    const r = this.robot.kok, yon = r.rotation.y;
+    const ileri = new THREE.Vector3(Math.cos(yon), 0, -Math.sin(yon));
+    this.blok.position.copy(r.position).addScaledVector(ileri, 0.19).setY(HALI_KALINLIK + 0.025);
+    this.blok.rotation.y = yon;
+    this.blok.visible = this.baslangicBlogu; this.blokKalkis = -1;
   }
 
   /** Pisti kurar, robotu başlangıca koyar, kamerayı tanıtım dönüşüne alır. */
@@ -46,6 +66,7 @@ export class CizgiSahnesi {
     const b = this.pist.baslangic();
     this.konumla({ t: 0, x: b.x, y: b.y, yon: b.yon, sol: 0, sag: 0, sensor: [0, 0, 0, 900, 900, 0, 0, 0], solTeker: 0, sagTeker: 0, ilerleme: 0, sapma: 0 });
     this.hali?.izSil();
+    this.blokKoy();
     this.tanitim();
   }
 
@@ -77,12 +98,15 @@ export class CizgiSahnesi {
     if (this.kip === "takip") this.takipKamerasi(1);
     /* hareketi azalt açıksa tur oynatılmaz: iz bütün olarak çizilir, robot son konumda durur */
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      this.blok.visible = false;
       for (const k of s.kareler) this.hali?.iz(k.x, k.y);
       const son = s.kareler[s.kareler.length - 1];
       this.konumla(son); this.kareDinle(son);
       if (this.kip === "takip") this.takipKamerasi(1);
       return Promise.resolve(true);
     }
+    this.blokKoy();
+    this.blokKalkis = s.baslangic > 0 ? s.baslangic : -1;
     return new Promise((bitir) => { this.oynatma = { kareler: s.kareler, t: 0, bitir }; });
   }
 
@@ -93,10 +117,15 @@ export class CizgiSahnesi {
     const o = this.oynatma;
     if (o) {
       o.t += dt * this.hiz;
+      /* blok kaldırılır: yukarı ve geriye doğru, 0,35 sn */
+      if (this.blokKalkis >= 0 && this.blok.visible) {
+        const f = (o.t - this.blokKalkis) / 0.35;
+        if (f >= 0) { this.blok.position.y = HALI_KALINLIK + 0.025 + Math.min(1, f) * 0.14; this.blok.rotation.z = Math.min(1, f) * 0.5; if (f >= 1) this.blok.visible = false; }
+      }
       const son = o.kareler[o.kareler.length - 1];
-      const i = Math.min(o.kareler.length - 1, Math.floor(o.t / 0.02));
+      const i = Math.min(o.kareler.length - 1, Math.floor(o.t / DONGU_ARALIGI));
       const a = o.kareler[i], b = o.kareler[Math.min(o.kareler.length - 1, i + 1)];
-      const f = Math.max(0, Math.min(1, (o.t - a.t) / 0.02));
+      const f = Math.max(0, Math.min(1, (o.t - a.t) / DONGU_ARALIGI));
       const k: CizgiKaresi = { ...a, x: yumusak(a.x, b.x, f), y: yumusak(a.y, b.y, f), yon: yumusak(a.yon, b.yon, f), solTeker: yumusak(a.solTeker, b.solTeker, f), sagTeker: yumusak(a.sagTeker, b.sagTeker, f) };
       this.konumla(k);
       this.hali?.iz(k.x, k.y);

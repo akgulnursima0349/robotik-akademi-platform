@@ -26,7 +26,7 @@ def dongu():
         print("onuncu", sure())
     motorlar(0, 0)
 `);
-    expect(r.cikti).toEqual(["hazır", "onuncu 180"]);
+    expect(r.cikti).toEqual(["hazır", "onuncu 90"]);
     expect(r.sonuc!.durum).toBe("sure");
   });
   it("dongu yoksa Türkçe anlatılır", () => {

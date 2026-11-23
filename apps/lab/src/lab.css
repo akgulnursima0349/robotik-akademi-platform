@@ -247,3 +247,4 @@ a.l-gorev:hover { transform: translateY(-2px); box-shadow: var(--sra-golge-ust);
 .l3-tamam { font: 600 12px var(--sra-yazi); color: #1d7a55; display: inline-flex; gap: 4px; align-items: center }
 .l3-baslik2 { margin: 0 0 10px; font-size: var(--sra-yazi-l) }
 .l3-blok__not { font-weight: 500; font-size: 12px; opacity: .85 }
+.l3-blok--kontrol { background: #f2a51c }

@@ -311,7 +311,7 @@ function qtr(): THREE.Group {
   return golgeli(g);
 }
 
-/** Boyun ucundaki dikey modül: 4 pinli başlıkta küçük siyah kart, şeffaf 5 mm LED (görevi Nur'a soruldu) */
+/** Boyun ucundaki engel sensörü: başlangıçta önüne blok konur, kaldırılınca robot kalkar (kitte "Mz80" bloğu, D4) */
 function onModul(): THREE.Group {
   const g = new THREE.Group();
   g.add(kutu(2.6, 7, 10.2, M.plastikSiyah, 0, 3.5, 0));

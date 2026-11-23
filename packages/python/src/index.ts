@@ -203,7 +203,7 @@ export function pythonBeyin(kod: string): BeyinSonucu {
 export const DONGU_ADIM_SINIRI = 4000;
 export interface CizgiCalismaSonucu { sonuc: CizgiSonucu | null; hata: PyHata | null; cikti: string[] }
 
-/** Çocuğun kodunu bir kez çalıştırır, sonra turu 20 ms'lik dongu() çağrılarıyla koşturur. */
+/** Çocuğun kodunu bir kez çalıştırır, sonra turu 10 ms'lik dongu() çağrılarıyla koşturur. */
 export function cizgiCalistir(g: CizgiGorevi, kod: string, tohum = 7): CizgiCalismaSonucu {
   const pist = new Pist(g.pist);
   let okuma: CizgiOkuma = { sensorler: new Array(8).fill(0), konum: 0, sure: 0 };
@@ -229,7 +229,7 @@ export function cizgiCalistir(g: CizgiGorevi, kod: string, tohum = 7): CizgiCali
   try { modul = surdur(c, sk.importMainWithBody("<lab>", false, kod, true)); }
   catch (e) { bitir(); return { sonuc: null, hata: hataCevir(e, c.aktifSatir, kod), cikti }; }
   const dongu = modul?.$d?.dongu, kurulum = modul?.$d?.kurulum;
-  if (!dongu) { bitir(); return { sonuc: null, hata: { satir: 1, tur: "Atölye", mesaj: "<code>def dongu():</code> fonksiyonunu bulamadım. SiroLine her 20 milisaniyede bu fonksiyonu çalıştırır." }, cikti }; }
+  if (!dongu) { bitir(); return { sonuc: null, hata: { satir: 1, tur: "Atölye", mesaj: "<code>def dongu():</code> fonksiyonunu bulamadım. SiroLine her 10 milisaniyede bu fonksiyonu çalıştırır." }, cikti }; }
   let pyHata: PyHata | null = null;
   const cagir = (fn: any) => {
     c.adim = 0; c.sinir = DONGU_ADIM_SINIRI;

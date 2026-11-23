@@ -73,19 +73,25 @@ describe("Çizgi izleyen motoru", () => {
     const r = turKos(oval, () => { throw new Error("3. satır: hata"); }, 10);
     expect(r.durum).toBe("hata"); expect(r.hata).toMatch(/3\. satır/);
   });
-  it("kareler 20 ms aralıklı, ilerleme 0'dan 1'e artar", () => {
+  it("kareler 10 ms aralıklı, ilerleme 0'dan 1'e artar", () => {
     const r = turKos(oval, pd(2, 0, 200), 30);
-    expect(r.kareler[1].t - r.kareler[0].t).toBeCloseTo(0.02);
+    expect(r.kareler[1].t - r.kareler[0].t).toBeCloseTo(0.01);
     expect(r.kareler[0].ilerleme).toBe(0);
     expect(r.kareler.at(-1)!.ilerleme).toBe(1);
   });
-  it("PD, aynı hızda yalnız P'den daha hızlı tur atar (yarış pisti)", () => {
-    const p = new Pist(CIZGI_GOREVLERI[2].pist);
-    const P = turKos(p, pd(2, 0, 255), 60), PD = turKos(p, pd(2.5, 8, 255), 60);
+  it("yarış pistinde hızlı robotta yalnız P virajda kaçar; PD daha hızlı gider ve 3 yıldız alır", () => {
+    const p = new Pist(CIZGI_GOREVLERI[2].pist), g = CIZGI_GOREVLERI[2];
+    expect(turKos(p, pd(1.2, 0, 140), 30).durum).toBe("cikti");
+    const P = turKos(p, pd(1, 0, 120), 30), PD = turKos(p, pd(1, 8, 160), 30);
     expect(P.durum).toBe("bitti"); expect(PD.durum).toBe("bitti");
-    expect(PD.sure).toBeLessThan(P.sure);
-    const g = CIZGI_GOREVLERI[2];
+    expect(PD.sure).toBeLessThan(P.sure); expect(PD.ortSapma).toBeLessThan(P.ortSapma);
     expect(cizgiYildiz(g, P)).toBe(2); expect(cizgiYildiz(g, PD)).toBe(3);
+  });
+  it("başlangıç bloğu: robot blok kalkana kadar bekler, süre bloğun kalktığı andan ölçülür", () => {
+    const a = turKos(oval, pd(1, 3, 120), 30), b = turKos(oval, pd(1, 3, 120), 30, 7, 0.5);
+    expect(b.baslangic).toBe(0.5);
+    expect(b.kareler.filter((k) => k.t < 0.5).every((k) => k.x === b.kareler[0].x && k.sol === 0)).toBe(true);
+    expect(b.sure).toBeCloseTo(a.sure, 1);
   });
   it("çizgi genişliği yarışma bandı kadar; teker ve iz genişliği sınıftaki robottan", () => { expect(CIZGI_GENISLIGI).toBe(19); expect(SIROLINE.tekerCap).toBe(36); expect(SIROLINE.izGenisligi).toBe(125); });
   it("işaretli uzaklık: çizginin solu artı, sağı eksi", () => {
@@ -94,7 +100,7 @@ describe("Çizgi izleyen motoru", () => {
     expect(oval.isaretliUzaklik(300, -30)).toBeCloseTo(-30, 0);
   });
   it("sapma her karede ölçülür; ortalama sapma sonuçta", () => {
-    const r = turKos(oval, pd(2, 0, 200), 30);
+    const r = turKos(oval, pd(1, 3, 120), 30);
     expect(r.kareler.every((k) => Math.abs(k.sapma) <= 250)).toBe(true);
     expect(r.ortSapma).toBeGreaterThan(0); expect(r.ortSapma).toBeLessThan(15);
   });

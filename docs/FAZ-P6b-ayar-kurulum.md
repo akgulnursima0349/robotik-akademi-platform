@@ -113,4 +113,19 @@ Görev listesinin üstünde iki yeni kart olur: "3D Kurulum Rehberi" ve "Ayar At
   - Ayar Atölyesi artık siyah zeminli, beyaz bantlı pistte çalışıyor.
   - Python görevleri beyaz halı, siyah bant olarak kaldı.
 - **Kurulum rehberi:** 9 adım, üç soru. Adımlar: ana kart, QTR-8A, motorlar, tekerlekler, sürücüler, Nano, pil, kablolar, hazır.
-- **Nur'a sorulanlar:** boyun ucundaki dikey kartın görevi ve neden iki sürücü olduğu. Rehberde açıklanmadı.
+
+## Ürün sayfası ve Nur'un cevaplarıyla düzeltme (23 Kasım, akşam)
+
+- **Engel sensörü:** Boyun ucundaki kart bir engel sensörü (Nur). Yarış öncesi robotun önüne blok konur, blok kaldırılınca robot kalkar.
+  - Kitteki karşılığı "Mz80 = 0 olana kadar bekle" bloğu.
+  - Ayar Atölyesi'nde blok sahnede görünüyor ve 0,6 sn sonra kalkıyor; süre bloğun kalktığı andan ölçülüyor.
+  - Kurulum rehberine adım olarak eklendi; rehber 10 adım, 4 soru.
+- **İki motor sürücü:** ürün sayfasına göre "motorların daha güçlü ve dengeli kontrol edilmesine yardımcı olur". Rehberde bu cümleyle anlatıldı.
+- **Motorlar:** "Speed TT Full Metal Dişli Yarış Motoru, 2000–2500 devir/dk" (ürün sayfası). Simülasyon buna göre güncellendi:
+  - azami hız ≈ 3,8 m/sn;
+  - motor gecikmesi 0,07 sn;
+  - döngü 10 ms (önceden 20 ms).
+  - Python görevlerinin başlangıç kodları, örnek çözümleri ve yıldız süreleri yeniden ölçüldü.
+  - Hızlı robotta yalnız P ile yarış pistinde kaçılıyor; PD 3 yıldız alıyor.
+- **Pil:** Tattu 300 mAh 2S, 7,6 V (ürün sayfası).
+- **Kitin örnek değerleri:** (taban 100, Kp 0.04, Kd 0.7, Zemin Siyah) yeni hızda da üç pisti ortalama 4–5 mm sapmayla bitiriyor.

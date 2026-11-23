@@ -60,12 +60,13 @@ export function sahneBolumu(etiket: string) {
     ilerlemePano.style.width = k.ilerleme * 100 + "%";
   };
 
-  async function kur(pist: Pist): Promise<CizgiSahnesi | null> {
+  async function kur(pist: Pist, baslangicBlogu = false): Promise<CizgiSahnesi | null> {
     const m = await sahneModulu();
     if (!m) { sahneKutu.replaceChildren(webglYok()); return null; }
     if (!sahneKutu.isConnected) return null;
     sahne = new m.CizgiSahnesi(sahneKutu);
     sahne.tanitimMesafesi = 0.85;
+    sahne.baslangicBlogu = baslangicBlogu;
     sahne.yukle(pist);
     sahne.kareDinle = panelGoster;
     window.addEventListener("hashchange", () => sahne?.kapat(), { once: true });

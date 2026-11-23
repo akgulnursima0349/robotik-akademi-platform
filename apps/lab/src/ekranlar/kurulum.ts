@@ -1,4 +1,4 @@
-/* SiroLine (Full PCB) 3D kurulum rehberi: 9 adım, her adımda parça yerine iner; üç adımda kısa soru.
+/* SiroLine (Full PCB) 3D kurulum rehberi: 10 adım, her adımda parça yerine iner; dört adımda kısa soru.
    Montaj sırası genel bir çizgi izleyen kurulumudur; akademinin kılavuzuyla karşılaştırılacak (docs/FAZ-P6b). */
 import { dugme, el, ikon } from "@sra/tasarim";
 import type { ParcaAdi } from "../sahne3d/siroline";
@@ -19,25 +19,29 @@ export const ADIMLAR: Adim[] = [
     soru: { soru: "Sensör siyah bandın tam üstündeyken ne okur?", siklar: ["0'a yakın", "Hep 500", "1000'e yakın"], dogru: 2,
       aciklama: "Siyah ışığı yutar, geri az ışık döner; kart bunu büyük bir sayı olarak verir." } },
   { baslik: "Redüktörlü motorlar", parca: "motor", kamera: { hedef: [25, 15, 0], kamera: [170, 140, 210] },
-    metin: "Mavi kutuların içinde dişliler var. Gümüş renkli küçük motor çok hızlı ama güçsüz döner; dişliler hızı düşürüp gücü artırır. Buna redüktör denir. Beyaz kelepçeler motorları karta iki vidayla sabitler.",
-    bilgi: "TT motorun dişlileri hızı yaklaşık 48'de 1'e indirir.",
+    metin: "Mavi kutuların içinde metal dişliler var. Gümüş renkli küçük motor çok hızlı ama güçsüz döner; dişliler hızı düşürüp gücü artırır. Buna redüktör denir. Beyaz motor tutucular motorları karta iki vidayla sabitler.",
+    bilgi: "SiroLine'daki \"Speed TT\" yarış motorunun dişlileri hızı az düşürür: tekerlek dakikada 2000–2500 tur atar. Sıradan TT motorlar bunun onda biri kadar döner.",
     soru: { soru: "Motorun içindeki dişliler ne işe yarar?", siklar: ["Motoru soğutur", "Hızı düşürüp gücü artırır", "Pili şarj eder"], dogru: 1,
       aciklama: "Bisikletteki vites gibi: hafif viteste pedal kolay döner ama yavaş gidersin." } },
   { baslik: "Tekerlekler", parca: "teker", kamera: { hedef: [0, 18, 50], kamera: [120, 80, 230] },
-    metin: "Kırmızı jantlı tekerlekler motorun miline geçer. 36 mm çaplı bir tekerlek bir turda yaklaşık 11,3 cm yol alır (çap × π). Siyah köpük lastik pisti iyi tutar.",
+    metin: "Kırmızı jantlı tekerlekler motorun miline geçer. 36 mm çaplı bir tekerlek bir turda yaklaşık 11,3 cm yol alır (çap × π). Dakikada 2000 turla bu, saniyede 3,8 metre eder! Siyah köpük lastik pisti iyi tutar.",
     bilgi: "Sınıftaki robot kumpasla ölçüldü: teker çapı 36,1 mm, iki tekerleğin arası 99,2 mm." },
   { baslik: "Motor sürücüler", parca: "surucu", kamera: { hedef: [50, 18, 0], kamera: [160, 140, 120] },
-    metin: "İki kırmızı TB6612FNG kartı motorlara güç verir. Nano kararı verir ama motorları kendisi çeviremez; sürücü, Nano'nun küçük komutunu pilden aldığı güçle motora iletir.",
+    metin: "Nano kararı verir ama motorları kendisi çeviremez; motor sürücü, Nano'nun küçük komutunu pilden aldığı güçle motora iletir. SiroLine'da iki TB6612FNG sürücü var: çift sürücü, hızlı motorların daha güçlü ve dengeli kontrol edilmesine yardım eder. Sıradan kitlerde tek sürücü olur.",
     soru: { soru: "Motorları neden doğrudan Nano'ya bağlamıyoruz?", siklar: ["Motorlar Nano'nun verebileceğinden çok daha fazla akım ister", "Kablolar kısa kalır", "Nano Python bilmez"], dogru: 0,
       aciklama: "Nano'nun bir pini çok küçük bir akım verebilir; motor ise bunun onlarca katını ister. Sürücü aradaki güç köprüsüdür." } },
   { baslik: "Arduino Nano", parca: "nano", kamera: { hedef: [71, 20, 0], kamera: [170, 130, 90] },
     metin: "Robotun beyni. Sensörleri okur, Kp ve Kd ile hesabı yapar, motorlara ne kadar güç verileceğine karar verir. Dişi başlıklara takılır; bozulursa lehim gerekmeden değiştirilir. Bilgisayardan USB ile programlanır." },
   { baslik: "LiPo pil", parca: "pil", kamera: { hedef: [13, 12, 0], kamera: [-160, 140, 120] },
-    metin: "İki hücreli LiPo pil: 3,7 + 3,7 = 7,4 volt. Kablo bağıyla karta tutturulur, sarı XT30 soketiyle bağlanır.",
+    metin: "300 mAh, iki hücreli (2S) LiPo pil; dolu iken yaklaşık 7,6 volt. Küçük ve hafiftir; kablo bağıyla karta tutturulur, sarı XT30 soketiyle bağlanır.",
     bilgi: "Pil zayıfladıkça motorlar yavaşlar. Aynı Kp değeri dolu pille ve yarım pille farklı davranabilir." },
   { baslik: "Kablolar", parca: "kablo", kamera: { hedef: [40, 15, 0], kamera: [190, 170, 170] },
     metin: "Burada az kablo var: motorların kırmızı-siyah telleri beyaz soketlere, pil kablosu güç girişine. Sensörden Nano'ya giden sekiz sinyal ise kablo değil, kartın içindeki bakır yollardan A0–A7 girişlerine gider." },
-  { baslik: "SiroLine hazır", parca: "modul", kamera: { hedef: [80, 10, 0], kamera: [330, 200, 280] },
+  { baslik: "Engel sensörü: yarışı başlatan göz", parca: "modul", kamera: { hedef: [124, 14, 0], kamera: [230, 90, 110] },
+    metin: "Boynun ucundaki küçük kart bir engel sensörü. Yarış başlamadan robotun önüne bir blok konur; sensör önünü kapalı gördükçe robot bekler. Blok kaldırılınca yol açılır ve robot kendiliğinden kalkar. Kitteki \"Mz80 = 0 olana kadar bekle\" bloğu bunu yapar.",
+    soru: { soru: "Robot yarışa ne zaman başlar?", siklar: ["Pil takılır takılmaz", "Önündeki blok kaldırılınca", "Çizgiyi gördüğü an"], dogru: 1,
+      aciklama: "Böylece bütün robotlar aynı anda, hakemin işaretiyle başlar; kimse düğmeye basmakla zaman kaybetmez." } },
+  { baslik: "SiroLine hazır", parca: null, kamera: { hedef: [80, 10, 0], kamera: [330, 200, 280] },
     metin: "Robot kuruldu. Şimdi onu pistte dene: ister Python'la kendi programını yaz, ister kitin bloklarıyla Ayar Atölyesi'nde Kp ve Kd'yi ayarla." }
 ];
 const SIRA: ParcaAdi[] = ADIMLAR.flatMap((a) => (a.parca ? [a.parca] : []));

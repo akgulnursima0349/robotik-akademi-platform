@@ -10,14 +10,15 @@ export const SIROLINE = {
   sensorOnde: 154,    // QTR-8A dizisinin aks merkezinden uzaklığı (mm)
   sensorAralik: 9.525, // QTR-8A: komşu sensörler arası 0,375 inç (mm)
   sensorSayisi: 8,
-  azamiHiz: 600,      // 255 PWM'de tekerlek hızı (mm/sn); 7,4 V'ta TT motor ≈ 300 devir/dk
-  oluBolge: 35,       // bu PWM'in altında redüktörlü motor dönmez
-  gecikme: 0.14       // motor ve gövde tepki süresi sabiti (sn)
+  motorDevir: 2000,   // "Speed TT" metal dişli yarış motoru: 2000–2500 devir/dk (ürün sayfası); yükte alt sınır
+  azamiHiz: 2000 / 60 * Math.PI * 36, // 255 PWM'de tekerlek hızı ≈ 3770 mm/sn
+  oluBolge: 25,       // bu PWM'in altında motor dönmez
+  gecikme: 0.07       // motor ve gövde tepki süresi sabiti (sn): hafif gövde, hızlı motor
 
 } as const;
 export const CIZGI_GENISLIGI = 19;     // siyah bant (mm)
-export const FIZIK_ADIMI = 0.005;      // sn
-export const DONGU_ARALIGI = 0.02;     // çocuğun dongu() çağrısı (sn)
+export const FIZIK_ADIMI = 0.0025;     // sn
+export const DONGU_ARALIGI = 0.01;     // çocuğun dongu() çağrısı (sn); hızlı robotta sık karar gerekir
 const KONTROL_ORANI = Math.round(DONGU_ARALIGI / FIZIK_ADIMI);
 
 export type Nokta = [number, number];
@@ -163,9 +164,13 @@ export interface CizgiKaresi {
   sapma: number;                          // sensör dizisi ortasının çizgiye işaretli uzaklığı (mm), solda artı
 }
 export type CizgiDurum = "bitti" | "cikti" | "sure" | "hata";
-export interface CizgiSonucu { durum: CizgiDurum; sure: number; ilerleme: number; kareler: CizgiKaresi[]; hata?: string; ortSapma: number }
+export interface CizgiSonucu {
+  durum: CizgiDurum; sure: number; ilerleme: number; kareler: CizgiKaresi[]; hata?: string; ortSapma: number;
+  /** başlangıç bloğunun kaldırıldığı an (sn); süre bu andan ölçülür */
+  baslangic: number;
+}
 export interface CizgiOkuma { sensorler: number[]; konum: number; sure: number }
-/** Her 20 ms'de çağrılır; [sol, sağ] PWM döndürür. */
+/** Her 10 ms'de çağrılır; [sol, sağ] PWM döndürür. */
 export type CizgiBeyni = (o: CizgiOkuma) => [number, number];
 
 export class CizgiRobotu {
@@ -230,8 +235,8 @@ export class CizgiRobotu {
 export const CIKMA_SURESI = 1.0;   // bant hiçbir sensörde görünmeden geçebilecek süre (sn)
 export const YOLDAN_UZAK = 240;    // aks merkezinin çizgiden en fazla uzaklığı (mm)
 
-/** Turu baştan sona koşturur. Beyin hata fırlatırsa tur "hata" ile biter. */
-export function turKos(pist: Pist, beyin: CizgiBeyni, sureSiniri: number, tohum = 7): CizgiSonucu {
+/** Turu baştan sona koşturur. `bekleme` > 0 ise robot, önündeki blok kaldırılana kadar (engel sensörü) bekler. */
+export function turKos(pist: Pist, beyin: CizgiBeyni, sureSiniri: number, tohum = 7, bekleme = 0): CizgiSonucu {
   const r = new CizgiRobotu(pist, tohum);
   const n = pist.yol.length;
   let iz = 0, gidilen = 0, cizgisiz = 0, pwm: [number, number] = [0, 0];
@@ -241,7 +246,7 @@ export function turKos(pist: Pist, beyin: CizgiBeyni, sureSiniri: number, tohum 
     kareler.push({ t: +t.toFixed(3), x: r.x, y: r.y, yon: r.yon, sol: pwm[0], sag: pwm[1], sensor: s, solTeker: r.solTeker, sagTeker: r.sagTeker, ilerleme: Math.max(0, Math.min(1, gidilen / n)), sapma: +Math.max(-250, Math.min(250, pist.isaretliUzaklik(sx, sy))).toFixed(1) });
   };
   const bitir = (durum: CizgiDurum, t: number, hata?: string): CizgiSonucu => ({
-    durum, sure: +t.toFixed(2), ilerleme: Math.max(0, Math.min(1, gidilen / n)), kareler, hata,
+    durum, sure: +Math.max(0, t - bekleme).toFixed(2), ilerleme: Math.max(0, Math.min(1, gidilen / n)), kareler, hata, baslangic: bekleme,
     ortSapma: +(kareler.reduce((a, k) => a + Math.abs(k.sapma), 0) / kareler.length).toFixed(1)
   });
 
@@ -250,7 +255,8 @@ export function turKos(pist: Pist, beyin: CizgiBeyni, sureSiniri: number, tohum 
     const s = r.sensorler();
     kare(t, s);
     if (gidilen >= n) return bitir("bitti", t);
-    if (t >= sureSiniri) return bitir("sure", t);
+    if (t >= sureSiniri + bekleme) return bitir("sure", t);
+    if (t < bekleme) { pwm = [0, 0]; continue; } // blok hâlâ önünde: engel sensörü yolu kapalı görüyor
     cizgisiz = r.cizgiPayi(s).every((v) => v < 300) ? cizgisiz + DONGU_ARALIGI : 0; // bant hiçbir sensörde yok
     const { x0, y0, x1, y1 } = pist.sinir;
     if (cizgisiz > CIKMA_SURESI || pist.uzaklik(r.x, r.y) > YOLDAN_UZAK || r.x < x0 || r.x > x1 || r.y < y0 || r.y > y1) return bitir("cikti", t);
@@ -314,47 +320,41 @@ export const CIZGI_GOREVLERI: CizgiGorevi[] = [
   {
     kimlik: "oval", ad: "İlk tur", ozet: "Oval pistte bir tur at.", ogretir: "Sensör okuma ve koşul",
     pist: { parcalar: [{ tur: "duz", uzunluk: 900 }, { tur: "yay", yaricap: 340, aci: 180 }, { tur: "duz", uzunluk: 900 }, { tur: "yay", yaricap: 340, aci: 180 }] },
-    sureSiniri: 40, yildizSureleri: [12, 10],
-    ipucu: "Ortadaki iki sensöre bak: s[3] soldaki, s[4] sağdaki. Çizgi sola kaydıysa soldaki sensör siyahı görür; sola dönmek için sol motoru yavaşlat.",
-    baslangicKod: `# SiroLine her 20 milisaniyede bir dongu() fonksiyonunu çalıştırır.
+    sureSiniri: 30, yildizSureleri: [4.8, 4.2],
+    ipucu: "SiroLine'ın motorları dakikada 2000 tur atar; küçük güçlerle başla. Ortadaki sensör s[3] siyahı görüyorsa çizgi soldadır: sola dönmek için sol motoru yavaşlat. Güçleri azar azar artırıp en hızlı turu bul.",
+    baslangicKod: `# SiroLine her 10 milisaniyede bir dongu() fonksiyonunu çalıştırır.
 # sensorler(): 8 değer, soldan sağa. 0 = beyaz, 1000 = siyah.
-# motorlar(sol, sag): -255 ile 255 arası güç.
+# motorlar(sol, sag): -255 ile 255 arası güç. Motorlar çok hızlı: küçük başla!
 
 def dongu():
     s = sensorler()
     if s[3] > 500:          # çizgi solda
-        motorlar(60, 160)
+        motorlar(30, 70)
     else:
-        motorlar(160, 60)
+        motorlar(70, 30)
 `,
     ornekCozum: `def dongu():
     s = sensorler()
-    if s[2] > 500:
-        motorlar(40, 220)
-    elif s[5] > 500:
-        motorlar(220, 40)
-    elif s[3] > 500:
-        motorlar(160, 230)
-    elif s[4] > 500:
-        motorlar(230, 160)
+    if s[3] > 500:
+        motorlar(40, 90)
     else:
-        motorlar(230, 230)
+        motorlar(90, 40)
 `
   },
   {
     kimlik: "s-viraj", ad: "S virajları", ozet: "Art arda gelen virajlarda çizgiyi kaybetme.", ogretir: "Sensör dizisi, oransal dönüş",
     pist: { noktalar: [[0, 0], [520, 0], [900, 160], [1280, 0], [1700, 0], [2020, 300], [1700, 640], [1300, 640], [900, 470], [500, 640], [120, 640], [-220, 320]] },
-    sureSiniri: 50, yildizSureleri: [13, 11.5],
-    ipucu: "cizgi_konumu() sana çizginin nerede olduğunu tek sayıyla söyler: -100 solda, 0 ortada, 100 sağda. Dönüşü bu sayıyla orantılı yap.",
+    sureSiniri: 30, yildizSureleri: [4.2, 3.7],
+    ipucu: "cizgi_konumu() sana çizginin nerede olduğunu tek sayıyla söyler: -100 solda, 0 ortada, 100 sağda. Dönüşü bu sayıyla orantılı yap. Robot sallanıyorsa çarpanı küçült, sonra hızı artır.",
     baslangicKod: `def dongu():
     k = cizgi_konumu()      # -100 (solda) ... 0 (ortada) ... 100 (sağda)
     donus = k * 1           # bu sayıyı değiştir
-    motorlar(150 + donus, 150 - donus)
+    motorlar(80 + donus, 80 - donus)
 `,
     ornekCozum: `def dongu():
     k = cizgi_konumu()
-    donus = k * 2
-    motorlar(200 + donus, 200 - donus)
+    donus = k * 0.6
+    motorlar(100 + donus, 100 - donus)
 `
   },
   {
@@ -363,8 +363,8 @@ def dongu():
       { tur: "duz", uzunluk: 1400 }, { tur: "yay", yaricap: 110, aci: 90 }, { tur: "duz", uzunluk: 620 }, { tur: "yay", yaricap: 110, aci: 90 },
       { tur: "duz", uzunluk: 470.19 }, { tur: "yay", yaricap: 150, aci: 50 }, { tur: "yay", yaricap: 150, aci: -100 }, { tur: "yay", yaricap: 150, aci: 50 },
       { tur: "duz", uzunluk: 470.19 }, { tur: "yay", yaricap: 110, aci: 90 }, { tur: "duz", uzunluk: 620 }, { tur: "yay", yaricap: 110, aci: 90 }] },
-    sureSiniri: 60, yildizSureleri: [10, 9],
-    ipucu: "Oransal dönüş (P) hızlanınca sallanır. Hatanın ne kadar hızlı değiştiğini de ekle (D): fark = k - son_k. Modülün en üstündeki değişkenler çağrılar arasında saklanır; içeride global yazmayı unutma.",
+    sureSiniri: 30, yildizSureleri: [3.2, 2.3],
+    ipucu: "Yalnız oransal dönüş (P) hızlanınca sallanır ve virajda kaçar. Hatanın ne kadar hızlı değiştiğini de ekle (D): fark = k - son_k. Modülün en üstündeki değişkenler çağrılar arasında saklanır; fonksiyonun içinde global yazmayı unutma.",
     baslangicKod: `son_k = 0
 
 def dongu():
@@ -372,8 +372,8 @@ def dongu():
     k = cizgi_konumu()
     fark = k - son_k
     son_k = k
-    donus = k * 2 + fark * 0     # Kp = 2, Kd = 0: Kd'yi artır
-    hiz = 180
+    donus = k * 1 + fark * 0     # Kp = 1, Kd = 0: Kd'yi artır
+    hiz = 100
     motorlar(hiz + donus, hiz - donus)
 `,
     ornekCozum: `son_k = 0
@@ -383,8 +383,8 @@ def dongu():
     k = cizgi_konumu()
     fark = k - son_k
     son_k = k
-    donus = k * 2.5 + fark * 8
-    hiz = 255
+    donus = k * 1 + fark * 8
+    hiz = 160
     motorlar(hiz + donus, hiz - donus)
 `
   }

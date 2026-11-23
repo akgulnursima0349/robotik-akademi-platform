@@ -1,13 +1,15 @@
 /* SiroLine Ayar Atölyesi: kitin mBlock bloğundaki değerlerle (taban hız, ek hız, Kp, Kd, zemin) oynayıp pistte dene.
    Hesap kitin kütüphanesindeki gibi (bkz. robot-motoru/cizgi.ts siroBeyni). Bulunan değerler masadaki robota aynen girilir. */
 import { dugme, el, ikon, uyari } from "@sra/tasarim";
-import { CIZGI_GOREVLERI, Pist, siroBeyni, SIRO_VARSAYILAN, turKos, type CizgiSonucu, type SiroAyar } from "@sra/robot-motoru";
+import { CIZGI_GOREVLERI, DONGU_ARALIGI, Pist, siroBeyni, SIRO_VARSAYILAN, turKos, type CizgiSonucu, type SiroAyar } from "@sra/robot-motoru";
 import { ilerleme } from "../ilerleme";
 import { ustKisim } from "./ana";
 import { BOS_KARE, sahneBolumu, secici, sn } from "./cizgi-ortak";
 
 interface Deneme { no: number; pist: string; ayar: SiroAyar; sonuc: CizgiSonucu }
 const ANAHTAR = "siro-ayar";
+/** Blok kaldırılana kadar bekleme (sn): kitteki "Mz80 = 0 olana kadar bekle" bloğu */
+const BEKLEME = 0.6;
 const SVG = "http://www.w3.org/2000/svg";
 
 const ALANLAR: { k: "taban" | "ek" | "kp" | "kd"; ad: string; min: number; max: number; adim: number; aciklama: string }[] = [
@@ -50,6 +52,7 @@ export async function ayarAtolyesi(root: HTMLElement) {
     el("div", "l3-blok", {}, "QTR-8A Kızılötesi Sensör Başlat"),
     el("div", "l3-blok l3-blok--ayar", {}, "Ayarla Taban Hız:", ovalGirdi(ALANLAR[0]), ", Ek Hız:", ovalGirdi(ALANLAR[1]), ", Kp:", ovalGirdi(ALANLAR[2]), ", Kd:", ovalGirdi(ALANLAR[3])),
     el("div", "l3-blok", {}, "Zemin:", zeminSec, "Yap", el("span", "l3-blok__not", {}, "pistin zemin rengi")),
+    el("div", "l3-blok l3-blok--kontrol", {}, "Mz80 = ", el("i", "", {}, "0"), " olana kadar bekle", el("span", "l3-blok__not", {}, "önündeki blok kalkınca başlar")),
     el("div", "l3-blok l3-blok--dongu", {}, el("span", "", {}, "sürekli tekrarla"),
       el("div", "l3-blok l3-blok--ic", {}, "Sensör Oku"),
       el("div", "l3-blok l3-blok--ic", {}, "Pid ile Motor Güçlerini Ayarla"),
@@ -99,14 +102,14 @@ export async function ayarAtolyesi(root: HTMLElement) {
   const bolum = sahneBolumu("Ayar Atölyesi: SiroLine yarışma pistinde, 3D");
   const sag = el("section", "l-gorev-sag", {}, el("div", "l3-pist-sec", {}, el("span", "", {}, "Pist"), pistSec), bolum.kok, grafik, tabloKap);
   root.replaceChildren(ustKisim(), el("main", "l-gorev-sayfa sra-sarmal", { id: "ana" }, sol, sag));
-  const sahne = await bolum.kur(new Pist(gorev.pist, "siyah"));
+  const sahne = await bolum.kur(new Pist(gorev.pist, "siyah"), true);
   if (!sahne) { denaB.disabled = true; return; }
 
   denaB.addEventListener("click", async () => {
     if (sahne.oynuyor) return;
     denaB.disabled = true; cikti.replaceChildren();
     const a = { ...ayar };
-    const sonuc = turKos(new Pist(gorev.pist, "siyah"), siroBeyni(a), gorev.sureSiniri);
+    const sonuc = turKos(new Pist(gorev.pist, "siyah"), siroBeyni(a), gorev.sureSiniri, 7, BEKLEME);
     const d: Deneme = { no: denemeler.length + 1, pist: gorev.ad, ayar: a, sonuc };
     denemeler.push(d);
     const tamam = await sahne.oynat(sonuc);
@@ -160,7 +163,7 @@ export async function ayarAtolyesi(root: HTMLElement) {
     s.addEventListener("pointermove", (e) => {
       const r = s.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * W;
       const t = Math.max(0, Math.min(tMax, (x - sol) / (W - sol - sag) * tMax));
-      const kk = k[Math.min(k.length - 1, Math.round(t / 0.02))];
+      const kk = k[Math.min(k.length - 1, Math.round(t / DONGU_ARALIGI))];
       s.querySelector(".imlec")!.setAttribute("x1", String(X(kk.t))); s.querySelector(".imlec")!.setAttribute("x2", String(X(kk.t)));
       s.querySelector(".nokta")!.setAttribute("cx", String(X(kk.t))); s.querySelector(".nokta")!.setAttribute("cy", String(Y(kk.sapma)));
       ipucu.hidden = false; ipucu.textContent = `${sn(kk.t)} sn · ${sn(Math.abs(kk.sapma))} mm ${kk.sapma > 0 ? "solda" : kk.sapma < 0 ? "sağda" : ""}`;
