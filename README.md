@@ -16,7 +16,8 @@ Geliştirme fazlar hâlinde ilerler; her fazın spec'i `docs/` klasöründedir.
 | P3 | Blok Atölyesi MVP | Yapıldı |
 | P4 | Öğrenme analitiği | Yapıldı |
 | P5 | Demo cilası | Yapıldı |
-| P6a | Lab 3D: SiroLine çizgi izleyen (ilk dilim) | Yapıldı, Nur'un onayında |
+| P6a | Lab 3D: SiroLine çizgi izleyen (ilk dilim) | Yapıldı |
+| P6b | SiroLine Ayar Atölyesi ve 3D kurulum rehberi | Yapıldı, Nur'un onayında |
 
 ## Çalıştırma
 

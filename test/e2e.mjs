@@ -273,6 +273,39 @@ for (const [ad, g, y] of BOYUTLAR) {
     ok((await p.$$("a.l-gorev")).length === 2, "ilk pist bitince ikincisi açıldı");
     await p.goto(ADRES + "lab/?z#"); await hazir(p);
     ok(/3\/9 yıldız/.test(await p.textContent('a.sra-kurs[data-kurs="cizgi"]')), "Laboratuvar kartında SiroLine yıldızları");
+
+    /* 3D kurulum rehberi */
+    await p.goto(ADRES + "lab/?k#cizgi"); await p.waitForSelector("#c-kurulum");
+    ok(await p.isVisible("#c-ayar"), "SiroLine sayfasında kurulum ve ayar kartları");
+    await p.click("#c-kurulum"); await p.waitForSelector("body[data-kurulum-hazir] .l3-kurulum__sahne canvas", { timeout: 60000 });
+    ok((await p.$$(".l3-noktalar button")).length === 10 && await p.isDisabled("#k-geri"), "kurulum: 10 adım, ilk adımda Geri kapalı");
+    await p.click("#k-ileri"); await p.click("#k-ileri");
+    ok(await p.getAttribute(".l3-kurulum__sahne", "data-adim") === "3", "İleri ile 3. adım (motorlar)");
+    await p.click(".l3-sik:nth-of-type(1)"); ok(await p.isVisible(".l3-sik.yanlis") && /Bir daha/.test(await p.textContent(".l3-soru__sonuc")), "yanlış cevap işaretlendi");
+    await p.click(".l3-sik:nth-of-type(2)"); ok(await p.isVisible(".l3-sik.dogru") && /Doğru/.test(await p.textContent(".l3-soru__sonuc")), "doğru cevap ve açıklaması");
+    await p.keyboard.press("ArrowRight"); ok(await p.getAttribute(".l3-kurulum__sahne", "data-adim") === "4", "klavye: sağ ok ileri");
+    await p.keyboard.press("ArrowLeft"); ok(await p.getAttribute(".l3-kurulum__sahne", "data-adim") === "3", "klavye: sol ok geri");
+    await p.click(".l3-noktalar li:nth-child(10) button");
+    ok(await p.isHidden("#k-ileri") && await p.isVisible('a[href="#cizgi/ayar"]'), "son adım: Ayar Atölyesi ve kod görevleri bağlantısı");
+    await p.waitForTimeout(400);
+    await p.screenshot({ path: `${EKRAN}/lab3d_${ad}_5_kurulum.png`, fullPage: true });
+    ok(await tasmaYok(p), "kurulum rehberinde taşma yok");
+    await p.goto(ADRES + "lab/?k2#cizgi"); await p.waitForSelector("#c-kurulum");
+    ok(/Tamamlandı/.test(await p.textContent("#c-kurulum")), "rehber bitince kartta 'Tamamlandı'");
+
+    /* Ayar Atölyesi */
+    await p.click("#c-ayar"); await p.waitForSelector(".l3-sahne[data-hazir] canvas", { timeout: 60000 });
+    ok(await p.inputValue("#ayar-kp") === "0.04" && await p.inputValue("#ayar-kd") === "0.7" && await p.inputValue("#ayar-taban") === "100", "kitin örnek değerleri yüklü");
+    await p.click("#l-calistir"); await p.waitForSelector(".l3-tablo tbody tr");
+    ok(/Tur tamam/.test(await p.textContent(".l-cikti")) && await p.isVisible(".l3-grafik svg path.seri"), "kitin değerleriyle tur tamam; sapma grafiği çizildi");
+    await p.selectOption("#ayar-zemin", "beyaz"); await p.click("#l-calistir");
+    await p.waitForFunction(() => document.querySelectorAll(".l3-tablo tbody tr").length === 2);
+    ok(/Zemin 'Beyaz'/.test(await p.textContent(".l-cikti")) && /çıktı/.test(await p.textContent(".l3-tablo tbody tr:first-child")), "zemin beyaz: robot çıktı ve nedeni anlatılıyor");
+    ok((await p.$$(".l3-tablo tr.en-iyi")).length === 1, "en hızlı deneme işaretli");
+    ok(/Zemin: Beyaz/.test(await p.textContent(".l3-aktar")), "robotuna aktar kutusu güncel değerleri gösteriyor");
+    await p.click("#ayar-varsayilan"); ok(await p.inputValue("#ayar-zemin") === "siyah", "Kitin değerleri düğmesi sıfırlıyor");
+    await p.screenshot({ path: `${EKRAN}/lab3d_${ad}_6_ayar.png`, fullPage: true });
+    ok(await tasmaYok(p), "Ayar Atölyesinde taşma yok");
     ok(hatalar.length === 0, "3D işlev testlerinde konsol hatası yok" + (hatalar.length ? ": " + hatalar.slice(0, 2).join(" | ") : ""));
     await ctx.close();
   }

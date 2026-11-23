@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CIZGI_GENISLIGI, CIZGI_GOREVLERI, cizgiYildiz, CizgiRobotu, Pist, SIROLINE, turKos, type CizgiBeyni } from "../src";
+import { CIZGI_GENISLIGI, CIZGI_GOREVLERI, cizgiYildiz, CizgiRobotu, Pist, qtrOkuyucu, siroBeyni, SIRO_VARSAYILAN, SIROLINE, turKos, type CizgiBeyni } from "../src";
 
 const oval = new Pist(CIZGI_GOREVLERI[0].pist);
 const pd = (kp: number, kd: number, hiz: number): CizgiBeyni => { let son = 0; return (o) => { const f = o.konum - son; son = o.konum; const d = o.konum * kp + f * kd; return [hiz + d, hiz - d]; }; };
@@ -87,5 +87,50 @@ describe("Çizgi izleyen motoru", () => {
     const g = CIZGI_GOREVLERI[2];
     expect(cizgiYildiz(g, P)).toBe(2); expect(cizgiYildiz(g, PD)).toBe(3);
   });
-  it("çizgi genişliği yarışma bandı kadar", () => { expect(CIZGI_GENISLIGI).toBe(19); });
+  it("çizgi genişliği yarışma bandı kadar, teker 3,7 cm", () => { expect(CIZGI_GENISLIGI).toBe(19); expect(SIROLINE.tekerCap).toBe(37); });
+  it("işaretli uzaklık: çizginin solu artı, sağı eksi", () => {
+    // oval başlangıçta doğuya gidiyor: sol = +y
+    expect(oval.isaretliUzaklik(300, 30)).toBeCloseTo(30, 0);
+    expect(oval.isaretliUzaklik(300, -30)).toBeCloseTo(-30, 0);
+  });
+  it("sapma her karede ölçülür; ortalama sapma sonuçta", () => {
+    const r = turKos(oval, pd(2, 0, 200), 30);
+    expect(r.kareler.every((k) => Math.abs(k.sapma) <= 250)).toBe(true);
+    expect(r.ortSapma).toBeGreaterThan(0); expect(r.ortSapma).toBeLessThan(15);
+  });
+});
+
+describe("SiroLine bloğu (kitin mBlock uzantısı)", () => {
+  it("QTR okuma 0–7000: orta 3500, çizgi solda küçük, kaybolunca son görülen uç", () => {
+    const oku = qtrOkuyucu();
+    expect(oku([0, 0, 0, 1000, 1000, 0, 0, 0])).toBe(3500);
+    expect(oku([1000, 0, 0, 0, 0, 0, 0, 0])).toBe(0);
+    expect(oku([0, 0, 0, 0, 0, 0, 0, 0])).toBe(0);
+    oku([0, 0, 0, 0, 0, 0, 1000, 1000]);
+    expect(oku([0, 0, 0, 0, 0, 0, 0, 0])).toBe(7000);
+    expect(oku([1000, 1000, 1000, 0, 0, 1000, 1000, 1000], "beyaz")).toBe(3500);
+  });
+  it("hesap kitteki gibi: düzeltme = Kp·hata + Kd·(hata - son hata)", () => {
+    const b = siroBeyni({ taban: 100, ek: 0, kp: 0.04, kd: 0.03, zemin: "siyah" });
+    const s = [0, 0, 0, 0, 0, 1000, 1000, 0]; // konum 5500 → hata 2000
+    expect(b({ sensorler: s, konum: 0, sure: 0 })).toEqual([100 + 80 + 60, 100 - 80 - 60]);
+    expect(b({ sensorler: s, konum: 0, sure: 20 })).toEqual([180, 20]); // hata değişmedi: Kd terimi 0
+    const c = siroBeyni({ taban: 100, ek: 0, kp: 0.04, kd: 0.7, zemin: "siyah" });
+    expect(c({ sensorler: s, konum: 0, sure: 0 })).toEqual([255, -255]); // motor sınırı
+  });
+  it("ek hız yalnızca çizgi ortadayken eklenir", () => {
+    const b = siroBeyni({ taban: 100, ek: 50, kp: 0, kd: 0, zemin: "siyah" });
+    expect(b({ sensorler: [0, 0, 0, 1000, 1000, 0, 0, 0], konum: 0, sure: 0 })).toEqual([150, 150]);
+    expect(b({ sensorler: [1000, 0, 0, 0, 0, 0, 0, 0], konum: 0, sure: 0 })).toEqual([100, 100]);
+  });
+  it("kitin örnek değerleri (taban 100, Kp 0.04, Kd 0.7) üç pisti de bitirir", () => {
+    for (const g of CIZGI_GOREVLERI) expect(turKos(new Pist(g.pist), siroBeyni(SIRO_VARSAYILAN), g.sureSiniri).durum, g.kimlik).toBe("bitti");
+  });
+  it("zemin 'beyaz' seçilirse robot bizim halıda çizgiyi kaybeder", () => {
+    expect(turKos(oval, siroBeyni({ ...SIRO_VARSAYILAN, zemin: "beyaz" }), 30).durum).toBe("cikti");
+  });
+  it("yüksek hızda düşük Kp virajda pistten çıkarır; aşırı Kd robotu titretip yavaşlatır", () => {
+    expect(turKos(oval, siroBeyni({ ...SIRO_VARSAYILAN, taban: 220, kp: 0.01, kd: 0 }), 40).durum).toBe("cikti");
+    expect(turKos(oval, siroBeyni({ ...SIRO_VARSAYILAN, kd: 10 }), 40).durum).toBe("sure");
+  });
 });

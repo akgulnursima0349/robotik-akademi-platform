@@ -6,11 +6,11 @@ import { rastgele } from "./izgara";
 /* ---------- robot ölçüleri (mağaza fotoğrafı: 21,5 × 17,5 cm) ---------- */
 export const SIROLINE = {
   izGenisligi: 145,   // iki tekerleğin merkezleri arası (mm)
-  tekerCap: 44,       // lastik çapı (mm)
+  tekerCap: 37,       // lastik çapı (mm); kitin enkoder bloğunda 3,7 cm
   sensorOnde: 168,    // sensör dizisinin aks merkezinden uzaklığı (mm)
   sensorAralik: 9.5,  // komşu sensörler arası (mm)
   sensorSayisi: 8,
-  azamiHiz: 700,      // 255 PWM'de tekerlek hızı (mm/sn)
+  azamiHiz: 600,      // 255 PWM'de tekerlek hızı (mm/sn); 7,4 V'ta TT motor ≈ 300 devir/dk
   oluBolge: 35,       // bu PWM'in altında redüktörlü motor dönmez
   gecikme: 0.14       // motor ve gövde tepki süresi sabiti (sn)
 
@@ -59,6 +59,20 @@ export class Pist {
     /* en yakın iki parçaya dik uzaklık */
     const n = this.yol.length;
     return Math.min(parcayaUzaklik(x, y, this.yol[enI], this.yol[(enI + 1) % n]), parcayaUzaklik(x, y, this.yol[(enI - 1 + n) % n], this.yol[enI]));
+  }
+
+  /** İşaretli uzaklık (mm): nokta yolun solundaysa artı, sağındaysa eksi. */
+  isaretliUzaklik(x: number, y: number): number {
+    const d = this.uzaklik(x, y);
+    const cx = Math.floor(x / Pist.HUCRE), cy = Math.floor(y / Pist.HUCRE);
+    let en = Infinity, enI = 0;
+    for (let dx = -2; dx <= 2; dx++) for (let dy = -2; dy <= 2; dy++) {
+      const l = this.izgara.get((cx + dx) + "," + (cy + dy)); if (!l) continue;
+      for (const i of l) { const [px, py] = this.yol[i]; const e = (px - x) ** 2 + (py - y) ** 2; if (e < en) { en = e; enI = i; } }
+    }
+    const a = this.yol[enI], b = this.yol[(enI + 1) % this.yol.length];
+    const capraz = (b[0] - a[0]) * (y - a[1]) - (b[1] - a[1]) * (x - a[0]);
+    return capraz >= 0 ? d : -d;
   }
 
   /** Yol üzerindeki en yakın örneğin sırası; `onceki` verilirse yalnızca onun çevresinde arar (kısa yoldan atlamayı önler). */
@@ -144,9 +158,10 @@ export interface CizgiKaresi {
   sensor: number[];                       // 8 değer, 0–1000
   solTeker: number; sagTeker: number;     // tekerleğin aldığı yol (mm) → dönüş açısı
   ilerleme: number;                       // 0–1
+  sapma: number;                          // sensör dizisi ortasının çizgiye işaretli uzaklığı (mm), solda artı
 }
 export type CizgiDurum = "bitti" | "cikti" | "sure" | "hata";
-export interface CizgiSonucu { durum: CizgiDurum; sure: number; ilerleme: number; kareler: CizgiKaresi[]; hata?: string }
+export interface CizgiSonucu { durum: CizgiDurum; sure: number; ilerleme: number; kareler: CizgiKaresi[]; hata?: string; ortSapma: number }
 export interface CizgiOkuma { sensorler: number[]; konum: number; sure: number }
 /** Her 20 ms'de çağrılır; [sol, sağ] PWM döndürür. */
 export type CizgiBeyni = (o: CizgiOkuma) => [number, number];
@@ -213,8 +228,14 @@ export function turKos(pist: Pist, beyin: CizgiBeyni, sureSiniri: number, tohum 
   const n = pist.yol.length;
   let iz = 0, gidilen = 0, beyaz = 0, pwm: [number, number] = [0, 0];
   const kareler: CizgiKaresi[] = [];
-  const kare = (t: number, s: number[]) => kareler.push({ t: +t.toFixed(3), x: r.x, y: r.y, yon: r.yon, sol: pwm[0], sag: pwm[1], sensor: s, solTeker: r.solTeker, sagTeker: r.sagTeker, ilerleme: Math.max(0, Math.min(1, gidilen / n)) });
-  const bitir = (durum: CizgiDurum, t: number, hata?: string): CizgiSonucu => ({ durum, sure: +t.toFixed(2), ilerleme: Math.max(0, Math.min(1, gidilen / n)), kareler, hata });
+  const kare = (t: number, s: number[]) => {
+    const [sx, sy] = r.sensorKonumu(3.5);
+    kareler.push({ t: +t.toFixed(3), x: r.x, y: r.y, yon: r.yon, sol: pwm[0], sag: pwm[1], sensor: s, solTeker: r.solTeker, sagTeker: r.sagTeker, ilerleme: Math.max(0, Math.min(1, gidilen / n)), sapma: +Math.max(-250, Math.min(250, pist.isaretliUzaklik(sx, sy))).toFixed(1) });
+  };
+  const bitir = (durum: CizgiDurum, t: number, hata?: string): CizgiSonucu => ({
+    durum, sure: +t.toFixed(2), ilerleme: Math.max(0, Math.min(1, gidilen / n)), kareler, hata,
+    ortSapma: +(kareler.reduce((a, k) => a + Math.abs(k.sapma), 0) / kareler.length).toFixed(1)
+  });
 
   for (let tik = 0; ; tik++) {
     const t = tik * DONGU_ARALIGI;
@@ -238,6 +259,37 @@ export function turKos(pist: Pist, beyin: CizgiBeyni, sureSiniri: number, tohum 
   }
 }
 
+/* ---------- SiroLine bloğu: kitin mBlock uzantısındaki PID ---------- */
+export interface SiroAyar { taban: number; ek: number; kp: number; kd: number; zemin: "siyah" | "beyaz" }
+/** Ürün sayfasındaki mBlock örneğinin değerleri */
+export const SIRO_VARSAYILAN: SiroAyar = { taban: 100, ek: 0, kp: 0.04, kd: 0.7, zemin: "siyah" };
+
+/** QTR kütüphanesindeki readLine gibi: 0 (çizgi en solda) … 3500 (orta) … 7000 (en sağda). */
+export function qtrOkuyucu() {
+  let son = 3500;
+  return (s: number[], zemin: "siyah" | "beyaz" = "siyah"): number => {
+    const v = zemin === "siyah" ? s : s.map((x) => 1000 - x);
+    let top = 0, agir = 0, gordu = false;
+    v.forEach((d, i) => { if (d > 200) gordu = true; if (d > 50) { top += d; agir += d * i * 1000; } });
+    if (!gordu) return son < 3500 ? 0 : 7000;
+    son = Math.round(agir / top);
+    return son;
+  };
+}
+
+/** Kitin bloklarıyla aynı hesap: hata = konum - 3500; düzeltme = Kp·hata + Kd·(hata - son hata). */
+export function siroBeyni(a: SiroAyar): CizgiBeyni {
+  const oku = qtrOkuyucu(); let sonHata = 0;
+  return (o) => {
+    const hata = oku(o.sensorler, a.zemin) - 3500;
+    const duz = a.kp * hata + a.kd * (hata - sonHata);
+    sonHata = hata;
+    const taban = a.taban + (Math.abs(hata) < 500 ? a.ek : 0);
+    const sinirla = (x: number) => Math.max(-255, Math.min(255, Math.round(x)));
+    return [sinirla(taban + duz), sinirla(taban - duz)];
+  };
+}
+
 /* ---------- görevler ---------- */
 export interface CizgiGorevi {
   kimlik: string; ad: string; ozet: string; ogretir: string;
@@ -253,7 +305,7 @@ export const CIZGI_GOREVLERI: CizgiGorevi[] = [
   {
     kimlik: "oval", ad: "İlk tur", ozet: "Oval pistte bir tur at.", ogretir: "Sensör okuma ve koşul",
     pist: { parcalar: [{ tur: "duz", uzunluk: 900 }, { tur: "yay", yaricap: 340, aci: 180 }, { tur: "duz", uzunluk: 900 }, { tur: "yay", yaricap: 340, aci: 180 }] },
-    sureSiniri: 40, yildizSureleri: [11, 9.5],
+    sureSiniri: 40, yildizSureleri: [12, 10],
     ipucu: "Ortadaki iki sensöre bak: s[3] soldaki, s[4] sağdaki. Çizgi sola kaydıysa soldaki sensör siyahı görür; sola dönmek için sol motoru yavaşlat.",
     baslangicKod: `# SiroLine her 20 milisaniyede bir dongu() fonksiyonunu çalıştırır.
 # sensorler(): 8 değer, soldan sağa. 0 = beyaz, 1000 = siyah.
@@ -283,7 +335,7 @@ def dongu():
   {
     kimlik: "s-viraj", ad: "S virajları", ozet: "Art arda gelen virajlarda çizgiyi kaybetme.", ogretir: "Sensör dizisi, oransal dönüş",
     pist: { noktalar: [[0, 0], [520, 0], [900, 160], [1280, 0], [1700, 0], [2020, 300], [1700, 640], [1300, 640], [900, 470], [500, 640], [120, 640], [-220, 320]] },
-    sureSiniri: 50, yildizSureleri: [11.5, 9.8],
+    sureSiniri: 50, yildizSureleri: [13, 11.5],
     ipucu: "cizgi_konumu() sana çizginin nerede olduğunu tek sayıyla söyler: -100 solda, 0 ortada, 100 sağda. Dönüşü bu sayıyla orantılı yap.",
     baslangicKod: `def dongu():
     k = cizgi_konumu()      # -100 (solda) ... 0 (ortada) ... 100 (sağda)
@@ -302,7 +354,7 @@ def dongu():
       { tur: "duz", uzunluk: 1400 }, { tur: "yay", yaricap: 110, aci: 90 }, { tur: "duz", uzunluk: 620 }, { tur: "yay", yaricap: 110, aci: 90 },
       { tur: "duz", uzunluk: 470.19 }, { tur: "yay", yaricap: 150, aci: 50 }, { tur: "yay", yaricap: 150, aci: -100 }, { tur: "yay", yaricap: 150, aci: 50 },
       { tur: "duz", uzunluk: 470.19 }, { tur: "yay", yaricap: 110, aci: 90 }, { tur: "duz", uzunluk: 620 }, { tur: "yay", yaricap: 110, aci: 90 }] },
-    sureSiniri: 60, yildizSureleri: [9, 7.8],
+    sureSiniri: 60, yildizSureleri: [10, 9],
     ipucu: "Oransal dönüş (P) hızlanınca sallanır. Hatanın ne kadar hızlı değiştiğini de ekle (D): fark = k - son_k. Modülün en üstündeki değişkenler çağrılar arasında saklanır; içeride global yazmayı unutma.",
     baslangicKod: `son_k = 0
 

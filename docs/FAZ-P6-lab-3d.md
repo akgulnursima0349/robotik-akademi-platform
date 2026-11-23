@@ -97,6 +97,8 @@ Her görevin örnek çözümü birim testinde yıldızlarıyla doğrulanır.
 
 ## Uygulama notları
 
+- Teker çapı P6b'de 44 mm'den 37 mm'ye düzeltildi (kitin enkoder bloğu: 3,7 cm).
+
 - Fizikte savrulma denendi ama bu boyut ve hızda hiç devreye girmediği için çıkarıldı. Fark yaratan şeyler: motor gecikmesi (0,14 sn), ölü bölge ve sensörün aksın 168 mm önünde olması.
 - Yıldız süreleri, örnek çözümler ve tipik çocuk kodlarıyla ölçülerek seçildi:
   - yarış pistinde yalnız P ile tam hız 2 yıldız alır;

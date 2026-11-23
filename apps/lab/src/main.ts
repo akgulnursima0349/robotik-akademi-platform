@@ -18,6 +18,8 @@ async function yonlendir() {
   else if (h.startsWith("kar/")) await karGorev(root, h.slice(4));
   else if (h === "lig") await lig(root);
   else if (h === "cizgi") void cizgiListe(root);
+  else if (h === "cizgi/ayar") void (await import("./ekranlar/ayar")).ayarAtolyesi(root);
+  else if (h === "cizgi/kurulum") void (await import("./ekranlar/kurulum")).kurulumRehberi(root);
   else if (h.startsWith("cizgi/")) void cizgiGorev(root, h.slice(6));
   else ana(root);
   window.scrollTo({ top: 0 });

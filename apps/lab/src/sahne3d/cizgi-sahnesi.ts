@@ -44,7 +44,7 @@ export class CizgiSahnesi {
     this.durdur();
     if (!this.pist) return;
     const b = this.pist.baslangic();
-    this.konumla({ t: 0, x: b.x, y: b.y, yon: b.yon, sol: 0, sag: 0, sensor: [0, 0, 0, 900, 900, 0, 0, 0], solTeker: 0, sagTeker: 0, ilerleme: 0 });
+    this.konumla({ t: 0, x: b.x, y: b.y, yon: b.yon, sol: 0, sag: 0, sensor: [0, 0, 0, 900, 900, 0, 0, 0], solTeker: 0, sagTeker: 0, ilerleme: 0, sapma: 0 });
     this.hali?.izSil();
     this.tanitim();
   }

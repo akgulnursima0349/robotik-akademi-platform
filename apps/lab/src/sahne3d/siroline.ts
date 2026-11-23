@@ -4,10 +4,11 @@
 import * as THREE from "three";
 import { SIROLINE } from "@sra/robot-motoru";
 
-const R_TEKER = SIROLINE.tekerCap / 2;           // 22
+const R_TEKER = SIROLINE.tekerCap / 2;           // 18,5
 const IZ = SIROLINE.izGenisligi / 2;             // 72,5: tekerlek merkezinin yana uzaklığı
-const TEKER_EN = 27;
-const PLEKSI_ALT = 7.7, PLEKSI_KAL = 3;
+const TEKER_EN = 25;
+const PLEKSI_KAL = 3;
+const PLEKSI_ALT = R_TEKER - 11.25 - PLEKSI_KAL; // motor gövdesi pleksinin üstünde, mili teker ekseninde
 const PLEKSI_UST = PLEKSI_ALT + PLEKSI_KAL;
 export const SENSOR_X = SIROLINE.sensorOnde;     // 168
 
@@ -122,7 +123,7 @@ function katman(sekil: THREE.Shape, kalinlik: number, y: number, m: THREE.Materi
 function tekerlek(): THREE.Group {
   const g = new THREE.Group();
   /* lastik: yuvarlatılmış kenarlı geniş köpük */
-  const ic = 15.5, dis = R_TEKER, yar = TEKER_EN / 2, r = 3.2;
+  const ic = 12.8, dis = R_TEKER, yar = TEKER_EN / 2, r = 2.8;
   const pr: THREE.Vector2[] = [];
   pr.push(new THREE.Vector2(ic, -yar));
   for (let i = 0; i <= 6; i++) { const a = -Math.PI / 2 + (i / 6) * Math.PI / 2; pr.push(new THREE.Vector2(dis - r + Math.cos(a) * r, -yar + r + Math.sin(a) * r)); }
@@ -133,7 +134,7 @@ function tekerlek(): THREE.Group {
   /* jant: 4 trapez delikli sarı disk, dış yüzden 2 mm içeride */
   const jant = new THREE.Shape(); jant.absarc(0, 0, ic + 0.3, 0, Math.PI * 2, false);
   for (let k = 0; k < 4; k++) {
-    const a0 = k * Math.PI / 2 + 0.24, a1 = (k + 1) * Math.PI / 2 - 0.24, ri = 6.4, ro = 13.4;
+    const a0 = k * Math.PI / 2 + 0.24, a1 = (k + 1) * Math.PI / 2 - 0.24, ri = 5.2, ro = 10.9;
     const h = new THREE.Path();
     h.moveTo(Math.cos(a0) * ri, Math.sin(a0) * ri);
     h.lineTo(Math.cos(a0 - 0.08) * ro, Math.sin(a0 - 0.08) * ro);
@@ -145,7 +146,7 @@ function tekerlek(): THREE.Group {
   const jantG = new THREE.ExtrudeGeometry(jant, { depth: 3, bevelEnabled: true, bevelThickness: 0.5, bevelSize: 0.5, bevelSegments: 2, curveSegments: 32 });
   const dis1 = new THREE.Mesh(jantG, M.pla); dis1.position.z = yar - 4.6; g.add(dis1);
   const icDisk = new THREE.Mesh(new THREE.CylinderGeometry(ic, ic, 2, 40), M.icGolge); icDisk.rotation.x = Math.PI / 2; icDisk.position.z = -yar + 4; g.add(icDisk);
-  const gobek = silindir(5.6, TEKER_EN - 6, M.plaKoyu, 24); gobek.rotation.x = Math.PI / 2; gobek.position.z = 1; g.add(gobek);
+  const gobek = silindir(4.6, TEKER_EN - 6, M.plaKoyu, 24); gobek.rotation.x = Math.PI / 2; gobek.position.z = 1; g.add(gobek);
   const halka = new THREE.Mesh(new THREE.CylinderGeometry(ic, ic, TEKER_EN - 8, 48, 1, true), M.icGolge); halka.rotation.x = Math.PI / 2; halka.position.z = 0.5; g.add(halka);
   const vida = silindir(1.6, 1.2, M.celik, 12); vida.rotation.x = Math.PI / 2; vida.position.z = yar - 1.8; g.add(vida);
   return golgeli(g) as THREE.Group;
@@ -208,7 +209,7 @@ function kalkan(): THREE.Group {
   nano.add(kutu(3.4, 1.2, 2.2, M.gumus, 10, 1.4, -4)); // kristal
   nano.add(kutu(2.4, 0.8, 1.4, M.plastikBeyaz, 14, 1.2, 4)); // düğme
   for (const z of [-7.62, 7.62]) { nano.add(kutu(38, 8.5, 2.6, M.plastikSiyah, 0, -5.2, z)); }
-  nano.position.set(-2, 10.6, -10);
+  nano.position.set(-2, 10.6, -10); nano.userData.ust = true;
   g.add(nano);
   /* kırmızı motor sürücü */
   const surucu = new THREE.Group();
@@ -216,7 +217,7 @@ function kalkan(): THREE.Group {
   surucu.add(kutu(6, 1.3, 5, M.entegre, 0, 1.4, 0));
   surucu.add(kutu(2.2, 1.3, 1.4, M.entegre, -6, 1.4, 5)); surucu.add(kutu(2.2, 1.3, 1.4, M.entegre, 6, 1.4, -5));
   for (const z of [-8.5, 8.5]) surucu.add(kutu(17, 6, 2.5, M.plastikSiyah, 0, -3.8, z));
-  surucu.position.set(8, 9, 15);
+  surucu.position.set(8, 9, 15); surucu.userData.ust = true;
   g.add(surucu);
   /* JST soket, kondansatör */
   g.add(kutu(8, 6, 6, M.plastikBeyaz, 24, 3.8, -19));
@@ -264,8 +265,13 @@ function seritKablo(yol: [number, number, number][]): THREE.Group {
 }
 
 /* ---------- robot ---------- */
+/** Kurulum rehberinin adımlarına göre parça grupları */
+export const PARCALAR = ["sasi", "kol", "motor", "teker", "sensor", "kalkan", "nano", "pil", "kablo"] as const;
+export type ParcaAdi = (typeof PARCALAR)[number];
+
 export interface SiroLineModeli {
   kok: THREE.Group;
+  parcalar: Record<ParcaAdi, THREE.Group>;
   /** sol ve sağ tekerleği gidilen yola göre döndürür (mm) */
   tekerleriDondur(solMm: number, sagMm: number): void;
   /** sensör değerleriyle (0–1000) LED'leri yakar */
@@ -274,54 +280,60 @@ export interface SiroLineModeli {
 
 export function siroline(): SiroLineModeli {
   const ic = new THREE.Group();
-  ic.add(golgeli(katman(govdeSekli(), PLEKSI_KAL, PLEKSI_ALT, M.pleksi, 0.4)));
-  /* sensör kolu: siyah pleksi taban + sarı baskı */
-  ic.add(golgeli(katman(kolSekli(), 2, PLEKSI_ALT, M.pleksi, 0.3)));
-  ic.add(golgeli(katman(kolSekli(), 5, PLEKSI_ALT + 2, M.pla, 0.7)));
-  /* boynu kol ile birleştiren sarı yaka */
-  ic.add(golgeli(kutu(14, 4, 30, M.pla, 156, PLEKSI_UST + 2, 0, 1.5)));
-  /* kayma topları (şeffaf) */
-  for (const z of [-50, 50]) { const t = new THREE.Mesh(new THREE.SphereGeometry(5.2, 24, 16), M.seffaf); t.position.set(184, 5.2, z); ic.add(t); ic.add(golgeli(silindir(6.2, 4, M.seffaf, 24)).translateX(184).translateY(PLEKSI_ALT - 1).translateZ(z)); }
-  /* sensör kartı kolun ön kenarında, yere 5 mm yukarıda (göz aşağı bakar) */
+  const parcalar = Object.fromEntries(PARCALAR.map((a) => { const g = new THREE.Group(); g.name = a; ic.add(g); return [a, g]; })) as Record<ParcaAdi, THREE.Group>;
+  const { sasi, kol, motor, teker, sensor, kalkan: kalkanG, nano, pil: pilG, kablo: kabloG } = parcalar;
+
+  /* 1 · şasi */
+  sasi.add(golgeli(katman(govdeSekli(), PLEKSI_KAL, PLEKSI_ALT, M.pleksi, 0.4)));
+  /* 2 · sensör kolu: siyah pleksi taban + sarı baskı, yaka, kayma topları, vidalar */
+  kol.add(golgeli(katman(kolSekli(), 2, PLEKSI_ALT, M.pleksi, 0.3)));
+  kol.add(golgeli(katman(kolSekli(), 5, PLEKSI_ALT + 2, M.pla, 0.7)));
+  kol.add(golgeli(kutu(14, 4, 30, M.pla, 156, PLEKSI_UST + 2, 0, 1.5)));
+  for (const z of [-50, 50]) {
+    const t = new THREE.Mesh(new THREE.SphereGeometry(4.2, 24, 16), M.seffaf); t.position.set(184, 4.2, z); kol.add(t);
+    kol.add(golgeli(silindir(5.4, 3, M.seffaf, 24)).translateX(184).translateY(PLEKSI_ALT + 0.6).translateZ(z));
+  }
+  for (const z of [-30, 30]) kol.add(golgeli(silindir(2.6, 1.6, M.celik, 12)).translateX(166).translateY(PLEKSI_ALT + 7.6).translateZ(z));
+  /* 5 · sensör kartı kolun ön kenarında */
   const KART_Y = PLEKSI_ALT + 7 + 0.8;
-  const sk = sensorKarti(); sk.g.position.set(SENSOR_X, KART_Y, 0); ic.add(sk.g);
-  /* motorlar ve tekerlekler */
+  const sk = sensorKarti(); sk.g.position.set(SENSOR_X, KART_Y, 0); sensor.add(sk.g);
+  /* 3-4 · motorlar ve tekerlekler */
+  const KALKAN_Y = PLEKSI_UST + 14.8;
   const tekerler: THREE.Group[] = [];
   for (const sag of [false, true]) {
-    const z = (sag ? 1 : -1) * (IZ - TEKER_EN / 2 - 10.5);
-    const mot = ttMotor(sag); mot.position.set(0, R_TEKER, z); ic.add(mot);
-    /* motor bağlantı plakası */
-    ic.add(golgeli(kutu(16, 12, 3, M.pla, 12, PLEKSI_UST + 6, z + (sag ? -11 : 11), 1)));
-    const t = tekerlek(); t.position.set(0, R_TEKER, (sag ? 1 : -1) * IZ); if (!sag) t.rotation.y = Math.PI; ic.add(t); tekerler.push(t);
-    /* motor kabloları */
-    const zs = sag ? 1 : -1;
-    ic.add(kablo([[62, R_TEKER + 4, z], [68, R_TEKER + 12, z - zs * 6], [56, 44, zs * 22], [44, 40, zs * 18]], M.kabloKirmizi, 0.8));
-    ic.add(kablo([[62, R_TEKER - 4, z], [70, R_TEKER + 8, z - zs * 10], [58, 42, zs * 17], [46, 40, zs * 14]], M.kabloSiyah, 0.8));
+    const z = (sag ? 1 : -1) * (IZ - TEKER_EN / 2 - 10.5), zs = sag ? 1 : -1;
+    const mot = ttMotor(sag); mot.position.set(0, R_TEKER, z); motor.add(mot);
+    motor.add(golgeli(kutu(16, 12, 3, M.pla, 12, PLEKSI_UST + 6, z - zs * 11, 1)));
+    const t = tekerlek(); t.position.set(0, R_TEKER, zs * IZ); if (!sag) t.rotation.y = Math.PI; teker.add(t); tekerler.push(t);
+    kabloG.add(kablo([[62, R_TEKER + 4, z], [68, R_TEKER + 12, z - zs * 6], [56, KALKAN_Y + 15, zs * 22], [44, KALKAN_Y + 11, zs * 18]], M.kabloKirmizi, 0.8));
+    kabloG.add(kablo([[62, R_TEKER - 4, z], [70, R_TEKER + 8, z - zs * 10], [58, KALKAN_Y + 13, zs * 17], [46, KALKAN_Y + 11, zs * 14]], M.kabloSiyah, 0.8));
   }
-  /* pirinç aralayıcılar ve kontrol kartı */
+  /* 6 · pirinç aralayıcılar ve kalkan kartı; 7 · Nano ve sürücü (kalkanın üstünde) */
   for (const [x, z] of [[12, -24], [12, 24], [58, -24], [58, 24]]) {
-    const a = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 2.6, 14, 6), M.pirinc); a.position.set(x, PLEKSI_UST + 7, z); golgeli(a); ic.add(a);
+    const a = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 2.6, 14, 6), M.pirinc); a.position.set(x, PLEKSI_UST + 7, z); golgeli(a); kalkanG.add(a);
   }
-  const k = kalkan(); k.position.set(35, PLEKSI_UST + 14.8, 0); ic.add(k);
-  /* pil yuvası: arkada, iki mavi 18650 */
+  const k = kalkan(); k.position.set(35, KALKAN_Y, 0);
+  /* kalkan grubundan Nano ve sürücüyü ayır: kurulumda ayrı adım */
+  const ust = k.children.filter((c) => c.userData.ust);
+  for (const c of ust) { k.remove(c); c.position.add(k.position); nano.add(c); }
+  kalkanG.add(k);
+  /* 8 · pil yuvası: arkada, iki mavi 18650 */
   const pil = new THREE.Group();
   pil.add(kutu(40, 8, 70, M.plastikSiyah, 0, 4, 0, 1.2));
   for (const x of [-9.5, 9.5]) { const h = silindir(9, 65, M.pilMavi, 32); h.rotation.x = Math.PI / 2; h.position.set(x, 11, 0); pil.add(h); const u = silindir(4, 1.2, M.gumus, 16); u.rotation.x = Math.PI / 2; u.position.set(x, 11, 33); pil.add(u); }
-  pil.position.set(-20, PLEKSI_UST, 0); golgeli(pil); ic.add(pil);
-  ic.add(kablo([[-8, PLEKSI_UST + 8, 34], [0, PLEKSI_UST + 26, 30], [12, PLEKSI_UST + 22, 22]], M.kabloKirmizi, 0.85));
-  ic.add(kablo([[-8, PLEKSI_UST + 5, 34], [-2, PLEKSI_UST + 22, 34], [14, PLEKSI_UST + 20, 26]], M.kabloSiyah, 0.85));
-  /* şerit kablo: kalkandan boyun boyunca sensör kartına; boyunda siyah bant */
+  pil.position.set(-20, PLEKSI_UST, 0); golgeli(pil); pilG.add(pil);
+  /* 9 · kablolar: pil, şerit kablo (sensör → A0–A7), boyundaki bant */
+  kabloG.add(kablo([[-8, PLEKSI_UST + 8, 34], [0, PLEKSI_UST + 26, 30], [12, PLEKSI_UST + 22, 22]], M.kabloKirmizi, 0.85));
+  kabloG.add(kablo([[-8, PLEKSI_UST + 5, 34], [-2, PLEKSI_UST + 22, 34], [14, PLEKSI_UST + 20, 26]], M.kabloSiyah, 0.85));
   const sy = PLEKSI_UST + 0.9;
-  ic.add(seritKablo([[64, PLEKSI_UST + 17, 0], [76, PLEKSI_UST + 8, 0], [92, sy + 0.4, 0], [130, sy, 0], [150, sy + 3, 0], [156, PLEKSI_UST + 7, 0], [160, KART_Y + 10, 0], [SENSOR_X - 6, KART_Y + 9, 0], [SENSOR_X - 3.5, KART_Y + 10.5, 0]]));
-  ic.add(golgeli(kutu(16, 2.6, 22, M.bant, 118, PLEKSI_UST + 1.2, 0, 0.6)));
-  /* ön kartın arkasındaki vida başları */
-  for (const z of [-30, 30]) ic.add(golgeli(silindir(2.6, 1.6, M.celik, 12)).translateX(166).translateY(PLEKSI_ALT + 7.6).translateZ(z));
+  kabloG.add(seritKablo([[64, KALKAN_Y + 2, 0], [76, PLEKSI_UST + 8, 0], [92, sy + 0.4, 0], [130, sy, 0], [150, sy + 3, 0], [156, PLEKSI_UST + 7, 0], [160, KART_Y + 10, 0], [SENSOR_X - 6, KART_Y + 9, 0], [SENSOR_X - 3.5, KART_Y + 10.5, 0]]));
+  kabloG.add(golgeli(kutu(16, 2.6, 22, M.bant, 118, PLEKSI_UST + 1.2, 0, 0.6)));
 
   const kok = new THREE.Group(); kok.add(ic); kok.scale.setScalar(0.001); // mm → metre
 
   const ledMat = sk.ledler.map((l) => l.material as THREE.MeshStandardMaterial);
   return {
-    kok,
+    kok, parcalar,
     tekerleriDondur(solMm, sagMm) {
       tekerler[0].rotation.z = solMm / R_TEKER;   // sol tekerlek y ekseninde ters çevrili
       tekerler[1].rotation.z = -sagMm / R_TEKER;
