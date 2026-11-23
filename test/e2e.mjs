@@ -278,14 +278,14 @@ for (const [ad, g, y] of BOYUTLAR) {
     await p.goto(ADRES + "lab/?k#cizgi"); await p.waitForSelector("#c-kurulum");
     ok(await p.isVisible("#c-ayar"), "SiroLine sayfasında kurulum ve ayar kartları");
     await p.click("#c-kurulum"); await p.waitForSelector("body[data-kurulum-hazir] .l3-kurulum__sahne canvas", { timeout: 60000 });
-    ok((await p.$$(".l3-noktalar button")).length === 10 && await p.isDisabled("#k-geri"), "kurulum: 10 adım, ilk adımda Geri kapalı");
+    ok((await p.$$(".l3-noktalar button")).length === 9 && await p.isDisabled("#k-geri"), "kurulum: 9 adım, ilk adımda Geri kapalı");
     await p.click("#k-ileri"); await p.click("#k-ileri");
     ok(await p.getAttribute(".l3-kurulum__sahne", "data-adim") === "3", "İleri ile 3. adım (motorlar)");
     await p.click(".l3-sik:nth-of-type(1)"); ok(await p.isVisible(".l3-sik.yanlis") && /Bir daha/.test(await p.textContent(".l3-soru__sonuc")), "yanlış cevap işaretlendi");
     await p.click(".l3-sik:nth-of-type(2)"); ok(await p.isVisible(".l3-sik.dogru") && /Doğru/.test(await p.textContent(".l3-soru__sonuc")), "doğru cevap ve açıklaması");
     await p.keyboard.press("ArrowRight"); ok(await p.getAttribute(".l3-kurulum__sahne", "data-adim") === "4", "klavye: sağ ok ileri");
     await p.keyboard.press("ArrowLeft"); ok(await p.getAttribute(".l3-kurulum__sahne", "data-adim") === "3", "klavye: sol ok geri");
-    await p.click(".l3-noktalar li:nth-child(10) button");
+    await p.click(".l3-noktalar li:nth-child(9) button");
     ok(await p.isHidden("#k-ileri") && await p.isVisible('a[href="#cizgi/ayar"]'), "son adım: Ayar Atölyesi ve kod görevleri bağlantısı");
     await p.waitForTimeout(400);
     await p.screenshot({ path: `${EKRAN}/lab3d_${ad}_5_kurulum.png`, fullPage: true });

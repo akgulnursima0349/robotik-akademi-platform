@@ -160,7 +160,7 @@ a.l-gorev:hover { transform: translateY(-2px); box-shadow: var(--sra-golge-ust);
 .l3-panel__baslik { margin: 0 0 6px; font: 600 12px var(--sra-yazi-kod); color: var(--sra-murekkep-3) }
 .l3-sensorler { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 5px; height: 92px; align-items: end }
 .l3-sensor { position: relative; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; background: var(--sra-zemin, #f3f4f7); border-radius: 6px; overflow: hidden }
-.l3-sensor i { position: absolute; left: 0; right: 0; bottom: 0; height: 0; background: #8a93a6; transition: height .05s linear }
+.l3-sensor i { position: absolute; left: 0; right: 0; bottom: 0; height: 0; background: #8a93a6 }
 .l3-sensor.siyah i { background: #23262d }
 .l3-sensor b { position: relative; font: 600 11px var(--sra-yazi-kod); color: var(--sra-murekkep); background: rgba(255,255,255,.82); border-radius: 4px; padding: 0 3px; margin-bottom: 16px }
 .l3-sensor small { position: absolute; bottom: 2px; font: 600 10px var(--sra-yazi-kod); color: #fff; mix-blend-mode: difference }
@@ -246,3 +246,4 @@ a.l-gorev:hover { transform: translateY(-2px); box-shadow: var(--sra-golge-ust);
 .l3-etkinlik__ikon { width: 46px; height: 46px; padding: 11px; border-radius: 12px; background: #e7f6ee; color: #26966a; flex: none }
 .l3-tamam { font: 600 12px var(--sra-yazi); color: #1d7a55; display: inline-flex; gap: 4px; align-items: center }
 .l3-baslik2 { margin: 0 0 10px; font-size: var(--sra-yazi-l) }
+.l3-blok__not { font-weight: 500; font-size: 12px; opacity: .85 }

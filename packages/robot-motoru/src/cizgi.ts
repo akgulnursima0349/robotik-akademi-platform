@@ -1,14 +1,14 @@
-/* Çizgi izleyen robot simülasyonu (SiroLine Pleksi).
+/* Çizgi izleyen robot simülasyonu (SiroLine Full PCB, akademinin sınıftaki robotu).
    Birim: milimetre ve saniye. Diferansiyel sürüş, motor gecikmesi, 8 kızılötesi sensör.
    Deterministik: sensör gürültüsü sabit tohumlu; aynı kod → aynı tur. */
 import { rastgele } from "./izgara";
 
-/* ---------- robot ölçüleri (mağaza fotoğrafı: 21,5 × 17,5 cm) ---------- */
+/* ---------- robot ölçüleri (sınıftaki robot, dijital kumpasla: teker 36,1 mm, iki teker arası 99,2 mm, arka gövde 94,1 mm) ---------- */
 export const SIROLINE = {
-  izGenisligi: 145,   // iki tekerleğin merkezleri arası (mm)
-  tekerCap: 37,       // lastik çapı (mm); kitin enkoder bloğunda 3,7 cm
-  sensorOnde: 168,    // sensör dizisinin aks merkezinden uzaklığı (mm)
-  sensorAralik: 9.5,  // komşu sensörler arası (mm)
+  izGenisligi: 125,   // iki tekerleğin merkezleri arası (mm): 99,2 iç açıklık + 26 lastik eni
+  tekerCap: 36,       // lastik çapı (mm); kumpasla 36,1 (kitin enkoder bloğunda 3,7 cm)
+  sensorOnde: 154,    // QTR-8A dizisinin aks merkezinden uzaklığı (mm)
+  sensorAralik: 9.525, // QTR-8A: komşu sensörler arası 0,375 inç (mm)
   sensorSayisi: 8,
   azamiHiz: 600,      // 255 PWM'de tekerlek hızı (mm/sn); 7,4 V'ta TT motor ≈ 300 devir/dk
   oluBolge: 35,       // bu PWM'in altında redüktörlü motor dönmez
@@ -23,6 +23,8 @@ const KONTROL_ORANI = Math.round(DONGU_ARALIGI / FIZIK_ADIMI);
 export type Nokta = [number, number];
 export type PistParca = { tur: "duz"; uzunluk: number } | { tur: "yay"; yaricap: number; aci: number /* derece, + sola */ };
 export type PistTanimi = { parcalar: PistParca[] } | { noktalar: Nokta[] };
+/** Zemin rengi: "beyaz" = beyaz halı, siyah bant (yarışma standardı); "siyah" = siyah zemin, beyaz bant (akademinin sınıf pisti) */
+export type Zemin = "beyaz" | "siyah";
 
 /* ---------- pist ---------- */
 export class Pist {
@@ -33,7 +35,7 @@ export class Pist {
   private izgara = new Map<string, number[]>();
   private static HUCRE = 40;
 
-  constructor(t: PistTanimi, readonly kenarPayi = 260) {
+  constructor(t: PistTanimi, readonly zemin: Zemin = "beyaz", readonly kenarPayi = 260) {
     const ham = "parcalar" in t ? parcalardan(t.parcalar) : splineDan(t.noktalar);
     this.yol = esitAralikla(ham, 2);
     this.uzunluk = this.yol.length * 2;
@@ -191,13 +193,19 @@ export class CizgiRobotu {
       const d = this.pist.uzaklik(sx, sy);
       const ortu = Math.max(0, Math.min(1, (CIZGI_GENISLIGI / 2 - d) / 8 + 0.5)); // sensörün ~8 mm'lik görüş alanı
       const g = (this.gurultu() - 0.5) * 30;
-      out.push(Math.round(Math.max(0, Math.min(1000, 45 + 905 * ortu + g))));
+      /* QTR: koyu yüzey büyük sayı. Beyaz zeminde bant siyah, siyah zeminde bant beyaz. */
+      const koyuluk = this.pist.zemin === "beyaz" ? ortu : 1 - ortu;
+      out.push(Math.round(Math.max(0, Math.min(1000, 45 + 905 * koyuluk + g))));
     }
     return out;
   }
 
   /** QTR kütüphanesindeki gibi ağırlıklı konum: -100 (çizgi solda) … 100 (sağda). Çizgi görünmezse son gördüğü taraf. */
-  konum(s: number[]): number {
+  /** Bandın sensördeki payı (0–1000): zemin rengine göre çevrilmiş okuma */
+  cizgiPayi(s: number[]): number[] { return this.pist.zemin === "beyaz" ? s : s.map((v) => 1000 - v); }
+
+  konum(ham: number[]): number {
+    const s = this.cizgiPayi(ham);
     let top = 0, agir = 0;
     s.forEach((v, i) => { if (v > 200) { top += v; agir += v * i; } });
     if (top < 300) return this.sonKonum < 0 ? -100 : 100;
@@ -219,14 +227,14 @@ export class CizgiRobotu {
   }
 }
 
-export const CIKMA_SURESI = 1.0;   // bütün sensörler beyazken geçebilecek süre (sn)
+export const CIKMA_SURESI = 1.0;   // bant hiçbir sensörde görünmeden geçebilecek süre (sn)
 export const YOLDAN_UZAK = 240;    // aks merkezinin çizgiden en fazla uzaklığı (mm)
 
 /** Turu baştan sona koşturur. Beyin hata fırlatırsa tur "hata" ile biter. */
 export function turKos(pist: Pist, beyin: CizgiBeyni, sureSiniri: number, tohum = 7): CizgiSonucu {
   const r = new CizgiRobotu(pist, tohum);
   const n = pist.yol.length;
-  let iz = 0, gidilen = 0, beyaz = 0, pwm: [number, number] = [0, 0];
+  let iz = 0, gidilen = 0, cizgisiz = 0, pwm: [number, number] = [0, 0];
   const kareler: CizgiKaresi[] = [];
   const kare = (t: number, s: number[]) => {
     const [sx, sy] = r.sensorKonumu(3.5);
@@ -243,9 +251,9 @@ export function turKos(pist: Pist, beyin: CizgiBeyni, sureSiniri: number, tohum 
     kare(t, s);
     if (gidilen >= n) return bitir("bitti", t);
     if (t >= sureSiniri) return bitir("sure", t);
-    beyaz = s.every((v) => v < 300) ? beyaz + DONGU_ARALIGI : 0;
+    cizgisiz = r.cizgiPayi(s).every((v) => v < 300) ? cizgisiz + DONGU_ARALIGI : 0; // bant hiçbir sensörde yok
     const { x0, y0, x1, y1 } = pist.sinir;
-    if (beyaz > CIKMA_SURESI || pist.uzaklik(r.x, r.y) > YOLDAN_UZAK || r.x < x0 || r.x > x1 || r.y < y0 || r.y > y1) return bitir("cikti", t);
+    if (cizgisiz > CIKMA_SURESI || pist.uzaklik(r.x, r.y) > YOLDAN_UZAK || r.x < x0 || r.x > x1 || r.y < y0 || r.y > y1) return bitir("cikti", t);
     try {
       const p = beyin({ sensorler: s, konum: r.konum(s), sure: Math.round(t * 1000) });
       pwm = [Number(p[0]) || 0, Number(p[1]) || 0];
@@ -260,15 +268,16 @@ export function turKos(pist: Pist, beyin: CizgiBeyni, sureSiniri: number, tohum 
 }
 
 /* ---------- SiroLine bloğu: kitin mBlock uzantısındaki PID ---------- */
-export interface SiroAyar { taban: number; ek: number; kp: number; kd: number; zemin: "siyah" | "beyaz" }
-/** Ürün sayfasındaki mBlock örneğinin değerleri */
+export interface SiroAyar { taban: number; ek: number; kp: number; kd: number; zemin: Zemin }
+/** Ürün sayfasındaki mBlock örneğinin değerleri (Zemin: Siyah = akademinin siyah zeminli, beyaz bantlı pisti) */
 export const SIRO_VARSAYILAN: SiroAyar = { taban: 100, ek: 0, kp: 0.04, kd: 0.7, zemin: "siyah" };
 
 /** QTR kütüphanesindeki readLine gibi: 0 (çizgi en solda) … 3500 (orta) … 7000 (en sağda). */
 export function qtrOkuyucu() {
   let son = 3500;
-  return (s: number[], zemin: "siyah" | "beyaz" = "siyah"): number => {
-    const v = zemin === "siyah" ? s : s.map((x) => 1000 - x);
+  return (s: number[], zemin: Zemin = "beyaz"): number => {
+    /* kitteki "Zemin" seçimi zeminin rengidir: siyah zeminde beyaz bant aranır, okuma ters çevrilir */
+    const v = zemin === "beyaz" ? s : s.map((x) => 1000 - x);
     let top = 0, agir = 0, gordu = false;
     v.forEach((d, i) => { if (d > 200) gordu = true; if (d > 50) { top += d; agir += d * i * 1000; } });
     if (!gordu) return son < 3500 ? 0 : 7000;

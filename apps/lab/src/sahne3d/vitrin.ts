@@ -7,7 +7,7 @@ import { pistHalisi, HALI_KALINLIK } from "./pist";
 
 const ACILAR: Record<string, [number, number, number, number]> = {
   // kamera konumu (robot ekseninde, metre) ve hedef yüksekliği
-  "on-sag": [0.42, 0.2, 0.3, 0.02], "yan": [0.08, 0.06, 0.42, 0.02], "ust": [0.09, 0.5, 0.001, 0], "arka": [-0.35, 0.22, -0.28, 0.02], "yakin": [0.2, 0.12, 0.2, 0.025], "on": [0.5, 0.08, 0.0, 0.02], "kapak": [0.36, 0.17, 0.27, 0.03]
+  "on-sag": [0.42, 0.2, 0.3, 0.02], "yan": [0.08, 0.06, 0.42, 0.02], "ust": [0.09, 0.5, 0.001, 0], "arka": [-0.35, 0.22, -0.28, 0.02], "yakin": [0.2, 0.12, 0.2, 0.025], "on": [0.5, 0.08, 0.0, 0.02], "kapak": [0.36, 0.17, 0.27, 0.03], "foto": [-0.12, 0.17, -0.3, 0.01], "foto-ust": [0.1, 0.42, 0.0005, 0]
 };
 export function vitrin(root: HTMLElement, aci: string) {
   const kap = document.createElement("div"); kap.style.cssText = "position:fixed;inset:0"; root.replaceChildren(kap);

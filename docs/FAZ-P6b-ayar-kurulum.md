@@ -54,6 +54,8 @@ Robot adım adım kurulur. O adımın parçaları yukarıdan inip yerine oturur,
 | 9 | Kablolar | Şerit kablo sensörü A0–A7'ye bağlar |
 | 10 | Hazır | Pistte dene, Ayar Atölyesi |
 
+(Bu tablo ilk taslaktır. Full PCB sürümünün 9 adımı için aşağıdaki düzeltmeye bak.)
+
 - Her adımda kısa bir açıklama ve "Biliyor muydun?" notu var.
 - Dört adımda üç şıklı bir soru sorulur; doğru cevapta yeşil onay görünür.
 - İleri ve geri düğmeleri, adım noktaları, klavye okları. Hareketi azalt açıksa parçalar animasyonsuz yerine konur.
@@ -90,3 +92,25 @@ Görev listesinin üstünde iki yeni kart olur: "3D Kurulum Rehberi" ve "Ayar At
   - "Ek Hız" bloğunun gerçek anlamı;
   - akademinin montaj sırası;
   - kalkan kartının üstten fotoğrafı.
+
+## Sınıftaki robota göre düzeltme (23 Kasım, Nur'un kumpasla ölçtüğü fotoğraflar)
+
+- **Hangi robot:** Sınıftaki robot **SiroLine Full PCB**. Model buna göre baştan yapıldı:
+  - gövde siyah devre kartı; tarak kanatlar, kancalı ön plaka;
+  - mavi TT motorlar ve beyaz kelepçeler;
+  - kırmızı jant, siyah köpük lastik;
+  - iki TB6612FNG sürücü ve yan yatık Nano;
+  - LiPo pil ve XT30;
+  - ön plakanın altında QTR-8A ve pencereden görünen başlığı;
+  - boyun ucunda dikey modül.
+- **Ölçüler (kumpasla):**
+  - teker 36,1 mm;
+  - iki teker arası 99,2 mm, iz genişliği 125 mm;
+  - arka gövde 94,1 mm, boyun 28 mm, ön kenar 81,1 mm;
+  - motor 63 mm, pil 45,6 mm.
+  - Sensör aksın 154 mm önünde.
+- **"Zemin" bloğunun anlamı düzeltildi:** pistin **zemin** rengidir. Sınıf pisti siyah zemin, beyaz bant; kitin örnek değeri de "Siyah".
+  - Ayar Atölyesi artık siyah zeminli, beyaz bantlı pistte çalışıyor.
+  - Python görevleri beyaz halı, siyah bant olarak kaldı.
+- **Kurulum rehberi:** 9 adım, üç soru. Adımlar: ana kart, QTR-8A, motorlar, tekerlekler, sürücüler, Nano, pil, kablolar, hazır.
+- **Nur'a sorulanlar:** boyun ucundaki dikey kartın görevi ve neden iki sürücü olduğu. Rehberde açıklanmadı.

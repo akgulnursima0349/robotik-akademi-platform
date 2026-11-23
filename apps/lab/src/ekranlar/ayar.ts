@@ -49,7 +49,7 @@ export async function ayarAtolyesi(root: HTMLElement) {
     el("div", "l3-blok l3-blok--sapka", {}, "Arduino başladığında"),
     el("div", "l3-blok", {}, "QTR-8A Kızılötesi Sensör Başlat"),
     el("div", "l3-blok l3-blok--ayar", {}, "Ayarla Taban Hız:", ovalGirdi(ALANLAR[0]), ", Ek Hız:", ovalGirdi(ALANLAR[1]), ", Kp:", ovalGirdi(ALANLAR[2]), ", Kd:", ovalGirdi(ALANLAR[3])),
-    el("div", "l3-blok", {}, "Zemin:", zeminSec, "Yap"),
+    el("div", "l3-blok", {}, "Zemin:", zeminSec, "Yap", el("span", "l3-blok__not", {}, "pistin zemin rengi")),
     el("div", "l3-blok l3-blok--dongu", {}, el("span", "", {}, "sürekli tekrarla"),
       el("div", "l3-blok l3-blok--ic", {}, "Sensör Oku"),
       el("div", "l3-blok l3-blok--ic", {}, "Pid ile Motor Güçlerini Ayarla"),
@@ -64,7 +64,7 @@ export async function ayarAtolyesi(root: HTMLElement) {
   /* pist seçimi, çalıştır, varsayılana dön */
   const pistSec = secici("Pist", CIZGI_GOREVLERI.map((g) => [g.kimlik, g.ad] as [string, string]), gorev.kimlik, (d) => {
     gorev = CIZGI_GOREVLERI.find((g) => g.kimlik === d)!;
-    sahne?.yukle(new Pist(gorev.pist)); bolum.panelGoster(BOS_KARE);
+    sahne?.yukle(new Pist(gorev.pist, "siyah")); bolum.panelGoster(BOS_KARE);
   });
   const denaB = dugme({ metin: "Pistte dene", ikon: "ok-sag", ikonSonda: true, id: "l-calistir" }) as HTMLButtonElement;
   const varsayB = dugme({ metin: "Kitin değerleri", tur: "ikincil", kucuk: true, id: "ayar-varsayilan" }) as HTMLButtonElement;
@@ -91,7 +91,7 @@ export async function ayarAtolyesi(root: HTMLElement) {
   const sol = el("section", "l-gorev-sol", {},
     el("a", "l-geri", { href: "#cizgi" }, "← SiroLine"),
     el("div", "l-baslik", {}, el("p", "l-ust", {}, "Ayar Atölyesi · kitin blokları"), el("h1", "", {}, "SiroLine'ı ayarla"),
-      el("p", "", {}, "Kod yazmadan, robotunun gerçek bloklarındaki değerlerle oyna. Hızlı ama sallanmayan ayarı bul, sonra aynısını masadaki robota gir.")),
+      el("p", "", {}, "Kod yazmadan, robotunun gerçek bloklarındaki değerlerle oyna. Pist sınıftaki gibi: siyah zemin, beyaz bant. Hızlı ama sallanmayan ayarı bul, sonra aynısını masadaki robota gir.")),
     bloklar, kaydiriciKutu,
     el("div", "l-eylem", {}, denaB, varsayB),
     cikti, aktarKutu);
@@ -99,14 +99,14 @@ export async function ayarAtolyesi(root: HTMLElement) {
   const bolum = sahneBolumu("Ayar Atölyesi: SiroLine yarışma pistinde, 3D");
   const sag = el("section", "l-gorev-sag", {}, el("div", "l3-pist-sec", {}, el("span", "", {}, "Pist"), pistSec), bolum.kok, grafik, tabloKap);
   root.replaceChildren(ustKisim(), el("main", "l-gorev-sayfa sra-sarmal", { id: "ana" }, sol, sag));
-  const sahne = await bolum.kur(new Pist(gorev.pist));
+  const sahne = await bolum.kur(new Pist(gorev.pist, "siyah"));
   if (!sahne) { denaB.disabled = true; return; }
 
   denaB.addEventListener("click", async () => {
     if (sahne.oynuyor) return;
     denaB.disabled = true; cikti.replaceChildren();
     const a = { ...ayar };
-    const sonuc = turKos(new Pist(gorev.pist), siroBeyni(a), gorev.sureSiniri);
+    const sonuc = turKos(new Pist(gorev.pist, "siyah"), siroBeyni(a), gorev.sureSiniri);
     const d: Deneme = { no: denemeler.length + 1, pist: gorev.ad, ayar: a, sonuc };
     denemeler.push(d);
     const tamam = await sahne.oynat(sonuc);
@@ -118,7 +118,7 @@ export async function ayarAtolyesi(root: HTMLElement) {
   function yorum(d: Deneme) {
     const s = d.sonuc;
     let m: string, tur: "basari" | "bilgi" | "hata" = "bilgi";
-    if (d.ayar.zemin === "beyaz") { m = "Zemin 'Beyaz' seçili: robot beyaz zemini çizgi sandı. Bizim halıda bant siyah."; tur = "hata"; }
+    if (d.ayar.zemin === "beyaz") { m = "Zemin 'Beyaz' seçili, ama bu pistin zemini siyah ve bandı beyaz (sınıftaki pist gibi): robot siyah zemini bant sandı."; tur = "hata"; }
     else if (s.durum === "cikti") { m = `Robot çizgiyi kaybetti (turun %${Math.round(s.ilerleme * 100)}'i). Virajda yeterince sert dönemedi: Kp'yi artır ya da taban hızı düşür.`; tur = "hata"; }
     else if (s.durum === "sure") { m = s.ilerleme < 0.05 ? "Robot neredeyse hiç ilerlemedi: taban hız çok düşük olabilir." : "Süre doldu: robot çok yavaş ya da titriyor. Kd çok yüksekse motorlar sürekli ileri geri gider."; }
     else { m = `Tur tamam: ${sn(s.sure)} saniye, ortalama sapma ${sn(s.ortSapma)} mm.` + (s.ortSapma > 8 ? " Robot epey sallanıyor; Kd'yi biraz artırmayı dene." : " Çizgiyi sıkı takip ediyor; taban hızı artırmayı dene."); tur = "basari"; }
