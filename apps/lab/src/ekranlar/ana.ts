@@ -2,7 +2,8 @@
 import { el, ikon, kursKarti, rozet, ustBar } from "@sra/tasarim";
 import { CIZGI_GOREVLERI, GOREVLER } from "@sra/robot-motoru";
 import { ilerleme } from "../ilerleme";
-import { karKapagi, ligKapagi } from "../kapaklar";
+import { karKapagi } from "../kapaklar";
+import kapakKenshin from "../assets/kapak-kenshin.webp";
 import kapakSiroline from "../assets/kapak-siroline.webp";
 import { uygulama } from "../uygulama";
 
@@ -18,15 +19,15 @@ export function ana(root: HTMLElement) {
   const kahraman = el("section", "l-kahraman sra-sarmal sra-belir", {},
     el("p", "l-ust", {}, "Robotik Laboratuvarı"),
     el("h1", "", {}, "Robotunu programla, ", el("span", "", {}, "karla mücadele et.")),
-    el("p", "l-alt", {}, "Python ile yazdığın kod, tarayıcıdaki robotu yönetir. Karlı sokakları aç, robotunu sınıf liginde yarıştır, akademinin SiroLine robotunu 3D pistte koştur."));
+    el("p", "l-alt", {}, "Python ile yazdığın kod, tarayıcıdaki robotu yönetir. Karlı sokakları aç, akademinin Kenshin'iyle sumo liginde yarış, SiroLine'ı 3D pistte koştur."));
   const izgara = el("div", "l-etkinlikler sra-sarmal");
   izgara.append(
     kursKarti({ kimlik: "kar", etiket: `${GOREVLER.length} görev · ${yildiz}/${toplam} yıldız`, baslik: "Kar Küreme Robotu", renk: "var(--sra-kurs-lab)",
       aciklama: "Bataryası sınırlı robotla karlı sokakları aç: sıralı komutlar, döngüler, sensörler ve enerji planlaması.",
       bilgi: yildiz ? "Devam et" : "Başla", bilgiIkon: "robot", gorsel: karKapagi(), href: "#kar" }),
-    kursKarti({ kimlik: "lig", etiket: "Herkes herkesle", baslik: "Sınıf Robot Ligi", renk: "var(--sra-vurgu)",
-      aciklama: "Her turda ne yapacağına kendi karar veren bir robot yaz. Kar topu toplama maçlarında rakiplerini geç.",
-      bilgi: ilerleme.lig() ? "Robotun hazır" : "Robotunu yaz", bilgiIkon: "kisiler", gorsel: ligKapagi(), href: "#lig" }),
+    kursKarti({ kimlik: "lig", etiket: "3D · herkes herkesle", baslik: "Mini Sumo Ligi", renk: "var(--sra-vurgu)",
+      aciklama: "Akademinin yarışma robotu Kenshin ringde. Sensörlerini oku, taktiğini yaz, rakiplerini ringden çıkar.",
+      bilgi: ilerleme.lig() ? "Robotun hazır" : "Robotunu yaz", bilgiIkon: "kisiler", gorsel: kapakKenshin, href: "#lig" }),
     kursKarti({ kimlik: "cizgi", etiket: `3D · ${CIZGI_GOREVLERI.length} pist · ${cYildiz}/${cToplam} yıldız`, baslik: "Çizgi İzleyen Robot", renk: "#e0a800",
       aciklama: "Akademinin SiroLine robotu 3D pistte. Sekiz sensörü oku, iki motoru Python'la yönet; hızdan PID'ye.",
       bilgi: cYildiz ? "Devam et" : "Başla", bilgiIkon: "robot", gorsel: kapakSiroline, href: "#cizgi" })

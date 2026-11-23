@@ -195,13 +195,13 @@ for (const [ad, g, y] of BOYUTLAR) {
     ok(true, "while + sensör çözümü üç sokakta da geçti");
 
     /* lig */
-    await p.goto(ADRES + "lab/#lig"); await p.waitForSelector(".l-sahne canvas");
+    await p.goto(ADRES + "lab/#lig"); await p.waitForSelector(".l3-sahne[data-hazir] canvas", { timeout: 60000 });
     ok((await p.$$(".l-rakip")).length === 5, "beş rakibin kodu okunabilir");
     await p.click("#l-turnuva"); await p.waitForSelector(".l-tablo tbody tr");
     ok((await p.$$(".l-tablo tbody tr")).length === 6 && (await p.$$(".l-mac")).length === 15, "turnuva: 6 robot, 15 maç");
     await p.click('.l-mac[data-mac="14"]');
-    await p.waitForFunction(() => /tur [1-9]/.test(document.querySelector(".l-skor__tur")?.textContent ?? ""));
-    ok(true, "maç tekrarı oynuyor");
+    await p.waitForFunction(() => /[1-9],\d sn/.test(document.querySelector(".l-skor__tur")?.textContent ?? "") && /Raunt \d+:/.test(document.querySelector(".l-raunt-durum")?.textContent ?? ""));
+    ok((await p.$$(".l-rauntlar button")).length >= 2, "maç tekrarı: rauntlar ve raunt sonucu gösteriliyor");
     await yaz(p, "def hamle(robot)\n    return 'ileri'\n");
     await p.click("#l-turnuva"); await p.waitForSelector(".l-cikti .sra-uyari--hata");
     ok(/iki nokta/.test(await p.textContent(".l-cikti")), "robot kodundaki hata turnuvadan önce gösteriliyor");
@@ -211,14 +211,14 @@ for (const [ad, g, y] of BOYUTLAR) {
     await p.click("#g-ogrenci"); await p.fill("#g-kod", "JNR123"); await p.fill("#g-ad", "Ece"); await p.fill("#g-pin", "1234"); await p.click("button[type=submit]");
     await p.waitForURL(/\/junior\/$/);
     await p.goto(ADRES + "lab/#lig"); await p.waitForSelector("#l-gonder");
-    await yaz(p, "def hamle(robot):\n    if robot['onu_acik']:\n        return 'ileri'\n    return 'saga'\n");
+    await yaz(p, "def hamle(robot):\n    if robot['rakip'][2] == 1:\n        return 255, 255\n    return 120, -120\n");
     await p.click("#l-gonder"); await p.waitForSelector(".l-cikti .sra-uyari--basari");
     ok(true, "öğrenci robotunu sınıfına gönderdi (tek giriş Laboratuvar'da da geçerli)");
     await p.goto(ADRES); await hazir(p); await p.click("#p-cikis"); await p.waitForSelector("#p-giris");
     await p.goto(ADRES + "#giris"); await hazir(p);
     await p.click("#g-ogretmen"); await p.fill("#g-eposta", "ogretmen@deneme.com"); await p.fill("#g-sifre", "deneme123"); await p.click("button[type=submit]");
     await p.waitForSelector(".p-sinif[data-kod]");
-    await p.goto(ADRES + "lab/#lig"); await p.waitForSelector("#l-sinif option", { state: "attached" });
+    await p.goto(ADRES + "lab/#lig"); await p.waitForSelector("#l-sinif option", { state: "attached" }); await p.waitForSelector(".l3-sahne[data-hazir]", { timeout: 60000 });
     await p.selectOption("#l-sinif", "s1"); await p.click("#l-sinif-turnuva");
     await p.waitForSelector(".l-tablo tbody tr");
     ok((await p.$$(".l-tablo tbody tr")).length === 3, "öğretmen: sınıf turnuvası 3 öğrenci robotuyla oynandı");

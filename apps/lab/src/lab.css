@@ -248,3 +248,11 @@ a.l-gorev:hover { transform: translateY(-2px); box-shadow: var(--sra-golge-ust);
 .l3-baslik2 { margin: 0 0 10px; font-size: var(--sra-yazi-l) }
 .l3-blok__not { font-weight: 500; font-size: 12px; opacity: .85 }
 .l3-blok--kontrol { background: #f2a51c }
+
+/* ---------- Mini sumo ligi ---------- */
+.l3-sahne--sumo { height: clamp(320px, 52vh, 560px) }
+.l-rauntlar { display: inline-flex; gap: 6px; flex: 1; flex-wrap: wrap }
+.l-rauntlar button { border: 1px solid var(--sra-cizgi-2); background: var(--sra-yuzey); border-radius: 999px; padding: 5px 12px; font: 600 13px var(--sra-yazi); cursor: pointer; color: var(--sra-murekkep-2); min-height: 32px }
+.l-rauntlar button.secili { background: var(--sra-murekkep); color: #fff; border-color: var(--sra-murekkep) }
+.l-raunt-durum { margin: 0; padding: 10px 14px; background: var(--sra-yuzey); border-top: 1px solid var(--sra-cizgi); font-size: var(--sra-yazi-s); color: var(--sra-murekkep-2); min-height: 40px }
+.l-skor__ad.b, .l-skor__puan.b { color: #2a62d6 }

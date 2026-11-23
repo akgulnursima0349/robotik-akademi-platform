@@ -2,7 +2,7 @@
    - Her satırda sayaç artar; sınır aşılınca "bitmeyen döngü" hatasıyla durur.
    - Hatalar satır numarasıyla sade Türkçe cümlelere çevrilir.
    Skulpt, sayfada <script> ile (ya da testte) yüklenmiş olmalı: globalThis.Sk. */
-import { degerlendir, KarKureme, Pist, RobotDurdu, turKos, type Beyin, type CizgiGorevi, type CizgiOkuma, type CizgiSonucu, type Durum, type Gorev, type GorevSonucu } from "@sra/robot-motoru";
+import { degerlendir, KarKureme, Pist, RobotDurdu, turKos, type CizgiGorevi, type CizgiOkuma, type CizgiSonucu, type Gorev, type GorevSonucu, type SumoBeyni, type SumoGirdi } from "@sra/robot-motoru";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type SkTuru = any;
@@ -173,28 +173,31 @@ function calistirIc(kod: string, yerlesik: Record<string, unknown>, bagla: (c: C
   return { hata, cikti: c.cikti, modul };
 }
 
-/* ---------- Lig: def hamle(robot) ---------- */
-export interface BeyinSonucu { beyin: Beyin | null; hata: PyHata | null }
+/* ---------- Mini sumo ligi (Kenshin): def hamle(robot) ---------- */
+export interface BeyinSonucu { beyin: SumoBeyni | null; hata: PyHata | null }
 export { ORNEK_ROBOTLAR, ILK_ROBOT, type OrnekRobot } from "./ornek-robotlar";
-export const HAMLE_ADIM_SINIRI = 20000;
+export const HAMLE_ADIM_SINIRI = 5000;
 
-/** Çocuğun kodundan bir lig beyni üretir. Kod bir kez çalışır; her turda hamle(robot) çağrılır. */
+/** Çocuğun kodundan bir sumo beyni üretir. Kod bir kez çalışır; her 20 ms'de hamle(robot) çağrılır ve (sol, sağ) döner. */
 export function pythonBeyin(kod: string): BeyinSonucu {
   const c: Calisma = { aktifSatir: 0, adim: 0, cikti: [], sinir: HAMLE_ADIM_SINIRI };
   const r = calistirIc(kod, {}, () => {});
   if (r.hata) return { beyin: null, hata: r.hata };
   const fn = r.modul?.$d?.hamle;
-  if (!fn) return { beyin: null, hata: { satir: 1, tur: "Atölye", mesaj: "<code>def hamle(robot):</code> fonksiyonunu bulamadım. Robotun her turda bu fonksiyonla karar verir." } };
-  const beyin: Beyin = (d: Durum) => {
+  if (!fn) return { beyin: null, hata: { satir: 1, tur: "Atölye", mesaj: "<code>def hamle(robot):</code> fonksiyonunu bulamadım. Kenshin her 20 milisaniyede bu fonksiyonla karar verir." } };
+  const beyin: SumoBeyni = (g: SumoGirdi) => {
     const sk = Sk();
     c.adim = 0; c.sinir = HAMLE_ADIM_SINIRI;
-    try {
-      const v = surdur(c, sk.misceval.callsimOrSuspendArray(fn, [sk.ffi.remapToPy(d)]));
-      return v === sk.builtin.none.none$ ? "bekle" : String(sk.ffi.remapToJs(v));
-    } catch (e) {
+    let v: unknown;
+    try { v = sk.ffi.remapToJs(surdur(c, sk.misceval.callsimOrSuspendArray(fn, [sk.ffi.remapToPy(g)]))); }
+    catch (e) {
       const h = hataCevir(e, c.aktifSatir, kod);
       throw new Error(`${h.satir ? h.satir + ". satır: " : ""}${h.mesaj.replace(/<[^>]+>/g, "")}`);
     }
+    if (!Array.isArray(v) || v.length !== 2 || !v.every((x) => typeof x === "number" && Number.isFinite(x))) {
+      throw new Error(`${c.aktifSatir ? c.aktifSatir + ". satır: " : ""}hamle() iki sayı döndürmeli: return sol, sag (örneğin return 255, 255).`);
+    }
+    return [v[0], v[1]];
   };
   return { beyin, hata: null };
 }

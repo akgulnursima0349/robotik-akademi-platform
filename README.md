@@ -5,7 +5,7 @@
 - **Blok Atölyesi** (1–3. sınıf) · büyük bloklar, sesli yönergeler, "Bunun Python'u"
 - **Python Atölyesi Junior** (4–6. sınıf) · [python-atolyesi-junior](https://github.com/akgulnursima0349/python-atolyesi-junior)
 - **Python Atölyesi** (ortaokul) · [python-atolyesi](https://github.com/akgulnursima0349/python-atolyesi)
-- **Robotik Laboratuvarı** · Kar Küreme görevleri ve Sınıf Robot Ligi (Python, tarayıcıda)
+- **Robotik Laboratuvarı** · Kar Küreme görevleri, Kenshin Mini Sumo Ligi (3D) ve SiroLine çizgi izleyen (3D); Python, tarayıcıda
 
 Geliştirme fazlar hâlinde ilerler; her fazın spec'i `docs/` klasöründedir.
 
@@ -17,7 +17,10 @@ Geliştirme fazlar hâlinde ilerler; her fazın spec'i `docs/` klasöründedir.
 | P4 | Öğrenme analitiği | Yapıldı |
 | P5 | Demo cilası | Yapıldı |
 | P6a | Lab 3D: SiroLine çizgi izleyen (ilk dilim) | Yapıldı |
-| P6b | SiroLine Ayar Atölyesi ve 3D kurulum rehberi | Yapıldı, Nur'un onayında |
+| P6b | SiroLine Ayar Atölyesi ve 3D kurulum rehberi | Yapıldı |
+| P6c | Kenshin Mini Sumo Ligi (3D) | Yapıldı, Nur'un onayında |
+| P6d | Kar Küreme 3D | Sırada |
+| P6e | RizBot labirent | Sırada |
 
 ## Çalıştırma
 

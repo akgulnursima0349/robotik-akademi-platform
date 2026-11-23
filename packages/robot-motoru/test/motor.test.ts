@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { degerlendir, GOREVLER, KarKureme, macOyna, RobotDurdu, topDagit, turnuva, TOP_SAYISI, type Beyin, type Durum, type Gorev } from "../src";
+import { degerlendir, GOREVLER, KarKureme, RobotDurdu, type Gorev } from "../src";
 
 /** Örnek çözümü TS ile çalıştıran küçük yorumlayıcı (yalnızca testte; asıl yorumlayıcı Python/Skulpt). */
 function tsCalistir(g: Gorev, adimlar: (s: KarKureme) => void) {
@@ -84,57 +84,3 @@ describe("görevler", () => {
   });
 });
 
-/* ligde kullanılan basit beyinler */
-const bekleyen: Beyin = () => "bekle";
-const avci: Beyin = (d: Durum) => {
-  if (!d.en_yakin_top) return "bekle";
-  const [tx, ty] = d.en_yakin_top;
-  const istenen = tx > d.x ? "doğu" : tx < d.x ? "batı" : ty > d.y ? "güney" : "kuzey";
-  if (d.yon === istenen) return "ileri";
-  const sira = ["kuzey", "doğu", "güney", "batı"];
-  return (sira.indexOf(istenen) - sira.indexOf(d.yon) + 4) % 4 === 3 ? "sola" : "saga";
-};
-
-describe("lig", () => {
-  it("toplar simetrik, 15 tane ve başlangıç karelerinde değil", () => {
-    const t = topDagit(7);
-    expect(t.length).toBe(TOP_SAYISI);
-    for (const k of t) expect(t.some((m) => m.x === 8 - k.x && m.y === 8 - k.y)).toBe(true);
-    expect(t.some((k) => (k.x === 0 || k.x === 8) && k.y === 4)).toBe(false);
-  });
-  it("aynı beyinler ve tohum aynı maçı üretir", () => {
-    expect(JSON.stringify(macOyna(avci, avci, 5))).toBe(JSON.stringify(macOyna(avci, avci, 5)));
-  });
-  it("toplayan robot bekleyeni yener; toplar ile puan tutarlı", () => {
-    const s = macOyna(avci, bekleyen, 11);
-    expect(s.kazanan).toBe(0);
-    expect(s.puan[0]).toBeGreaterThan(0);
-    const son = s.kareler.at(-1)!;
-    expect(s.puan[0] + s.puan[1] + son.toplar.length).toBe(TOP_SAYISI);
-  });
-  it("iki aynı simetrik robot berabere kalır", () => {
-    expect(macOyna(bekleyen, bekleyen, 3).kazanan).toBeNull();
-  });
-  it("robotlar aynı kareye ve birbirinin yerine giremez", () => {
-    const s = macOyna(avci, avci, 9);
-    for (const k of s.kareler) expect(k.robotlar[0].x === k.robotlar[1].x && k.robotlar[0].y === k.robotlar[1].y).toBe(false);
-  });
-  it("geçersiz hamle ve hata beklemeye döner, hata kaydedilir", () => {
-    const s = macOyna(() => "zıpla", () => { throw new Error("patladı"); }, 1);
-    expect(s.hatalar[0]).toMatch(/zıpla/);
-    expect(s.hatalar[1]).toMatch(/patladı/);
-    expect(s.kareler.at(-1)!.robotlar[0]).toMatchObject({ x: 0, y: 4 });
-  });
-  it("arena sınırında ileri gitmez", () => {
-    const s = macOyna(() => "ileri", bekleyen, 1);
-    for (const k of s.kareler) expect(k.robotlar[0].x).toBeLessThanOrEqual(8);
-  });
-  it("turnuva: 6 robot 15 maç, puan tablosu doğru", () => {
-    const o = ["a", "b", "c", "d", "e", "f"].map((k, i) => ({ kimlik: k, ad: k.toUpperCase(), beyin: i < 2 ? avci : bekleyen }));
-    const t = turnuva(o);
-    expect(t.maclar.length).toBe(15);
-    expect(t.tablo.reduce((s, x) => s + x.o, 0)).toBe(30);
-    expect(t.tablo.slice(0, 2).map((x) => x.kimlik).sort()).toEqual(["a", "b"]);
-    for (const r of t.tablo) expect(r.puan).toBe(r.g * 3 + r.b);
-  });
-});

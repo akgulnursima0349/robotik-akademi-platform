@@ -25,7 +25,7 @@ const KARTLAR = (): KursKartiSecenek[] => [
   },
   {
     kimlik: "lab", etiket: "Bütün kurslar", baslik: "Robotik Laboratuvarı", renk: "var(--sra-kurs-lab)",
-    aciklama: "Kar Küreme görevleri, Sınıf Robot Ligi ve kendi kendine öğrenen robotlar. Hepsi tarayıcıda, kurulum yok.",
+    aciklama: "Akademinin robotları 3D: SiroLine çizgi izleyen, Kenshin mini sumo ligi ve Kar Küreme görevleri. Hepsi tarayıcıda, kurulum yok.",
     bilgi: "6 görev · robot ligi", bilgiIkon: "robot", gorsel: labKapagi(), href: "lab/"
   }
 ];

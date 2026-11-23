@@ -23,7 +23,7 @@ async function yonlendir() {
   else if (h.startsWith("cizgi/")) void cizgiGorev(root, h.slice(6));
   else ana(root);
   window.scrollTo({ top: 0 });
-  document.title = (h.startsWith("kar") ? "Kar Küreme" : h === "lig" ? "Sınıf Robot Ligi" : h.startsWith("cizgi") ? "Çizgi İzleyen Robot" : "Robotik Laboratuvarı") + " · Sivas Robotik Akademi";
+  document.title = (h.startsWith("kar") ? "Kar Küreme" : h === "lig" ? "Mini Sumo Ligi" : h.startsWith("cizgi") ? "Çizgi İzleyen Robot" : "Robotik Laboratuvarı") + " · Sivas Robotik Akademi";
   document.body.dataset.hazir = "1";
 }
 addEventListener("hashchange", () => void yonlendir());

@@ -24,24 +24,25 @@ interface Durum {
 
 /* deneme sınıfında hazır iki öğrenci robotu (öğretmenin sınıf turnuvası boş kalmasın) */
 const ORNEK_SINIF_ROBOTU_1 = `def hamle(robot):
-    hedef = robot["en_yakin_top"]
-    if hedef is None:
-        return "bekle"
-    if hedef[0] > robot["x"] and robot["yon"] != "doğu":
-        return "saga"
-    if hedef[0] < robot["x"] and robot["yon"] != "batı":
-        return "sola"
-    if hedef[0] == robot["x"] and hedef[1] != robot["y"]:
-        if robot["yon"] == "doğu" or robot["yon"] == "batı":
-            return "saga"
-    return "ileri"
+    sol_yan, sol_on, orta, sag_on, sag_yan = robot["rakip"]
+    if robot["kenar"][0] == 1 or robot["kenar"][1] == 1:
+        return -255, -200
+    if orta == 1:
+        return 255, 255
+    if sol_on == 1 or sol_yan == 1:
+        return -150, 200
+    if sag_on == 1 or sag_yan == 1:
+        return 200, -150
+    return 180, -180
 `;
 const ORNEK_SINIF_ROBOTU_2 = `def hamle(robot):
-    if robot["onu_acik"]:
-        return "ileri"
-    if robot["tur"] % 2 == 0:
-        return "saga"
-    return "sola"
+    if robot["kenar"][0] == 1 or robot["kenar"][1] == 1:
+        return -255, -255
+    if robot["zaman"] < 300:
+        return 60, 255
+    if robot["rakip"][2] == 1:
+        return 255, 255
+    return 200, 100
 `;
 
 /* ---------- deneme sınıfı: rapor ekranı sunumda dolu görünsün diye sabit tohumla üretilmiş veri ----------
@@ -111,8 +112,8 @@ function tohum(): Durum {
     ilerleme: ornek.ilerleme,
     sonGiris: ornek.sonGiris,
     labRobotlar: {
-      o4: { ad: "Kar Kaplanı", kod: ORNEK_SINIF_ROBOTU_1, guncelleme: "2026-11-18T10:00:00Z" },
-      o5: { ad: "Buzkıran", kod: ORNEK_SINIF_ROBOTU_2, guncelleme: "2026-11-18T10:05:00Z" }
+      o4: { ad: "Kaplan", kod: ORNEK_SINIF_ROBOTU_1, guncelleme: "2026-11-18T10:00:00Z" },
+      o5: { ad: "Şimşek", kod: ORNEK_SINIF_ROBOTU_2, guncelleme: "2026-11-18T10:05:00Z" }
     },
     kurumKodu: DENEME_HESAPLARI.kurumKodu,
     mudurKodu: "DENEME-MUDUR",

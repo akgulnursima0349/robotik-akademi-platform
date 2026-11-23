@@ -139,14 +139,6 @@ export function istasyon(g: Graphics, x: number, y: number) {
   g.poly([c.x - 2, c.y - 9, c.x + 6, c.y - 9, c.x + 1, c.y - 1, c.x + 7, c.y - 1, c.x - 5, c.y + 9, c.x - 1, c.y + 1, c.x - 7, c.y + 1]).fill(0xffffff);
 }
 
-/** Kar topu (lig): gölgeli küre */
-export function kartopu(g: Graphics, x: number, y: number, olcek = 1) {
-  const z = iso(x, y, 0), t = iso(x, y, 11 * olcek);
-  g.ellipse(z.x, z.y + 1, 11 * olcek, 5 * olcek).fill({ color: 0x1a2340, alpha: 0.14 });
-  g.circle(t.x, t.y, 10 * olcek).fill(0xf7f9ff);
-  g.circle(t.x + 3 * olcek, t.y + 3 * olcek, 7 * olcek).fill({ color: 0xdfe6f5, alpha: 0.7 });
-  g.circle(t.x - 3 * olcek, t.y - 4 * olcek, 3.2 * olcek).fill(0xffffff);
-}
 
 /** Pixi uygulamasını bir kutuya kurar; çözünürlük ekrana göre, arka plan saydam. */
 export async function pixiKur(kutu: HTMLElement): Promise<Application> {

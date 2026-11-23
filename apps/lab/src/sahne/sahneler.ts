@@ -1,9 +1,9 @@
 /* Lab sahneleri. TemelSahne: Pixi uygulaması, kamera, kar yağışı, animasyon sırası.
    KarSahnesi Kar Küreme izini, LigSahnesi bir lig maçını oynatır. İkisi de yalnızca motorun ürettiği kareleri çizer. */
-import { Container, Graphics, Text, type Application } from "pixi.js";
-import type { Kare, MacKaresi } from "@sra/robot-motoru";
+import { Container, Graphics, type Application } from "pixi.js";
+import type { Kare } from "@sra/robot-motoru";
 import { Izgara } from "@sra/robot-motoru";
-import { azHareket, bina, istasyon, iso, kare, karYigini, kartopu, pixiKur, RENK, robot, sigdir, ton, yumusak } from "./izometrik";
+import { azHareket, bina, istasyon, iso, kare, karYigini, pixiKur, RENK, robot, sigdir, yumusak } from "./izometrik";
 import { KarYagisi, Savrulma } from "./parcacik";
 
 const ACI = (yon: number) => (yon * Math.PI) / 2;
@@ -170,89 +170,5 @@ export class KarSahnesi extends TemelSahne {
     this.rx = s.x + 0.5; this.ry = s.y + 0.5; this.aci = ACI(s.yon);
     this.kareDinle?.(s, iz.length - 1);
     this.kirli = true;
-  }
-}
-
-/* ---------------- Sınıf Robot Ligi ---------------- */
-const LIG_RENK = [0xd7262e, 0x22a6a0];
-export class LigSahnesi extends TemelSahne {
-  private kare: MacKaresi | null = null;
-  private poz: { x: number; y: number; aci: number }[] = [];
-  private toplar = new Map<string, number>();
-  private etiketler: Container[] = [];
-  kareDinle: ((k: MacKaresi) => void) | null = null;
-
-  static async kur(kutu: HTMLElement, adlar: [string, string]): Promise<LigSahnesi> {
-    const s = new LigSahnesi(await pixiKur(kutu));
-    s.adlar(adlar);
-    return s;
-  }
-  private constructor(app: Application) {
-    super(app);
-    this.genislik = 9; this.yukseklik = 9;
-    const g = this.sabit;
-    /* çevrede karlı kenar, içeride meydan taşları */
-    for (let y = -1; y <= 9; y++) for (let x = -1; x <= 9; x++) {
-      const ic = x >= 0 && y >= 0 && x < 9 && y < 9;
-      kare(g, x, y, ic ? ((x + y) % 2 ? RENK.meydan : ton(RENK.meydan, -0.03)) : RENK.zemin, ic ? RENK.meydanCizgi : undefined);
-    }
-    for (const [x, y] of [[0, 4], [8, 4]]) {
-      const c = iso(x + 0.5, y + 0.5);
-      g.ellipse(c.x, c.y, 22, 11).stroke({ width: 2, color: LIG_RENK[x ? 1 : 0], alpha: 0.5 });
-    }
-    this.sigdir();
-  }
-  adlar(a: [string, string]) {
-    this.etiketler.forEach((t) => t.destroy({ children: true }));
-    this.etiketler = a.map((ad, i) => {
-      /* etiket: renkli hap + beyaz yazı (yazı arka planın üstünde olsun diye ayrı kap) */
-      const kap = new Container();
-      const t = new Text({ text: ad.length > 16 ? ad.slice(0, 15) + "…" : ad, style: { fontFamily: "Lexend, sans-serif", fontSize: 13, fontWeight: "700", fill: 0xffffff } });
-      t.anchor.set(0.5, 1);
-      const arka = new Graphics().roundRect(-t.width / 2 - 9, -t.height - 4, t.width + 18, t.height + 7, 11).fill(LIG_RENK[i]);
-      kap.addChild(arka, t);
-      this.kok.addChild(kap);
-      return kap;
-    });
-  }
-  goster(k: MacKaresi) {
-    this.kare = k;
-    this.poz = k.robotlar.map((r) => ({ x: r.x + 0.5, y: r.y + 0.5, aci: ACI(r.yon) }));
-    this.toplar.clear();
-    for (const t of k.toplar) this.toplar.set(`${t.x},${t.y}`, 1);
-    this.kareDinle?.(k);
-    this.kirli = true;
-  }
-  protected ciz() {
-    if (!this.kare) return;
-    const g = this.dinamik.clear();
-    const nesneler: { d: number; f: () => void }[] = [];
-    for (const [a, o] of this.toplar) { const [x, y] = a.split(",").map(Number); nesneler.push({ d: x + y, f: () => kartopu(g, x + 0.5, y + 0.5, o) }); }
-    this.poz.forEach((p, i) => nesneler.push({ d: p.x + p.y - 1 + 0.05, f: () => robot(g, p.x, p.y, p.aci, LIG_RENK[i], true) }));
-    nesneler.sort((a, b) => a.d - b.d).forEach((n) => n.f());
-    this.poz.forEach((p, i) => { const e = iso(p.x, p.y, 48); this.etiketler[i]?.position.set(e.x, e.y); });
-  }
-  async oynat(kareler: MacKaresi[], baslangic = 0): Promise<boolean> {
-    this.durdur();
-    const kimlik = this.oynatmaKimligi;
-    this.goster(kareler[baslangic]);
-    for (let i = baslangic + 1; i < kareler.length; i++) {
-      const k = kareler[i], once = this.poz.map((p) => ({ ...p }));
-      const hedef = k.robotlar.map((r) => ({ x: r.x + 0.5, y: r.y + 0.5, aci: ACI(r.yon) }));
-      const toplanan = k.toplanan.map((t) => `${t.x},${t.y}`);
-      const ok = await this.gecis(240, (t) => {
-        const e = yumusak(t);
-        this.poz = once.map((p, j) => ({ x: p.x + (hedef[j].x - p.x) * e, y: p.y + (hedef[j].y - p.y) * e, aci: p.aci + aciFarki(p.aci, hedef[j].aci) * e }));
-        for (const a of toplanan) this.toplar.set(a, Math.max(0, 1 - Math.max(0, (t - 0.5) * 2)));
-      }, kimlik);
-      if (!ok) return false;
-      for (const a of toplanan) {
-        this.toplar.delete(a);
-        const [x, y] = a.split(",").map(Number); const p = iso(x + 0.5, y + 0.5, 12);
-        this.savrulma.patlat(p.x, p.y, { x: 0, y: -1 }, 10);
-      }
-      this.kare = k; this.kareDinle?.(k); this.kirli = true;
-    }
-    return true;
   }
 }

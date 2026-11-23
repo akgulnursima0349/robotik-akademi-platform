@@ -44,12 +44,3 @@ export function karKapagi() {
   return svg(ic + yagis, "Karlı sokakta kar küreyen robot");
 }
 
-export function ligKapagi() {
-  let ic = `<rect width="800" height="500" fill="#fdf1f1"/>`;
-  for (let y = 0; y < 5; y++) for (let x = 0; x < 5; x++) ic += kare(x - 0.5, y - 0.3, (x + y) % 2 ? "#f3f6fd" : "#e9eefa");
-  const top = (x: number, y: number) => { const c = p(x, y).split(",").map(Number); return `<ellipse cx="${c[0]}" cy="${c[1] + 2}" rx="13" ry="6" fill="#1a2340" opacity=".14"/><circle cx="${c[0]}" cy="${c[1] - 12}" r="12" fill="#f7f9ff"/><circle cx="${c[0] - 4}" cy="${c[1] - 17}" r="4" fill="#fff"/>`; };
-  ic += top(2.2, 0.8) + top(1, 2.6) + top(3.4, 2.2) + top(2.6, 3.8);
-  ic += robotSvg(0.2, 1.3, "#d7262e", "#a8141b") + robotSvg(3.6, 3, "#22a6a0", "#178680");
-  ic += `<g transform="translate(560 410)"><rect width="200" height="54" rx="14" fill="#fff" stroke="#f1d3d3" stroke-width="2"/><text x="30" y="36" font-family="Lexend, sans-serif" font-weight="800" font-size="24" fill="#d7262e">4</text><text x="88" y="35" font-family="Lexend, sans-serif" font-size="16" fill="#8a93a6">tur 37</text><text x="160" y="36" font-family="Lexend, sans-serif" font-weight="800" font-size="24" fill="#22a6a0">3</text></g>`;
-  return svg(ic + yagis, "Kar topu toplayan iki robot");
-}

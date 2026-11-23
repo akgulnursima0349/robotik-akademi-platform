@@ -1,7 +1,7 @@
 import "./kurulum";
 import { describe, expect, it } from "vitest";
-import { GOREVLER, macOyna } from "@sra/robot-motoru";
-import { calistir, karKuremeCalistir, pythonBeyin, turkceAdBul } from "../src";
+import { GOREVLER, rauntOyna, sumoMaci } from "@sra/robot-motoru";
+import { calistir, ILK_ROBOT, karKuremeCalistir, pythonBeyin, turkceAdBul } from "../src";
 import { ORNEK_ROBOTLAR } from "../src/ornek-robotlar";
 
 const g = (k: string) => GOREVLER.find((x) => x.kimlik === k)!;
@@ -71,24 +71,30 @@ describe("Kar Küreme · Python", () => {
   });
 });
 
-describe("Lig · Python beyinleri", () => {
+describe("Mini sumo · Python beyinleri", () => {
+  const g = { rakip: [0, 0, 1, 0, 0], kenar: [0, 0], zaman: 0 };
   it("hamle fonksiyonu yoksa açık hata", () => {
     expect(pythonBeyin("x = 1\n").hata?.mesaj).toMatch(/def hamle/);
   });
-  it("örnek robotların hepsi derlenir ve hatasız oynar", () => {
-    const beyinler = ORNEK_ROBOTLAR.map((o) => { const b = pythonBeyin(o.kod); expect(b.hata).toBeNull(); return b.beyin!; });
-    for (let i = 1; i < beyinler.length; i++) {
-      const m = macOyna(beyinler[0], beyinler[i], i);
-      expect(m.hatalar).toEqual([null, null]);
-    }
+  it("demet ya da liste döndürür; sözlük okunur", () => {
+    expect(pythonBeyin("def hamle(robot):\n    return robot['rakip'][2] * 255, 100\n").beyin!(g)).toEqual([255, 100]);
+    expect(pythonBeyin("def hamle(robot):\n    return [1, -1]\n").beyin!(g)).toEqual([1, -1]);
   });
-  it("örnek robotlar arasında güç farkı var: Avcı Uyuyan'ı yener", () => {
-    const b = (ad: string) => pythonBeyin(ORNEK_ROBOTLAR.find((o) => o.ad === ad)!.kod).beyin!;
-    expect(macOyna(b("Avcı"), b("Uykucu"), 4).kazanan).toBe(0);
+  it("iki sayı dönmezse anlaşılır hata", () => {
+    expect(() => pythonBeyin("def hamle(robot):\n    return 'ileri'\n").beyin!(g)).toThrow(/iki sayı/);
   });
-  it("hamle içinde bitmeyen döngü o turu bekle yapar, hata kaydedilir", () => {
+  it("hamle içinde bitmeyen döngü durdurulur, raunt hatayla kaydedilir", () => {
     const b = pythonBeyin("def hamle(robot):\n    while True:\n        pass\n").beyin!;
-    const m = macOyna(b, () => "bekle", 1);
-    expect(m.hatalar[0]).toMatch(/bitmeyen/);
+    const r = rauntOyna([b, () => [0, 0]], "karsi", 1, 1);
+    expect(r.hatalar[0]).toMatch(/bitmeyen/);
+  });
+  it("hazır robotlar hatasız; Avcı, duran robotu (Temkinli değil, hep bekleyen) halkadan atar", () => {
+    const beyinler = Object.fromEntries(ORNEK_ROBOTLAR.map((o) => { const b = pythonBeyin(o.kod); expect(b.hata).toBeNull(); return [o.kimlik, b.beyin!]; }));
+    const m = sumoMaci(beyinler.avci, () => [0, 0], 3);
+    expect(m.kazanan).toBe(0);
+    for (const r of m.rauntlar) expect(r.hatalar).toEqual([null, null]);
+  });
+  it("başlangıç kodu çalışır ve duran robotu yener", () => {
+    expect(sumoMaci(pythonBeyin(ILK_ROBOT).beyin!, () => [0, 0], 5).kazanan).toBe(0);
   });
 });
