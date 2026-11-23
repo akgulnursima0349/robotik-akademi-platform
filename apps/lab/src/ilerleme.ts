@@ -15,7 +15,7 @@ export const ilerleme = {
   kodKaydet(k: string, kod: string) { kayit(k).kod = kod; yaz(); },
   denemeArttir(k: string) { const g = kayit(k); g.deneme = (g.deneme ?? 0) + 1; yaz(); },
   yildizKaydet(k: string, y: number, kod: string) { const g = kayit(k); g.yildiz = Math.max(y, g.yildiz); g.kod = kod; yaz(); },
-  toplamYildiz: () => Object.values(bellek.gorevler).reduce((t, g) => t + (g.yildiz ?? 0), 0),
+  toplamYildiz: (on = "") => Object.entries(bellek.gorevler).filter(([k]) => on ? k.startsWith(on) : !k.startsWith("cizgi-")).reduce((t, [, g]) => t + (g.yildiz ?? 0), 0),
   lig: () => bellek.lig,
   ligKaydet(ad: string, kod: string) { bellek.lig = { ad, kod }; yaz(); },
   /* eşitleme */

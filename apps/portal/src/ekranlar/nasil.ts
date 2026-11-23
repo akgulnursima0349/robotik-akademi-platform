@@ -17,7 +17,7 @@ const sema = () => {
     ${kutu(20, 104, 160, 64, "Blok Atölyesi", "1–3 · bloklar, ses", "#f0a020")}
     ${kutu(196, 104, 176, 64, "Python Atölyesi Junior", "4–6 · submodule", "#22a6a0")}
     ${kutu(388, 104, 160, 64, "Python Atölyesi", "ortaokul · submodule", "#d7262e")}
-    ${kutu(564, 104, 176, 64, "Robotik Laboratuvarı", "Kar Küreme · Robot Ligi", "#3a62e0", true)}
+    ${kutu(564, 104, 176, 64, "Robotik Laboratuvarı", "Kar Küreme · Lig · SiroLine 3D", "#3a62e0", true)}
     ${[100, 284, 468, 652].map((x) => ok(x, 168, 210)).join("")}
     <rect x="20" y="210" width="720" height="150" rx="14" fill="#f7f8fb" stroke="#e2e5ec"/>
     <text x="36" y="234" class="n-baslik">Ortak paketler (TypeScript)</text>
@@ -35,7 +35,7 @@ const sema = () => {
 const KARTLAR: [IkonAdi, string, string][] = [
   ["kod", "Tek depo, paylaşılan paketler", "Portal, Lab ve Blok Atölyesi aynı tasarım sistemini, oturumu ve simülasyon motorunu paylaşır. Mevcut iki site bozulmadan alt depo olarak bağlanır."],
   ["kisiler", "Nesne yönelimli çekirdek", "Oturum, Öğrenci ve Öğretmen sınıfları; her kullanıcı türü nereye gideceğini kendisi bilir. Sunucu bir arayüzün arkasında, testte sahtesiyle değiştirilir."],
-  ["robot", "Deterministik simülasyon", "Aynı kod her seferinde aynı sonucu verir. Bu yüzden lig maçları sunucu olmadan tekrar izlenir ve her görevin örnek çözümü otomatik test edilir."],
+  ["robot", "Deterministik simülasyon", "Aynı kod her seferinde aynı sonucu verir. Lig maçları sunucu olmadan tekrar izlenir; SiroLine çizgi izleyenin sensör gürültüsü bile sabit tohumlu. Her görevin örnek çözümü otomatik test edilir."],
   ["terminal", "Tarayıcıda Python", "Çocuğun kodu bilgisayarında çalışır, sunucuya gitmez. Hatalar satır numarasıyla Türkçe anlatılır; bitmeyen döngü kendiliğinden durdurulur."],
   ["grafik", "Öğrenme analitiği", "Kazanım ısı haritası, başlangıç ve bitiş testi arasında eşleştirilmiş etki büyüklüğü, en zor bölümler ve nazik bir destek listesi."],
   ["tamam", "Otomatik testler", "Birim testleri (Vitest), gerçek PostgreSQL'de yetki senaryoları ve masaüstü, tablet, telefonda uçtan uca testler (Playwright). Her değişiklikte GitHub Actions çalıştırır."]

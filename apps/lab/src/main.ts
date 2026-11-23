@@ -7,17 +7,21 @@ import { IlerlemeEsitleyici, Ogrenci } from "@sra/bulut";
 import { ana } from "./ekranlar/ana";
 import { karGorev, karListe } from "./ekranlar/kar";
 import { lig } from "./ekranlar/lig";
+import { cizgiGorev, cizgiListe } from "./ekranlar/cizgi";
 
 const root = document.getElementById("app")!;
 async function yonlendir() {
   document.body.removeAttribute("data-hazir");
   const h = location.hash.replace(/^#\/?/, "");
+  if (h.startsWith("vitrin")) { const { vitrin } = await import("./sahne3d/vitrin"); vitrin(root, h.split("/")[1] ?? ""); return; }
   if (h === "kar") karListe(root);
   else if (h.startsWith("kar/")) await karGorev(root, h.slice(4));
   else if (h === "lig") await lig(root);
+  else if (h === "cizgi") void cizgiListe(root);
+  else if (h.startsWith("cizgi/")) void cizgiGorev(root, h.slice(6));
   else ana(root);
   window.scrollTo({ top: 0 });
-  document.title = (h.startsWith("kar") ? "Kar Küreme" : h === "lig" ? "Sınıf Robot Ligi" : "Robotik Laboratuvarı") + " · Sivas Robotik Akademi";
+  document.title = (h.startsWith("kar") ? "Kar Küreme" : h === "lig" ? "Sınıf Robot Ligi" : h.startsWith("cizgi") ? "Çizgi İzleyen Robot" : "Robotik Laboratuvarı") + " · Sivas Robotik Akademi";
   document.body.dataset.hazir = "1";
 }
 addEventListener("hashchange", () => void yonlendir());

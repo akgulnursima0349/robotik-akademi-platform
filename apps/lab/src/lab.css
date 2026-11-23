@@ -131,3 +131,44 @@ a.l-gorev:hover { transform: translateY(-2px); box-shadow: var(--sra-golge-ust);
 .l-rakip summary { cursor: pointer; padding: 10px 14px; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap }
 .l-rakip summary span { color: var(--sra-murekkep-2); font-size: var(--sra-yazi-s) }
 .l-kod { margin: 0; padding: 12px 14px; background: #121a33; color: #e6edff; font: 500 13px/1.55 var(--sra-yazi-kod); overflow-x: auto; border-radius: 0 0 var(--sra-kose-s) var(--sra-kose-s) }
+
+/* ---------- 3D: çizgi izleyen ---------- */
+@media (min-width: 1100px) { .l-etkinlikler { grid-template-columns: repeat(3, minmax(0, 1fr)) } }
+.l3-kahraman { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: var(--sra-bosluk-5); align-items: center; margin-bottom: var(--sra-bosluk-5) }
+@media (max-width: 900px) { .l3-kahraman { grid-template-columns: 1fr } }
+.l3-vitrin { position: relative; height: clamp(260px, 38vh, 420px); border-radius: var(--sra-yaricap-l, 18px); overflow: hidden; background: #dde1e7; box-shadow: var(--sra-golge) }
+.l3-tuval { display: block; width: 100% !important; height: 100% !important; touch-action: none }
+.l3-ozellik { list-style: none; padding: 0; margin: var(--sra-bosluk-4) 0 0; display: flex; flex-direction: column; gap: 8px }
+.l3-ozellik li { display: flex; gap: 10px; align-items: center; color: var(--sra-murekkep-2); font-size: var(--sra-yazi-s) }
+.l3-ozellik .sra-ikon { color: #b88a00 }
+.l3-api { border: 1px solid var(--sra-cizgi-2); border-radius: 12px; background: var(--sra-yuzey); padding: 10px 14px; font-size: var(--sra-yazi-s) }
+.l3-api summary { cursor: pointer; font-weight: 700 }
+.l3-api dl { margin: 10px 0 2px; display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px }
+.l3-api dt { white-space: nowrap } .l3-api dd { margin: 0; color: var(--sra-murekkep-2) }
+@media (max-width: 520px) { .l3-api dl { grid-template-columns: 1fr } .l3-api dd { margin-bottom: 6px } }
+.l3-sahne-kap { overflow: hidden; display: flex; flex-direction: column; background: #dde1e7 }
+.l3-sahne { position: relative; height: clamp(300px, 50vh, 560px); width: 100% }
+.l3-ust { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; padding: 10px 12px; background: var(--sra-yuzey); border-bottom: 1px solid var(--sra-cizgi) }
+.l3-zaman { display: inline-flex; gap: 6px; align-items: center; font: 600 14px var(--sra-yazi-kod); min-width: 92px }
+.l3-ilerleme { flex: 1; min-width: 80px; height: 6px; border-radius: 99px; background: var(--sra-cizgi); overflow: hidden }
+.l3-ilerleme i { display: block; height: 100%; width: 0; background: var(--sra-murekkep); border-radius: 99px }
+.l3-secici { display: inline-flex; border: 1px solid var(--sra-cizgi-2); border-radius: 999px; overflow: hidden; background: var(--sra-yuzey) }
+.l3-secici button { border: 0; background: none; padding: 6px 12px; font: 600 13px var(--sra-yazi); cursor: pointer; color: var(--sra-murekkep-2); min-height: 32px }
+.l3-secici button.secili { background: var(--sra-murekkep); color: #fff }
+.l3-panel { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 12px 18px; padding: 12px 14px 14px; background: var(--sra-yuzey); border-top: 1px solid var(--sra-cizgi) }
+@media (max-width: 560px) { .l3-panel { grid-template-columns: 1fr } }
+.l3-panel__baslik { margin: 0 0 6px; font: 600 12px var(--sra-yazi-kod); color: var(--sra-murekkep-3) }
+.l3-sensorler { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 5px; height: 92px; align-items: end }
+.l3-sensor { position: relative; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; background: var(--sra-zemin, #f3f4f7); border-radius: 6px; overflow: hidden }
+.l3-sensor i { position: absolute; left: 0; right: 0; bottom: 0; height: 0; background: #8a93a6; transition: height .05s linear }
+.l3-sensor.siyah i { background: #23262d }
+.l3-sensor b { position: relative; font: 600 11px var(--sra-yazi-kod); color: var(--sra-murekkep); background: rgba(255,255,255,.82); border-radius: 4px; padding: 0 3px; margin-bottom: 16px }
+.l3-sensor small { position: absolute; bottom: 2px; font: 600 10px var(--sra-yazi-kod); color: #fff; mix-blend-mode: difference }
+.l3-panel__motorlar { display: flex; flex-direction: column; gap: 8px }
+.l3-motor { display: grid; grid-template-columns: 34px 1fr 40px; gap: 8px; align-items: center; font-size: 13px }
+.l3-motor small { color: var(--sra-murekkep-2); font-weight: 600 }
+.l3-motor b { font: 600 13px var(--sra-yazi-kod); text-align: right }
+.l3-motor__ray { position: relative; height: 14px; border-radius: 99px; background: var(--sra-zemin, #f3f4f7); overflow: hidden }
+.l3-motor__ray::after { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: var(--sra-cizgi-2) }
+.l3-motor__ray i { position: absolute; top: 0; bottom: 0; left: 50%; width: 0; background: #4a78d6 }
+.l3-motor__ray i.geri { background: #d7262e }

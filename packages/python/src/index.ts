@@ -2,7 +2,7 @@
    - Her satırda sayaç artar; sınır aşılınca "bitmeyen döngü" hatasıyla durur.
    - Hatalar satır numarasıyla sade Türkçe cümlelere çevrilir.
    Skulpt, sayfada <script> ile (ya da testte) yüklenmiş olmalı: globalThis.Sk. */
-import { degerlendir, KarKureme, RobotDurdu, type Beyin, type Durum, type Gorev, type GorevSonucu } from "@sra/robot-motoru";
+import { degerlendir, KarKureme, Pist, RobotDurdu, turKos, type Beyin, type CizgiGorevi, type CizgiOkuma, type CizgiSonucu, type Durum, type Gorev, type GorevSonucu } from "@sra/robot-motoru";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type SkTuru = any;
@@ -197,4 +197,53 @@ export function pythonBeyin(kod: string): BeyinSonucu {
     }
   };
   return { beyin, hata: null };
+}
+
+/* ---------- Çizgi izleyen (SiroLine): def dongu() ---------- */
+export const DONGU_ADIM_SINIRI = 4000;
+export interface CizgiCalismaSonucu { sonuc: CizgiSonucu | null; hata: PyHata | null; cikti: string[] }
+
+/** Çocuğun kodunu bir kez çalıştırır, sonra turu 20 ms'lik dongu() çağrılarıyla koşturur. */
+export function cizgiCalistir(g: CizgiGorevi, kod: string, tohum = 7): CizgiCalismaSonucu {
+  const pist = new Pist(g.pist);
+  let okuma: CizgiOkuma = { sensorler: new Array(8).fill(0), konum: 0, sure: 0 };
+  let pwm: [number, number] = [0, 0];
+  const cikti: string[] = [];
+  const c: Calisma = { aktifSatir: 0, adim: 0, cikti, sinir: ADIM_SINIRI };
+  const sayi = (v: unknown, ad: string) => {
+    const n = Number(v);
+    if (typeof v !== "number" || !Number.isFinite(n)) throw durmaHatasi(`<code>motorlar()</code> içindeki ${ad} değeri bir sayı olmalı.`);
+    return n;
+  };
+  const yerlesik = {
+    sensorler: pyIslev(() => okuma.sensorler.slice()),
+    cizgi_konumu: pyIslev(() => okuma.konum),
+    sure: pyIslev(() => okuma.sure),
+    motorlar: pyIslev((sol, sag) => { pwm = [sayi(sol, "sol"), sayi(sag, "sağ")]; })
+  };
+  const tr = turkceAdBul(kod);
+  if (tr) return { sonuc: null, hata: tr, cikti: [] };
+  const bitir = hazirla(c, yerlesik);
+  const sk = Sk();
+  let modul: any;
+  try { modul = surdur(c, sk.importMainWithBody("<lab>", false, kod, true)); }
+  catch (e) { bitir(); return { sonuc: null, hata: hataCevir(e, c.aktifSatir, kod), cikti }; }
+  const dongu = modul?.$d?.dongu, kurulum = modul?.$d?.kurulum;
+  if (!dongu) { bitir(); return { sonuc: null, hata: { satir: 1, tur: "Atölye", mesaj: "<code>def dongu():</code> fonksiyonunu bulamadım. SiroLine her 20 milisaniyede bu fonksiyonu çalıştırır." }, cikti }; }
+  let pyHata: PyHata | null = null;
+  const cagir = (fn: any) => {
+    c.adim = 0; c.sinir = DONGU_ADIM_SINIRI;
+    try { surdur(c, sk.misceval.callsimOrSuspendArray(fn, [])); }
+    catch (e) { pyHata = hataCevir(e, c.aktifSatir, kod); throw new Error(pyHata.mesaj); }
+  };
+  let ilk = true;
+  const sonuc = turKos(pist, (o) => {
+    okuma = o;
+    if (ilk) { ilk = false; if (kurulum) cagir(kurulum); }
+    cagir(dongu);
+    if (cikti.length > 300) cikti.splice(0, cikti.length - 300);
+    return pwm;
+  }, g.sureSiniri, tohum);
+  bitir();
+  return { sonuc, hata: pyHata, cikti };
 }

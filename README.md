@@ -16,6 +16,7 @@ Geliştirme fazlar hâlinde ilerler; her fazın spec'i `docs/` klasöründedir.
 | P3 | Blok Atölyesi MVP | Yapıldı |
 | P4 | Öğrenme analitiği | Yapıldı |
 | P5 | Demo cilası | Yapıldı |
+| P6a | Lab 3D: SiroLine çizgi izleyen (ilk dilim) | Yapıldı, Nur'un onayında |
 
 ## Çalıştırma
 
@@ -36,7 +37,7 @@ npm run demo          # derler ve http://localhost:4173 adresinde açar
 ```
 apps/portal        karşılama, tek giriş, Panellerim (Vite + TypeScript)
 apps/blok          Blok Atölyesi: kendi blok düzenleyicisi, SVG bahçe, sesli yönerge
-apps/lab           Robotik Laboratuvarı: izometrik sahne (PixiJS/WebGL), kod editörü, lig
+apps/lab           Robotik Laboratuvarı: izometrik sahne (PixiJS), SiroLine 3D sahnesi (Three.js), kod editörü, lig
 packages/tasarim   ortak tasarım sistemi (örnekler: /ornekler.html)
 packages/bulut     oturum ve kurs yönlendirme (nesne yönelimli; Supabase ya da sahte sunucu)
 packages/robot-motoru  deterministik simülasyon: ızgara, Kar Küreme, lig, turnuva

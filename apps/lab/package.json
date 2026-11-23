@@ -3,6 +3,19 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "scripts": { "dev": "vite", "build": "vite build" },
-  "dependencies": { "@sra/tasarim": "*", "@sra/bulut": "*", "@sra/robot-motoru": "*", "@sra/python": "*", "pixi.js": "8.6.6" }
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@sra/bulut": "*",
+    "@sra/python": "*",
+    "@sra/robot-motoru": "*",
+    "@sra/tasarim": "*",
+    "pixi.js": "8.6.6",
+    "three": "^0.187.0"
+  },
+  "devDependencies": {
+    "@types/three": "^0.187.0"
+  }
 }

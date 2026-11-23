@@ -18,7 +18,7 @@ const ok = (kosul, mesaj) => { console.log(`  ${kosul ? "✓" : "✗"} ${mesaj}`
 
 const sunucu = spawn(process.execPath, [resolve(KOK, "scripts/sun.mjs")], { env: { ...process.env, PORT: String(PORT) }, stdio: "ignore" });
 await new Promise((r) => setTimeout(r, 600));
-const tarayici = await chromium.launch();
+const tarayici = await chromium.launch({ args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"] });
 
 async function sayfaAc(genislik, yukseklik, ayar, azHareket = false) {
   const ctx = await tarayici.newContext({ viewport: { width: genislik, height: yukseklik }, reducedMotion: azHareket ? "reduce" : "no-preference" });
@@ -152,7 +152,7 @@ for (const [ad, g, y] of BOYUTLAR) {
     await p.goto(ADRES); await hazir(p);
     ok(await p.getAttribute('a.sra-kurs[data-kurs="lab"]', "href") === "lab/", "portal kartı Laboratuvar'a gidiyor");
     await p.click('a.sra-kurs[data-kurs="lab"]'); await p.waitForURL(/\/lab\/$/); await hazir(p);
-    ok((await p.$$("a.sra-kurs")).length === 2, "Laboratuvar: iki etkinlik");
+    ok((await p.$$("a.sra-kurs")).length === 3, "Laboratuvar: üç etkinlik (Kar Küreme, Lig, Çizgi İzleyen)");
     ok(await tasmaYok(p), "Laboratuvar ana sayfasında taşma yok");
     await shot("1_ana");
     await p.click('a.sra-kurs[data-kurs="kar"]'); await p.waitForSelector(".l-gorev");
@@ -224,6 +224,56 @@ for (const [ad, g, y] of BOYUTLAR) {
     ok((await p.$$(".l-tablo tbody tr")).length === 3, "öğretmen: sınıf turnuvası 3 öğrenci robotuyla oynandı");
     await p.screenshot({ path: `${EKRAN}/lab_${ad}_4_sinif_turnuvasi.png`, fullPage: true });
     ok(hatalar.length === 0, "Laboratuvar işlev testlerinde konsol hatası yok" + (hatalar.length ? ": " + hatalar.slice(0, 2).join(" | ") : ""));
+    await ctx.close();
+  }
+}
+
+/* ---------------- Lab 3D: SiroLine çizgi izleyen ---------------- */
+const OVAL_COZUM = "def dongu():\n    s = sensorler()\n    if s[2] > 500:\n        motorlar(40, 220)\n    elif s[5] > 500:\n        motorlar(220, 40)\n    elif s[3] > 500:\n        motorlar(160, 230)\n    elif s[4] > 500:\n        motorlar(230, 160)\n    else:\n        motorlar(230, 230)\n";
+for (const [ad, g, y] of BOYUTLAR) {
+  console.log(`\nlab 3D · ${ad}`);
+  /* görsel: gerçek oynatma, takip kamerası */
+  {
+    const { ctx, p, hatalar } = await sayfaAc(g, y, { deneme: true });
+    await p.goto(ADRES + "lab/#cizgi"); await p.waitForSelector(".l3-vitrin[data-hazir] canvas", { timeout: 60000 });
+    ok((await p.$$(".l-gorev")).length === 3 && (await p.$$("a.l-gorev")).length === 1, "üç pist, ilki açık");
+    ok(await tasmaYok(p), "SiroLine sayfasında taşma yok");
+    await p.waitForTimeout(1200);
+    await p.screenshot({ path: `${EKRAN}/lab3d_${ad}_1_liste.png`, fullPage: true });
+    await p.click('a[data-gorev="oval"]'); await p.waitForSelector(".l3-sahne[data-hazir] canvas", { timeout: 60000 });
+    await p.waitForTimeout(800);
+    await p.screenshot({ path: `${EKRAN}/lab3d_${ad}_2_gorev.png`, fullPage: true });
+    await p.click('.l3-secici button[data-deger="takip"]'); await p.click('.l3-secici button[data-deger="2"]');
+    await p.click("#l-calistir");
+    await p.waitForFunction(() => parseFloat(document.querySelector(".l3-sure").textContent.replace(",", ".")) > 1.2, null, { timeout: 60000 });
+    ok(Number(await p.textContent(".l3-sensor:nth-child(4) b")) >= 0 && /^-?\d+$/.test(await p.textContent(".l3-motor b")), "canlı sensör ve motor paneli güncelleniyor");
+    await p.screenshot({ path: `${EKRAN}/lab3d_${ad}_3_takip.png` });
+    await p.click("#l-bastan");
+    ok(!(await p.$(".l-sonuc")), "Başa al oynatmayı durdurdu");
+    ok(hatalar.length === 0, "3D sahnede konsol hatası yok" + (hatalar.length ? ": " + hatalar.slice(0, 2).join(" | ") : ""));
+    await ctx.close();
+  }
+  /* işlev: hareket azaltılmış → tur anında sonuçlanır */
+  {
+    const { ctx, p, hatalar } = await sayfaAc(g, y, { deneme: true }, true);
+    await p.goto(ADRES + "lab/#cizgi/oval"); await p.waitForSelector(".l3-sahne[data-hazir] canvas", { timeout: 60000 });
+    await yaz(p, "def dongu()\n    motorlar(100, 100)\n");
+    await p.click("#l-calistir"); await p.waitForSelector(".l-cikti .sra-uyari--hata");
+    ok(/1\. satır/.test(await p.textContent(".l-cikti")) && /iki nokta/.test(await p.textContent(".l-cikti")), "yazım hatası satır numarasıyla Türkçe");
+    await yaz(p, "def dongu():\n    motorlar(200, 200)\n");
+    await p.click("#l-calistir"); await p.waitForSelector(".l-sonuc");
+    ok(/çizgiyi kaybetti/.test(await p.textContent(".l-sonuc")), "dönmeyen robot: çizgiden çıktı anlatılıyor");
+    await yaz(p, OVAL_COZUM);
+    await p.click("#l-calistir"); await p.waitForSelector(".l-sonuc.basarili");
+    ok((await p.$$(".l-sonuc .l-yildizlar i.dolu")).length === 3, "örnek çözüm: tur tamam, 3 yıldız");
+    ok(await p.evaluate(() => document.querySelector(".l3-ilerleme i").style.width === "100%"), "ilerleme çubuğu dolu");
+    ok(await tasmaYok(p), "görev ekranında taşma yok");
+    await p.screenshot({ path: `${EKRAN}/lab3d_${ad}_4_sonuc.png`, fullPage: true });
+    await p.goto(ADRES + "lab/?y#cizgi"); await p.waitForSelector(".l-gorev");
+    ok((await p.$$("a.l-gorev")).length === 2, "ilk pist bitince ikincisi açıldı");
+    await p.goto(ADRES + "lab/?z#"); await hazir(p);
+    ok(/3\/9 yıldız/.test(await p.textContent('a.sra-kurs[data-kurs="cizgi"]')), "Laboratuvar kartında SiroLine yıldızları");
+    ok(hatalar.length === 0, "3D işlev testlerinde konsol hatası yok" + (hatalar.length ? ": " + hatalar.slice(0, 2).join(" | ") : ""));
     await ctx.close();
   }
 }

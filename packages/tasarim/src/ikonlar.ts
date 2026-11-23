@@ -24,9 +24,10 @@ import islemci from "lucide-static/icons/cpu.svg?raw";
 import indir from "lucide-static/icons/download.svg?raw";
 import yazici from "lucide-static/icons/printer.svg?raw";
 import grafik from "lucide-static/icons/chart-column.svg?raw";
+import saat from "lucide-static/icons/timer.svg?raw";
 
 export const IKONLAR = {
   "ok-sag": okSag, giris: girisIkon, cikis: cikisIkon, bloklar, robot, kod, kep, canta, isilti, kilit, kisiler, okul,
-  "sag-ok": sagOk, cevrimdisi, uyari, tamam, bilgi, panel, deney, yapboz, terminal, islemci, indir, yazici, grafik
+  "sag-ok": sagOk, cevrimdisi, uyari, tamam, bilgi, panel, deney, yapboz, terminal, islemci, indir, yazici, grafik, saat
 } as const;
 export type IkonAdi = keyof typeof IKONLAR;
