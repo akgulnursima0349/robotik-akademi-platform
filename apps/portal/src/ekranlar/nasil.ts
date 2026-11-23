@@ -64,7 +64,7 @@ export function nasil(root: HTMLElement) {
           "Yazı tipleri ve ikonlar sitenin içinde; dışarıdan yüklenmez.",
           "Simülasyonlar ve Python yorumlayıcısı tarayıcıda çalışır.",
           "Deneme modunda sahte sunucu tarayıcıda çalışır; tek giriş internetsiz de denenir.",
-          "Kurs bilgisayarı yavaşsa kar parçacıkları kendiliğinden azalır; sahne yalnızca değişince yeniden çizilir."
+          "3D sahneler ilk saniyelerde kare hızını ölçer; kurs bilgisayarı yavaşsa gölge ve çözünürlük kendiliğinden düşer."
         ].map((m) => el("li", "", {}, ikon("tamam"), m))))));
   root.replaceChildren(ustKisim(), ana, altBilgi());
 }

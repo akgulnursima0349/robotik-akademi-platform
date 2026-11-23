@@ -1,11 +1,11 @@
-/* Kar Küreme: görev listesi ve görev ekranı (kod editörü + izometrik sahne). */
+/* Kar Küreme: görev listesi ve görev ekranı (kod editörü + 3D mahalle maketi). */
 import { dugme, el, ikon, uyari } from "@sra/tasarim";
 import { GOREVLER, type Gorev, type GorevSonucu, type Kare } from "@sra/robot-motoru";
 import { karKuremeCalistir, type KarKuremeSonucu } from "@sra/python";
 import { Ogretmen } from "@sra/bulut";
 import { Editor } from "../editor";
 import { ilerleme } from "../ilerleme";
-import { KarSahnesi } from "../sahne/sahneler";
+import { webglYok } from "./cizgi-ortak";
 import { uygulama } from "../uygulama";
 import { ustKisim } from "./ana";
 
@@ -72,7 +72,12 @@ export async function karGorev(root: HTMLElement, kimlik: string) {
   const sag = el("section", "l-gorev-sag", {}, el("div", "l-sahne-kap sra-kart", {}, gosterge, sahneKutu, haritaSecim));
   root.replaceChildren(ustKisim(), el("main", "l-gorev-sayfa sra-sarmal", { id: "ana" }, sol, sag));
 
-  const sahne = await KarSahnesi.kur(sahneKutu);
+  const { webglVar } = await import("../sahne3d/studyo");
+  if (!webglVar()) { sahneKutu.replaceChildren(webglYok()); calistirB.disabled = true; return; }
+  const { KarSahnesi3D } = await import("../sahne3d/kar-sahnesi");
+  if (!sahneKutu.isConnected) return;
+  const sahne = await KarSahnesi3D.kur(sahneKutu);
+  sahneKutu.dataset.hazir = "1";
   let aktifHarita = 0;
   const karlilar = (i: number) => g.haritalar[i].join("").split("").filter((c) => c === ".").length;
   let kalan = karlilar(0);

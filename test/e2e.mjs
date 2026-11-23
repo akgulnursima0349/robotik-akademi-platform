@@ -157,7 +157,7 @@ for (const [ad, g, y] of BOYUTLAR) {
     await shot("1_ana");
     await p.click('a.sra-kurs[data-kurs="kar"]'); await p.waitForSelector(".l-gorev");
     ok((await p.$$("a.l-gorev")).length === 1 && (await p.$$(".l-gorev.kilitli")).length === 5, "ilk görev açık, diğerleri kilitli");
-    await p.click('a[data-gorev="ilk-sokak"]'); await p.waitForSelector(".l-sahne canvas");
+    await p.click('a[data-gorev="ilk-sokak"]'); await p.waitForSelector(".l-sahne[data-hazir] canvas");
     await p.waitForTimeout(500);
     await yaz(p, "ileri()\nileri()\nileri()\nileri()\n");
     await p.click("#l-calistir");
@@ -173,7 +173,7 @@ for (const [ad, g, y] of BOYUTLAR) {
   /* işlev testleri: hareket azaltılmış (animasyonlar anında) */
   {
     const { ctx, p, hatalar } = await sayfaAc(g, y, { deneme: true }, true);
-    await p.goto(ADRES + "lab/#kar/ilk-sokak"); await p.waitForSelector(".l-sahne canvas");
+    await p.goto(ADRES + "lab/#kar/ilk-sokak"); await p.waitForSelector(".l-sahne[data-hazir] canvas");
     await yaz(p, "ileri()\nileri(\n");
     await p.click("#l-calistir"); await p.waitForSelector(".l-cikti .sra-uyari--hata");
     ok(/2\. satır/.test(await p.textContent(".l-cikti")) && await p.isVisible(".e-no span.hata"), "yazım hatası: satır numarası ve vurgu");
@@ -184,7 +184,7 @@ for (const [ad, g, y] of BOYUTLAR) {
     await p.click("#l-calistir"); await p.waitForSelector(".l-sonuc.basarili");
     await p.goto(ADRES + "lab/#kar"); await p.waitForSelector(".l-gorev");
     ok((await p.$$("a.l-gorev")).length === 2, "ilk görev bitince ikincisi açıldı");
-    await p.goto(ADRES + "lab/#kar/kose"); await p.waitForSelector(".l-sahne canvas");
+    await p.goto(ADRES + "lab/#kar/kose"); await p.waitForSelector(".l-sahne[data-hazir] canvas");
     ok(await p.inputValue(".e-alan").then((v) => v.startsWith("ileri()")), "görevin başlangıç kodu yüklendi");
     /* sensör görevi üç haritada */
     await p.evaluate(() => localStorage.setItem("sra-lab-v1", JSON.stringify({ gorevler: { "ilk-sokak": { yildiz: 3 }, kose: { yildiz: 3 }, "uzun-cadde": { yildiz: 3 }, "okul-yolu": { yildiz: 3 } }, lig: null })));

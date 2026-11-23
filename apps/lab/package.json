@@ -12,7 +12,6 @@
     "@sra/python": "*",
     "@sra/robot-motoru": "*",
     "@sra/tasarim": "*",
-    "pixi.js": "8.6.6",
     "three": "^0.187.0"
   },
   "devDependencies": {

@@ -2,7 +2,7 @@
 import { el, ikon, kursKarti, rozet, ustBar } from "@sra/tasarim";
 import { CIZGI_GOREVLERI, GOREVLER } from "@sra/robot-motoru";
 import { ilerleme } from "../ilerleme";
-import { karKapagi } from "../kapaklar";
+import kapakKar from "../assets/kapak-kar.webp";
 import kapakKenshin from "../assets/kapak-kenshin.webp";
 import kapakSiroline from "../assets/kapak-siroline.webp";
 import { uygulama } from "../uygulama";
@@ -24,7 +24,7 @@ export function ana(root: HTMLElement) {
   izgara.append(
     kursKarti({ kimlik: "kar", etiket: `${GOREVLER.length} görev · ${yildiz}/${toplam} yıldız`, baslik: "Kar Küreme Robotu", renk: "var(--sra-kurs-lab)",
       aciklama: "Bataryası sınırlı robotla karlı sokakları aç: sıralı komutlar, döngüler, sensörler ve enerji planlaması.",
-      bilgi: yildiz ? "Devam et" : "Başla", bilgiIkon: "robot", gorsel: karKapagi(), href: "#kar" }),
+      bilgi: yildiz ? "Devam et" : "Başla", bilgiIkon: "robot", gorsel: kapakKar, href: "#kar" }),
     kursKarti({ kimlik: "lig", etiket: "3D · herkes herkesle", baslik: "Mini Sumo Ligi", renk: "var(--sra-vurgu)",
       aciklama: "Akademinin yarışma robotu Kenshin ringde. Sensörlerini oku, taktiğini yaz, rakiplerini ringden çıkar.",
       bilgi: ilerleme.lig() ? "Robotun hazır" : "Robotunu yaz", bilgiIkon: "kisiler", gorsel: kapakKenshin, href: "#lig" }),
