@@ -51,7 +51,7 @@ jobs:
     needs: test
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
-    permissions: { contents: read, pages: write, id-token: write }
+    permissions: { contents: read, actions: read, pages: write, id-token: write }
     environment: { name: github-pages, url: "${{ steps.yayinla.outputs.page_url }}" }
     concurrency: { group: pages, cancel-in-progress: false }
     env:
@@ -69,8 +69,9 @@ jobs:
           printf '{"supabaseUrl":"%s","supabaseKey":"%s"}' "$SUPABASE_URL" "$SUPABASE_KEY" > ayarlar/platform.json
           node scripts/derle.mjs
           touch dist/.nojekyll
+          find dist -name "*.map" -delete
       - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v4
         with: { path: dist }
       - id: yayinla
         uses: actions/deploy-pages@v4
