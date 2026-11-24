@@ -2,7 +2,6 @@
 --  SİVAS ROBOTİK AKADEMİ PLATFORMU · VERİTABANI EKLENTİSİ (Supabase)
 --  Önce python-atolyesi/site/supabase/kurulum.sql ve python-atolyesi-junior/supabase/junior.sql kurulmuş olmalı.
 --  Ekleme niteliğinde: eski tablolara yalnızca bir sütun ekler, veri silmez; tekrar çalıştırılabilir.
---  ŞİMDİLİK YALNIZCA DEMO PROJESİNDE çalıştırılır. Gerçek projeye ancak canlıya geçişte (P6) uygulanır.
 -- =====================================================================
 
 -- Sınıfın kursu: öğrenci girişte bu kursa yönlendirilir

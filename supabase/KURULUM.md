@@ -1,29 +1,56 @@
-# Demo projesi kurulumu
+# Supabase kurulumu
 
-Platformun demosu **ayrı bir Supabase projesinde** çalışır. Gerçek öğrencilerin bulunduğu projeye hiçbir şey yapılmaz.
+Platform, Python Atölyesi ve Python Atölyesi Junior ile **aynı Supabase projesini** kullanır. Öğretmen hesapları, sınıflar ve öğrenciler ortaktır; bir kez giriş yapan öğrenci kurslar arasında yeniden giriş yapmaz.
 
-1. [supabase.com](https://supabase.com) → **New project** → ad: `platform-demo`. Ücretsiz katman yeterli.
-2. **Authentication → Sign In / Providers**: *Email* açık; *Allow anonymous sign-ins* **açık** (öğrenci girişi anonim oturumla çalışır).
-   Demo için *Confirm email* kapatılabilir; açık kalırsa öğretmen hesabı açarken gelen e-postadaki bağlantıya tıklanır.
-3. **SQL Editor → New query**, sırayla beş dosyanın tamamını yapıştırıp **Run**:
-   1. `kurslar/ortaokul/site/supabase/kurulum.sql`
-   2. `kurslar/junior/supabase/junior.sql`
-   3. `supabase/platform.sql`
-   4. `supabase/lab.sql`
-   5. `supabase/analitik.sql`
+Bütün SQL dosyaları **eklemelidir ve tekrar çalıştırılabilir**: mevcut tablolara yalnızca sütun ve fonksiyon ekler, veri silmez.
 
-   Ardından kurum kodunu belirle (kendi kodunla değiştir):
-   ```sql
-   insert into public.ayarlar (anahtar, deger) values ('kurum_kodu', 'DEMO-KURUM-KODU')
-   on conflict (anahtar) do update set deger = excluded.deger;
-   ```
-4. `ayarlar/platform.ornek.json` dosyasını `ayarlar/platform.json` adıyla kopyala; **Project Settings → API Keys** sayfasındaki proje adresini ve **publishable** anahtarı yaz.
-   (Secret / service_role anahtarı asla kullanılmaz; derleme betiği bunu ve gerçek projeyi reddeder.)
-5. `npm run demo` → `http://localhost:4173/#giris` → **Öğretmenim → Hesap aç** ile demo öğretmen hesabını aç, kurum kodunu gir.
-6. `supabase/ornek-veri.sql` içindeki e-postayı bu hesapla değiştirip SQL Editor'de çalıştır. Üç örnek sınıf ve uydurma takma adlı öğrenciler eklenir:
+## 1. Veritabanı
 
-   | Sınıf kodu | Kurs | Öğrenci / PIN |
-   |---|---|---|
-   | JNR123 | Junior | Ece 1234 · Deniz 2345 · Kuzey 3456 |
-   | ORT456 | Ortaokul | Mert 5678 · Ada 6789 |
-   | BLK789 | Blok Atölyesi | Bulut 1111 |
+**SQL Editor → New query**: aşağıdaki dosyaların her birinin tamamını yapıştır, **Run**. Sıra önemlidir:
+
+1. `kurslar/ortaokul/site/supabase/kurulum.sql`: Python Atölyesi (öğretmenler, sınıflar, öğrenciler).
+2. `kurslar/junior/supabase/junior.sql`: Junior ilerlemesi.
+3. `supabase/platform.sql`: sınıfın kursu ve kursa yönlendirme. Mevcut sınıflara `kurs` sütunu eklenir; Junior ilerlemesi olan sınıflar `junior` olarak işaretlenir, diğerleri `ortaokul` kalır.
+4. `supabase/lab.sql`: Robotik Laboratuvarı lig robotları.
+5. `supabase/analitik.sql`: platform ilerlemesi ve öğretmen analitiği.
+
+İlk iki dosya projede zaten kuruluysa yeniden çalıştırmak zararsızdır ve son sürüme günceller.
+
+> `supabase/ornek-veri.sql` uydurma sınıf ve öğrenciler ekler; yalnızca ayrı bir deneme projesinde kullanılır. Akademinin asıl projesinde **çalıştırılmaz**.
+
+Kurum kodu daha önce belirlenmediyse:
+
+```sql
+insert into public.ayarlar (anahtar, deger) values ('kurum_kodu', 'KURUM-KODU')
+on conflict (anahtar) do update set deger = excluded.deger;
+```
+
+## 2. Kimlik doğrulama
+
+- **Authentication → Sign In / Providers:** *Email* açık; *Allow anonymous sign-ins* açık (öğrenci girişi anonim oturumla çalışır).
+- **Authentication → URL Configuration:** sitenin yayın adresini (örneğin `https://<kullanıcı>.github.io/robotik-akademi-platform/`) *Redirect URLs* listesine ekle. Öğretmen e-posta onayı bu adrese döner.
+
+## 3. Platform ayarı
+
+`ayarlar/platform.ornek.json` dosyasını `ayarlar/platform.json` adıyla kopyala; **Project Settings → API Keys** sayfasındaki proje adresini ve **publishable** anahtarı yaz.
+
+Secret / service_role anahtarı asla kullanılmaz; derleme betiği bu tür bir anahtarı reddeder.
+
+```sh
+npm run demo     # derler ve http://localhost:4173 adresinde açar
+```
+
+## Ayrı bir deneme projesi (isteğe bağlı)
+
+Gerçek sınıflara dokunmadan denemek için ücretsiz katmanda ikinci bir proje açılabilir. Adımlar aynıdır; ardından:
+
+1. Platformda **Öğretmenim → Hesap aç** ile öğretmen hesabı açılır.
+2. `supabase/ornek-veri.sql` içindeki e-posta bu hesapla değiştirilip çalıştırılır.
+
+Üç örnek sınıf ve uydurma takma adlı öğrenciler eklenir:
+
+| Sınıf kodu | Kurs | Öğrenci / PIN |
+|---|---|---|
+| JNR123 | Junior | Ece 1234 · Deniz 2345 · Kuzey 3456 |
+| ORT456 | Ortaokul | Mert 5678 · Ada 6789 |
+| BLK789 | Blok Atölyesi | Bulut 1111 |

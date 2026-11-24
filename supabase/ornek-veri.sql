@@ -1,6 +1,6 @@
 -- =====================================================================
 --  DEMO PROJESİ · ÖRNEK SINIFLAR VE ÖĞRENCİLER
---  Yalnızca "platform-demo" projesinde çalıştırılır. Takma adlar uydurmadır; gerçek çocuk adı yoktur.
+--  Yalnızca ayrı bir deneme projesinde çalıştırılır; akademinin asıl projesinde ÇALIŞTIRILMAZ. Takma adlar uydurmadır.
 --  Önce platform üzerinden bir öğretmen hesabı aç (KURULUM.md, adım 4); aşağıdaki e-postayı o hesapla değiştir.
 -- =====================================================================
 do $$

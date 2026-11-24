@@ -14,18 +14,11 @@ const KOK = resolve(import.meta.dirname, "..");
 const DIST = join(KOK, "dist");
 const arg = new Set(process.argv.slice(2));
 
-/* Gerçek öğrencilerin bulunduğu proje(ler): platform bu projelere asla bağlanmaz. */
-const GERCEK_PROJELER = ["dllbqjxhxrffjqwcnjjz"];
-
 function ayarOku() {
   if (arg.has("--deneme")) return { deneme: true };
   const yol = join(KOK, "ayarlar", "platform.json");
   if (!existsSync(yol)) return {};
   const a = JSON.parse(readFileSync(yol, "utf8"));
-  if (a.supabaseUrl && GERCEK_PROJELER.some((p) => a.supabaseUrl.includes(p))) {
-    console.error("✗ ayarlar/platform.json gerçek öğrencilerin bulunduğu Supabase projesini gösteriyor. Platform yalnızca DEMO projesine bağlanır.");
-    process.exit(1);
-  }
   if (a.supabaseKey && !/^sb_publishable_|^eyJ/.test(a.supabaseKey)) {
     console.error("✗ supabaseKey publishable anahtar gibi görünmüyor. Secret / service_role anahtarı asla kullanılmaz.");
     process.exit(1);
