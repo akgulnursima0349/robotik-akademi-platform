@@ -1,4 +1,5 @@
 # Her push ve PR'da: tip denetimi, birim testleri, veritabanı senaryosu, derleme ve uçtan uca testler.
+# main dalında testler geçerse site GitHub Pages'te yayınlanır.
 name: Test
 on:
   push:
@@ -45,3 +46,31 @@ jobs:
           printf 'Sivas Robotik Akademi Eğitim Platformu · demo\r\n\r\nGereken: Node.js 20 ya da üstü (https://nodejs.org)\r\n\r\nBu klasörde bir terminal açıp şunu yaz:\r\n    node scripts/sun.mjs\r\n\r\nSonra tarayıcıda aç: http://localhost:4173\r\nİnternet gerekmez. Sunum akışı: DEMO.md\r\n' > /tmp/demo-paketi/BASLAT.txt
       - uses: actions/upload-artifact@v4
         with: { name: demo-paketi, path: /tmp/demo-paketi, retention-days: 30 }
+
+  yayin:
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions: { contents: read, pages: write, id-token: write }
+    environment: { name: github-pages, url: "${{ steps.yayinla.outputs.page_url }}" }
+    concurrency: { group: pages, cancel-in-progress: false }
+    env:
+      # Herkese açık olacak şekilde tasarlanmış publishable anahtar; secret anahtar burada asla bulunmaz.
+      SUPABASE_URL: https://dllbqjxhxrffjqwcnjjz.supabase.co
+      SUPABASE_KEY: sb_publishable_NbRSfkt3d47J5CyV9i6OjA_yjnN76QN
+    steps:
+      - uses: actions/checkout@v4
+        with: { submodules: true }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - name: Derle (Supabase ile)
+        run: |
+          printf '{"supabaseUrl":"%s","supabaseKey":"%s"}' "$SUPABASE_URL" "$SUPABASE_KEY" > ayarlar/platform.json
+          node scripts/derle.mjs
+          touch dist/.nojekyll
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: dist }
+      - id: yayinla
+        uses: actions/deploy-pages@v4
