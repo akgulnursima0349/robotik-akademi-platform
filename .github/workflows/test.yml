@@ -1,5 +1,4 @@
 # Her push ve PR'da: tip denetimi, birim testleri, veritabanı senaryosu, derleme ve uçtan uca testler.
-# Yayın YOK: platform akademinin onayına kadar hiçbir yere yayınlanmıyor.
 name: Test
 on:
   push:

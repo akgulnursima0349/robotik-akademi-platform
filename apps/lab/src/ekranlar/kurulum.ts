@@ -1,5 +1,5 @@
 /* SiroLine (Full PCB) 3D kurulum rehberi: 10 adım, her adımda parça yerine iner; dört adımda kısa soru.
-   Montaj sırası genel bir çizgi izleyen kurulumudur; akademinin kılavuzuyla karşılaştırılacak (docs/FAZ-P6b). */
+   Montaj sırası genel bir çizgi izleyen kurulumudur. */
 import { dugme, el, ikon } from "@sra/tasarim";
 import type { ParcaAdi } from "../sahne3d/siroline";
 import type { AdimKamerasi } from "../sahne3d/kurulum-sahnesi";

@@ -1,5 +1,5 @@
 /* Kenshin: akademinin mini sumo robotu, kodla modellenmiş.
-   Kaynak: sınıftaki robotun fotoğrafları ve kumpas ölçüleri (Nur, 23 Kasım):
+   Kaynak: akademideki robotun fotoğrafları ve dijital kumpas ölçüleri:
    boy 98,4 mm (tekerlek arkası → bıçak ucu), bıçak eni 100,0 mm, bayrak boyu 149,4 mm.
    Yanlar açık: alt plaka + yeşil ana kart; arkada iki geniş lastik teker (alüminyum göbek),
    ortada dik duran mikro servo; servo iki siyah kolu döndürür, kolların ucundaki beyaz bayraklar

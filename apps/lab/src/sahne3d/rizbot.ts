@@ -1,4 +1,4 @@
-/* RizBot Maze: sivasrobotik.com.tr ürün fotoğraflarından (Nur'un gönderdiği beş görsel, 24 Kasım) modellendi.
+/* RizBot Maze: sivasrobotik.com.tr ürün fotoğraflarından modellendi.
    Kumpas ölçüsü yok: oranlar fotoğraflardan, tekerler arası dış genişlik ≈100 mm varsayımıyla ölçeklendi.
    - Siyah kart: önde geniş, köşeleri pahlı "kalkan"; arkada kuyruk (denetleyici kartı, anahtar, JST).
    - Denetleyici: mavi Pro Micro (fotoğrafta üstünde "pro Micro" yazıyor; ürün metni Arduino Nano diyor).

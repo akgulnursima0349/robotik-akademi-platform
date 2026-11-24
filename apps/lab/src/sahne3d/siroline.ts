@@ -1,5 +1,5 @@
 /* SiroLine Full PCB: akademinin sınıfta kullandığı çizgi izleyen robot, kodla modellenmiş.
-   Ölçüler sınıftaki robottan dijital kumpasla (Nur, 23 Kasım): teker çapı 36,1 · iki teker arası 99,2 · arka gövde 94,1 ·
+   Ölçüler akademideki robottan dijital kumpasla: teker çapı 36,1 · iki teker arası 99,2 · arka gövde 94,1 ·
    boyun 28,0 · ön kenar 81,1 · motor 63,0 · pil 45,6 mm. Diğer ölçüler üstten fotoğraftan orantıyla.
    Robotun kendi ekseni: +X ileri, +Y yukarı, +Z sağ. Aks merkezi (0, 0, 0) zeminde, tekerlek ekseninin altında.
    Çizimde kullanılan düzlem ölçüsü: X yanal (sağ +), Y ileri, arka kenardan (aks Y = 12'de). */
