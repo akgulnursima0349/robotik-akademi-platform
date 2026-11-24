@@ -1,6 +1,8 @@
-# Faz P6e · RizBot Labirent (3D) — TASLAK, Nur'un onayını bekliyor
+# Faz P6e · RizBot Labirent (3D)
 
-**Not:** "Hepsi sırayla" kararının son dilimi. Nur, 23 Kasım: "RizBot'a da geçebilirsin".
+**Not:** "Hepsi sırayla" kararının son dilimi.
+- Nur, 23 Kasım: "RizBot'a da geçebilirsin".
+- Nur, 24 Kasım: sınıfta RizBot bulunamadı, "şimdilik kafamızdan yapalım". Spec bu kararla onaylandı.
 
 ## Kaynaklar
 
@@ -25,11 +27,15 @@ Lab'e dördüncü 3D etkinlik: çocuk RizBot'u Python'la programlar, MEB pistini
 
 ## Robot modeli (`sahne3d/rizbot.ts`)
 
-- SiroLine ve Kenshin'deki gibi kodla modellenir. Kaynak: sınıftaki robotun fotoğrafları ve kumpas ölçüleri. Nur'dan istenecek:
-  - üstten, alttan, önden ve yandan fotoğraf;
-  - boy, en ve yükseklik; teker çapı;
-  - sensörlerin yeri ve sayısı; fanın yeri.
-- Fotoğraflar gelene kadar yalnızca simülasyon ve pist yapılır. Model fotoğraflarla yapılır; tahminle robot çizilmez.
+- **Ölçü ve fotoğraf yok:** sınıfta RizBot bulunamadı. Model, ürün sayfasındaki bilgilerle **tipik bir yarışma labirent robotu** olarak tasarlandı.
+  - Arduino Nano;
+  - kızılötesi duvar sensörleri: ileri bakan iki, yanlara bakan iki;
+  - iki mikro redüktörlü motor ve silikon teker;
+  - altta vakum fanı (fanlı model);
+  - 2S LiPo.
+- **Boyut:** yaklaşık 11 × 9,5 cm. 20 cm'lik hücrede rahat döner.
+- Kod içinde ve "Nasıl çalışır" notunda "temsilî model" diye belirtilir.
+- **İleride:** sınıftaki robot bulununca fotoğraf ve kumpas ölçüleriyle Kenshin'deki gibi yeniden yapılır.
 - Marka yazıları çizilmez.
 
 ## Simülasyon (`packages/robot-motoru/src/labirent.ts`)
@@ -93,21 +99,21 @@ while not bitti():
 
 - **Mikro fare akış (flood fill) algoritmasını hazır vermek:** çocuk kendi yazar, en fazla son görevde ipucu verilir.
 - **Sürekli fizik:** duvara sürtünme ve PID'li ortalama simüle edilmez. Hareket hücre düzeyinde.
-- **Vakum fanı:** simülasyonda yok; yalnızca modelde parça olarak görünür (Nur fanlı model kullanıyorsa).
-- **Tahmini model:** fotoğrafsız, tahminle RizBot modeli çizilmez.
+- **Vakum fanı:** simülasyonda yok; yalnızca modelde parça olarak görünür.
+- **Gerçek ölçü iddiası:** temsilî modelin ölçüleri gerçek RizBot'unkiymiş gibi sunulmaz.
 - **Sumo ligi gibi sınıf ligi:** labirentte sınıf içi sıralama ileride düşünülür.
 
 ## Bitti tanımı
 
-- [ ] Labirent motoru birim testleri: duvar algılama, çarpma, süre hesabı, MEB puanı, adım sınırı, determinizm.
-- [ ] Altı görevin örnek çözümleri testte yıldız alıyor; "ada" görevinde sağ el kuralı bitiremiyor.
-- [ ] 3D sahne: pist ve RizBot modeli Nur'un fotoğraflarıyla yan yana göz kontrolünden geçti.
-- [ ] Uçtan uca testler masaüstü, tablet ve telefonda yeşil; konsol hatası yok.
+- [x] Labirent motoru birim testleri: duvar algılama, çarpma, süre hesabı, MEB puanı, adım sınırı, determinizm.
+- [x] Altı görevin örnek çözümleri testte yıldız alıyor; "ada" görevinde sağ el kuralı bitiremiyor.
+- [x] 3D sahne: pist MEB ölçüleriyle, temsilî RizBot modeli; göz kontrolünden geçti.
+- [x] Uçtan uca testler masaüstü, tablet ve telefonda yeşil; konsol hatası yok.
 - [ ] Ekran görüntüleri Nur'a gönderildi, onay alındı.
 
-## Nur'a sorular
+## Varsayılan kararlar (Nur'un yanıtı gelene kadar)
 
-1. Sınıfta RizBot var mı? Varsa Kenshin'deki gibi fotoğraf ve kumpas ölçüsü.
-2. Fanlı model mi kullanılıyor?
-3. Çocuklar sınıfta labirenti hangi seviyede kodluyor: hücre komutlarıyla mı, yoksa sensör değeri ve motor hızıyla mı?
-4. Görev sırası sınıftaki ders sırasına uyuyor mu?
+- Sınıfta RizBot yok. Model temsilî.
+- Fanlı model: fan modelde görünür, simülasyonu etkilemez.
+- Kodlama seviyesi: hücre komutları ve duvar sensörleri. Ortaokul seviyesi; Kar Küreme ile tutarlı.
+- Görev sırası yukarıdaki gibi. Nur değiştirmek isterse görev listesi değişir, motor değişmez.

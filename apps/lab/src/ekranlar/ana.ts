@@ -1,10 +1,11 @@
-/* Lab ana ekranı: iki etkinlik ve ilerleme. */
+/* Lab ana ekranı: etkinlik kartları ve ilerleme. */
 import { el, ikon, kursKarti, rozet, ustBar } from "@sra/tasarim";
-import { CIZGI_GOREVLERI, GOREVLER } from "@sra/robot-motoru";
+import { CIZGI_GOREVLERI, GOREVLER, LABIRENT_GOREVLERI } from "@sra/robot-motoru";
 import { ilerleme } from "../ilerleme";
 import kapakKar from "../assets/kapak-kar.webp";
 import kapakKenshin from "../assets/kapak-kenshin.webp";
 import kapakSiroline from "../assets/kapak-siroline.webp";
+import kapakRizbot from "../assets/kapak-rizbot.webp";
 import { uygulama } from "../uygulama";
 
 export function ustKisim(...sag: Node[]): HTMLElement {
@@ -16,10 +17,11 @@ export function ustKisim(...sag: Node[]): HTMLElement {
 export function ana(root: HTMLElement) {
   const yildiz = ilerleme.toplamYildiz(), toplam = GOREVLER.length * 3;
   const cYildiz = ilerleme.toplamYildiz("cizgi-"), cToplam = CIZGI_GOREVLERI.length * 3;
+  const lYildiz = ilerleme.toplamYildiz("lb-"), lToplam = LABIRENT_GOREVLERI.length * 3;
   const kahraman = el("section", "l-kahraman sra-sarmal sra-belir", {},
     el("p", "l-ust", {}, "Robotik Laboratuvarı"),
     el("h1", "", {}, "Robotunu programla, ", el("span", "", {}, "karla mücadele et.")),
-    el("p", "l-alt", {}, "Python ile yazdığın kod, tarayıcıdaki robotu yönetir. Karlı sokakları aç, akademinin Kenshin'iyle sumo liginde yarış, SiroLine'ı 3D pistte koştur."));
+    el("p", "l-alt", {}, "Python ile yazdığın kod, tarayıcıdaki robotu yönetir. Karlı sokakları aç, akademinin Kenshin'iyle sumo liginde yarış, SiroLine'ı 3D pistte koştur, RizBot'la labirentten çık."));
   const izgara = el("div", "l-etkinlikler sra-sarmal");
   izgara.append(
     kursKarti({ kimlik: "kar", etiket: `${GOREVLER.length} görev · ${yildiz}/${toplam} yıldız`, baslik: "Kar Küreme Robotu", renk: "var(--sra-kurs-lab)",
@@ -30,7 +32,10 @@ export function ana(root: HTMLElement) {
       bilgi: ilerleme.lig() ? "Robotun hazır" : "Robotunu yaz", bilgiIkon: "kisiler", gorsel: kapakKenshin, href: "#lig" }),
     kursKarti({ kimlik: "cizgi", etiket: `3D · ${CIZGI_GOREVLERI.length} pist · ${cYildiz}/${cToplam} yıldız`, baslik: "Çizgi İzleyen Robot", renk: "#e0a800",
       aciklama: "Akademinin SiroLine robotu 3D pistte. Sekiz sensörü oku, iki motoru Python'la yönet; hızdan PID'ye.",
-      bilgi: cYildiz ? "Devam et" : "Başla", bilgiIkon: "robot", gorsel: kapakSiroline, href: "#cizgi" })
+      bilgi: cYildiz ? "Devam et" : "Başla", bilgiIkon: "robot", gorsel: kapakSiroline, href: "#cizgi" }),
+    kursKarti({ kimlik: "labirent", etiket: `3D · ${LABIRENT_GOREVLERI.length} görev · ${lYildiz}/${lToplam} yıldız`, baslik: "Labirent Ustası", renk: "#2f6fe0",
+      aciklama: "RizBot MEB ölçülerindeki labirentte. Duvar sensörlerini oku; sağ el kuralından hafızalı aramaya, en hızlı çıkışı bul.",
+      bilgi: lYildiz ? "Devam et" : "Başla", bilgiIkon: "robot", gorsel: kapakRizbot, href: "#labirent" })
   );
   const notlar = el("section", "l-not sra-sarmal", {},
     el("div", "sra-kart l-not__ic", {}, ikon("bilgi", "l-not__ikon"),

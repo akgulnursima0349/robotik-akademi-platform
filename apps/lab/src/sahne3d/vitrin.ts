@@ -4,6 +4,7 @@ import { CIZGI_GOREVLERI, Pist } from "@sra/robot-motoru";
 import { Studyo } from "./studyo";
 import { siroline } from "./siroline";
 import { kenshin } from "./kenshin";
+import { rizbot } from "./rizbot";
 import { pistHalisi, HALI_KALINLIK } from "./pist";
 
 const ACILAR: Record<string, [number, number, number, number]> = {
@@ -16,9 +17,9 @@ export function vitrin(root: HTMLElement, aci: string) {
   const s = new Studyo(kap);
   const pist = new Pist(CIZGI_GOREVLERI[0].pist);
   s.sahne.add(pistHalisi(pist).kok);
-  const kenshinMi = aci.startsWith("kenshin");
-  if (kenshinMi) aci = aci.replace(/^kenshin-?/, "") || "on-sag";
-  const r = kenshinMi ? { ...kenshin(), ledler: () => {} } : siroline(); const b = pist.baslangic();
+  const kenshinMi = aci.startsWith("kenshin"), rizbotMu = aci.startsWith("rizbot");
+  if (kenshinMi || rizbotMu) aci = aci.replace(/^(kenshin|rizbot)-?/, "") || "on-sag";
+  const r = kenshinMi ? { ...kenshin(), ledler: () => {} } : rizbotMu ? { ...rizbot(), ledler: () => {} } : siroline(); const b = pist.baslangic();
   r.kok.position.set(b.x / 1000 + 0.3, HALI_KALINLIK, -b.y / 1000); r.kok.rotation.y = b.yon;
   r.ledler([40, 60, 300, 900, 920, 200, 40, 50]);
   s.sahne.add(r.kok);

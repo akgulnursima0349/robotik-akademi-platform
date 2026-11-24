@@ -2,7 +2,7 @@
    - Her satırda sayaç artar; sınır aşılınca "bitmeyen döngü" hatasıyla durur.
    - Hatalar satır numarasıyla sade Türkçe cümlelere çevrilir.
    Skulpt, sayfada <script> ile (ya da testte) yüklenmiş olmalı: globalThis.Sk. */
-import { degerlendir, KarKureme, Pist, RobotDurdu, turKos, type CizgiGorevi, type CizgiOkuma, type CizgiSonucu, type Gorev, type GorevSonucu, type SumoBeyni, type SumoGirdi } from "@sra/robot-motoru";
+import { degerlendir, KarKureme, Labirent, LabirentDurdu, labirentDegerlendir, type LabirentGorevi, type LabirentSonucu, Pist, RobotDurdu, turKos, type CizgiGorevi, type CizgiOkuma, type CizgiSonucu, type Gorev, type GorevSonucu, type SumoBeyni, type SumoGirdi } from "@sra/robot-motoru";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type SkTuru = any;
@@ -45,13 +45,13 @@ function yazimYardimi(kod: string, satir: number): string | null {
   return null;
 }
 
-const BILINENLER = ["print", "range", "len", "ileri", "sola_don", "saga_don", "onu_acik", "onunde_kar_var", "batarya", "istasyonda_mi", "hamle", "robot"];
+const BILINENLER = ["print", "range", "len", "ileri", "sola_don", "saga_don", "onu_acik", "onunde_kar_var", "batarya", "istasyonda_mi", "hamle", "robot", "geri_don", "duvar", "duvar_on", "duvar_sol", "duvar_sag", "bitti", "konum", "komsu"];
 const yakin = (ad: string) => BILINENLER.find((k) => k !== ad && (k.replace(/_/g, "") === ad.replace(/_/g, "").toLowerCase() || k.split("").sort().join("") === ad.toLowerCase().split("").sort().join("")));
 
 /** Skulpt ya da robot hatasını çocuğa uygun cümleye çevirir. */
 export function hataCevir(e: any, satir: number, kod: string): PyHata {
   const ic = e?.nativeError ?? e;
-  if (ic instanceof RobotDurdu) return { satir, tur: "Robot", mesaj: ic.message };
+  if (ic instanceof RobotDurdu || ic instanceof LabirentDurdu) return { satir, tur: "Robot", mesaj: ic.message };
   if (ic?.sraMesaj) return { satir, tur: "Atölye", mesaj: ic.sraMesaj };
   let tur = "";
   try { tur = e.tp$name ?? ""; } catch { /* yok */ }
@@ -157,6 +157,50 @@ export function karKuremeCalistir(g: Gorev, kod: string): KarKuremeSonucu {
   }
   const durma = simler.find((s) => s.durdu)?.durdu;
   const sonuc = degerlendir(g, simler, kod, hata && !durma ? "hata" : undefined);
+  return { simler, sonuc, hata, cikti };
+}
+
+/* ---------- RizBot labirent ---------- */
+export interface LabirentCalismasi { simler: Labirent[]; sonuc: LabirentSonucu; hata: PyHata | null; cikti: string[] }
+const TARAFLAR = ["on", "sol", "sag"];
+
+export function labirentCalistir(g: LabirentGorevi, kod: string): LabirentCalismasi {
+  const simler: Labirent[] = [];
+  let hata: PyHata | null = null;
+  const cikti: string[] = [];
+  for (const harita of g.haritalar) {
+    const sim = new Labirent(harita, 0, g.sureSiniri);
+    simler.push(sim);
+    let c: Calisma | null = null;
+    const satirli = <T>(f: () => T) => () => { sim.satir = c?.aktifSatir ?? 0; return f(); };
+    const taraf = (t: unknown, geriOlur = false) => {
+      if (typeof t !== "string" || !(TARAFLAR.includes(t) || (geriOlur && t === "geri")))
+        throw durmaHatasi(`Yön olarak <code>"on"</code>, <code>"sol"</code> ya da <code>"sag"</code> yazılır${geriOlur ? ` (ya da <code>"geri"</code>)` : ""}.`);
+      return t as "on" | "sol" | "sag";
+    };
+    const ikili = ([x, y]: [number, number]) => { const sk = Sk(); return new sk.builtin.tuple([new sk.builtin.int_(x), new sk.builtin.int_(y)]); };
+    const yerlesik = {
+      ileri: pyIslev(satirli(() => sim.ileri())),
+      sola_don: pyIslev(satirli(() => sim.solaDon())),
+      saga_don: pyIslev(satirli(() => sim.sagaDon())),
+      geri_don: pyIslev(satirli(() => sim.geriDon())),
+      duvar_on: pyIslev(satirli(() => sim.duvar("on"))),
+      duvar_sol: pyIslev(satirli(() => sim.duvar("sol"))),
+      duvar_sag: pyIslev(satirli(() => sim.duvar("sag"))),
+      duvar: pyIslev((t) => { sim.satir = c?.aktifSatir ?? 0; return sim.duvar(taraf(t)); }),
+      bitti: pyIslev(() => sim.bittiMi()),
+      konum: () => ikili(sim.konum()),
+      komsu: (t: unknown) => ikili(sim.komsu(taraf(Sk().ffi.remapToJs(t), true) as "on")),
+      sure: pyIslev(() => Math.round(sim.sure * 100) / 100)
+    };
+    const r = calistirIc(kod, yerlesik, (cc) => { c = cc; });
+    sim.bitir();
+    if (simler.length === 1) cikti.push(...r.cikti);
+    /* bitişe varmak programı durdurur: hata değil */
+    if (r.hata && !(r.hata.tur === "Robot" && sim.bittiMi())) { hata = r.hata; break; }
+    if (!sim.bittiMi()) break;
+  }
+  const sonuc = labirentDegerlendir(g, simler, kod, hata && hata.tur !== "Robot" ? "hata" : undefined);
   return { simler, sonuc, hata, cikti };
 }
 

@@ -17,7 +17,7 @@ const sema = () => {
     ${kutu(20, 104, 160, 64, "Blok Atölyesi", "1–3 · bloklar, ses", "#f0a020")}
     ${kutu(196, 104, 176, 64, "Python Atölyesi Junior", "4–6 · submodule", "#22a6a0")}
     ${kutu(388, 104, 160, 64, "Python Atölyesi", "ortaokul · submodule", "#d7262e")}
-    ${kutu(564, 104, 176, 64, "Robotik Laboratuvarı", "Kar Küreme · Lig · SiroLine 3D", "#3a62e0", true)}
+    ${kutu(564, 104, 176, 64, "Robotik Laboratuvarı", "Kar · Sumo · SiroLine · Labirent", "#3a62e0", true)}
     ${[100, 284, 468, 652].map((x) => ok(x, 168, 210)).join("")}
     <rect x="20" y="210" width="720" height="150" rx="14" fill="#f7f8fb" stroke="#e2e5ec"/>
     <text x="36" y="234" class="n-baslik">Ortak paketler (TypeScript)</text>

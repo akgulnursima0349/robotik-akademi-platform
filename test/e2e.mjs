@@ -152,7 +152,7 @@ for (const [ad, g, y] of BOYUTLAR) {
     await p.goto(ADRES); await hazir(p);
     ok(await p.getAttribute('a.sra-kurs[data-kurs="lab"]', "href") === "lab/", "portal kartı Laboratuvar'a gidiyor");
     await p.click('a.sra-kurs[data-kurs="lab"]'); await p.waitForURL(/\/lab\/$/); await hazir(p);
-    ok((await p.$$("a.sra-kurs")).length === 3, "Laboratuvar: üç etkinlik (Kar Küreme, Lig, Çizgi İzleyen)");
+    ok((await p.$$("a.sra-kurs")).length === 4, "Laboratuvar: dört etkinlik (Kar Küreme, Lig, Çizgi İzleyen, Labirent)");
     ok(await tasmaYok(p), "Laboratuvar ana sayfasında taşma yok");
     await shot("1_ana");
     await p.click('a.sra-kurs[data-kurs="kar"]'); await p.waitForSelector(".l-gorev");
@@ -307,6 +307,53 @@ for (const [ad, g, y] of BOYUTLAR) {
     await p.screenshot({ path: `${EKRAN}/lab3d_${ad}_6_ayar.png`, fullPage: true });
     ok(await tasmaYok(p), "Ayar Atölyesinde taşma yok");
     ok(hatalar.length === 0, "3D işlev testlerinde konsol hatası yok" + (hatalar.length ? ": " + hatalar.slice(0, 2).join(" | ") : ""));
+    await ctx.close();
+  }
+}
+
+/* ---------------- Lab 3D: RizBot labirent ---------------- */
+const SAG_EL = "while not bitti():\n    if not duvar_sag():\n        saga_don()\n        ileri()\n    elif not duvar_on():\n        ileri()\n    else:\n        sola_don()\n";
+for (const [ad, g, y] of BOYUTLAR) {
+  console.log(`\nlabirent · ${ad}`);
+  /* görsel: gerçek oynatma */
+  {
+    const { ctx, p, hatalar } = await sayfaAc(g, y, { deneme: true });
+    await p.goto(ADRES + "lab/"); await hazir(p);
+    ok(await p.isVisible('a[href="#labirent"]'), "Lab ana sayfasında Labirent Ustası kartı");
+    await p.goto(ADRES + "lab/#labirent"); await p.waitForSelector(".l-gorev");
+    ok((await p.$$(".l-gorev")).length === 6 && (await p.$$("a.l-gorev")).length === 1, "altı görev, ilki açık");
+    ok(await tasmaYok(p), "labirent görev listesinde taşma yok");
+    await p.click('a[data-gorev="lb-ilk-koridor"]'); await p.waitForSelector(".l-sahne[data-hazir] canvas", { timeout: 60000 });
+    await yaz(p, "saga_don()\nileri()\nsola_don()\nileri()\nileri()\nsaga_don()\nileri()\n");
+    await p.click("#l-calistir");
+    await p.waitForTimeout(1500);
+    await p.screenshot({ path: `${EKRAN}/labirent_${ad}_1_oynuyor.png`, fullPage: true });
+    ok(await p.textContent("#l-saat").then((t) => t !== "0,00 sn"), "süre sayacı işliyor");
+    await p.waitForSelector(".l-sonuc.basarili", { timeout: 30000 });
+    ok((await p.$$(".l-sonuc .l-yildizlar i.dolu")).length === 3, "ilk koridor 3 yıldız");
+    ok(await tasmaYok(p), "labirent görev ekranında taşma yok");
+    await p.screenshot({ path: `${EKRAN}/labirent_${ad}_2_sonuc.png`, fullPage: true });
+    ok(hatalar.length === 0, "labirentte konsol hatası yok" + (hatalar.length ? ": " + hatalar.slice(0, 2).join(" | ") : ""));
+    await ctx.close();
+  }
+  /* işlev: hareket azaltılmış */
+  {
+    const { ctx, p, hatalar } = await sayfaAc(g, y, { deneme: true }, true);
+    await p.goto(ADRES + "lab/#labirent/lb-ilk-koridor"); await p.waitForSelector(".l-sahne[data-hazir] canvas", { timeout: 60000 });
+    await yaz(p, "ileri()\n");
+    await p.click("#l-calistir"); await p.waitForSelector(".l-sonuc");
+    ok(/çarptı/.test(await p.textContent(".l-cikti")) && /1\. satır/.test(await p.textContent(".l-cikti")), "duvara çarpma satırıyla anlatılıyor");
+    await p.evaluate(() => { const g = {}; for (const k of ["lb-ilk-koridor", "lb-duvara-bak", "lb-sag-el", "lb-hangi-el", "lb-ada"]) g[k] = { yildiz: 3 }; localStorage.setItem("sra-lab-v1", JSON.stringify({ gorevler: g, lig: null })); });
+    await p.goto(ADRES + "lab/?yenile#labirent/lb-ada"); await p.waitForSelector(".l-sahne[data-hazir] canvas", { timeout: 60000 });
+    await yaz(p, SAG_EL);
+    await p.click("#l-calistir"); await p.waitForSelector(".l-sonuc", { timeout: 30000 });
+    ok(/Süre doldu/.test(await p.textContent(".l-cikti")), "ada: sağ el kuralı süre dolana kadar dönüyor");
+    await p.goto(ADRES + "lab/#labirent/lb-meb"); await p.waitForSelector(".l-sahne[data-hazir] canvas", { timeout: 60000 });
+    await yaz(p, SAG_EL);
+    await p.click("#l-calistir"); await p.waitForSelector(".l-sonuc.basarili", { timeout: 30000 });
+    ok(/MEB puanı/.test(await p.textContent(".l-sonuc")) && /16\/16/.test(await p.textContent(".l-gosterge")), "MEB pisti: bitti, puan ve satır gösteriliyor");
+    await p.screenshot({ path: `${EKRAN}/labirent_${ad}_3_meb.png`, fullPage: true });
+    ok(hatalar.length === 0, "labirent işlev testlerinde konsol hatası yok" + (hatalar.length ? ": " + hatalar.slice(0, 2).join(" | ") : ""));
     await ctx.close();
   }
 }

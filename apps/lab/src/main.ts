@@ -1,4 +1,4 @@
-/* Robotik Laboratuvarı: #, #kar, #kar/<görev>, #lig */
+/* Robotik Laboratuvarı: #, #kar, #kar/<görev>, #lig, #cizgi…, #labirent, #labirent/<görev> */
 import "@sra/tasarim";
 import "./lab.css";
 import { uygulama } from "./uygulama";
@@ -21,9 +21,11 @@ async function yonlendir() {
   else if (h === "cizgi/ayar") void (await import("./ekranlar/ayar")).ayarAtolyesi(root);
   else if (h === "cizgi/kurulum") void (await import("./ekranlar/kurulum")).kurulumRehberi(root);
   else if (h.startsWith("cizgi/")) void cizgiGorev(root, h.slice(6));
+  else if (h === "labirent") (await import("./ekranlar/labirent")).labirentListe(root);
+  else if (h.startsWith("labirent/")) void (await import("./ekranlar/labirent")).labirentGorev(root, h.slice(9));
   else ana(root);
   window.scrollTo({ top: 0 });
-  document.title = (h.startsWith("kar") ? "Kar Küreme" : h === "lig" ? "Mini Sumo Ligi" : h.startsWith("cizgi") ? "Çizgi İzleyen Robot" : "Robotik Laboratuvarı") + " · Sivas Robotik Akademi";
+  document.title = (h.startsWith("kar") ? "Kar Küreme" : h === "lig" ? "Mini Sumo Ligi" : h.startsWith("cizgi") ? "Çizgi İzleyen Robot" : h.startsWith("labirent") ? "Labirent Ustası" : "Robotik Laboratuvarı") + " · Sivas Robotik Akademi";
   document.body.dataset.hazir = "1";
 }
 addEventListener("hashchange", () => void yonlendir());

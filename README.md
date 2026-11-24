@@ -20,7 +20,7 @@ Geliştirme fazlar hâlinde ilerler; her fazın spec'i `docs/` klasöründedir.
 | P6b | SiroLine Ayar Atölyesi ve 3D kurulum rehberi | Yapıldı |
 | P6c | Kenshin Mini Sumo Ligi (3D) | Yapıldı, Nur'un onayında |
 | P6d | Kar Küreme 3D | Yapıldı, Nur'un onayında |
-| P6e | RizBot labirent | Spec taslağı, Nur'un onayında |
+| P6e | RizBot labirent (3D, MEB pisti; temsilî model) | Yapıldı, Nur'un onayında |
 
 ## Çalıştırma
 
@@ -41,7 +41,7 @@ npm run demo          # derler ve http://localhost:4173 adresinde açar
 ```
 apps/portal        karşılama, tek giriş, Panellerim (Vite + TypeScript)
 apps/blok          Blok Atölyesi: kendi blok düzenleyicisi, SVG bahçe, sesli yönerge
-apps/lab           Robotik Laboratuvarı: 3D sahneler (Three.js) — Kar Küreme maketi, Kenshin sumo ringi, SiroLine pisti; kod editörü
+apps/lab           Robotik Laboratuvarı: 3D sahneler (Three.js) — Kar Küreme maketi, Kenshin sumo ringi, SiroLine pisti, RizBot labirenti (MEB ölçüleri); kod editörü
 packages/tasarim   ortak tasarım sistemi (örnekler: /ornekler.html)
 packages/bulut     oturum ve kurs yönlendirme (nesne yönelimli; Supabase ya da sahte sunucu)
 packages/robot-motoru  deterministik simülasyon: ızgara, Kar Küreme, lig, turnuva
