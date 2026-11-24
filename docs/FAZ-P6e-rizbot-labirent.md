@@ -27,15 +27,15 @@ Lab'e dördüncü 3D etkinlik: çocuk RizBot'u Python'la programlar, MEB pistini
 
 ## Robot modeli (`sahne3d/rizbot.ts`)
 
-- **Ölçü ve fotoğraf yok:** sınıfta RizBot bulunamadı. Model, ürün sayfasındaki bilgilerle **tipik bir yarışma labirent robotu** olarak tasarlandı.
-  - Arduino Nano;
-  - kızılötesi duvar sensörleri: ileri bakan iki, yanlara bakan iki;
-  - iki mikro redüktörlü motor ve silikon teker;
-  - altta vakum fanı (fanlı model);
-  - 2S LiPo.
-- **Boyut:** yaklaşık 11 × 9,5 cm. 20 cm'lik hücrede rahat döner.
-- Kod içinde ve "Nasıl çalışır" notunda "temsilî model" diye belirtilir.
-- **İleride:** sınıftaki robot bulununca fotoğraf ve kumpas ölçüleriyle Kenshin'deki gibi yeniden yapılır.
+- **İlk sürüm (24 Kasım sabah):** fotoğrafsız, temsilî. Ürün sayfası otomatik okunamadı.
+- **Güncel sürüm (24 Kasım öğleden sonra):** Nur'un gönderdiği beş ürün fotoğrafından modellendi.
+  - **Kart:** siyah; önde köşeleri pahlı geniş "kalkan", arkada kuyruk.
+  - **Kuyruk:** enine mavi Pro Micro (fotoğrafta "pro Micro" yazıyor; ürün metni Arduino Nano diyor, Nur'a soruldu), kondansatörler, sürgü anahtar, beyaz JST.
+  - **Tekerler:** kırmızı lastik, sarı göbek.
+  - **Motorlar:** iki motor; üstlerinde pürüzlü siyah 3D baskı kapaklı yuvalar.
+  - **Vakum:** önde 3D baskı köprü; üstünde dik gümüş fan motoru (beyaz kablolu), altında fan çarkı ve kart üstünde beyaz halka.
+  - **Sensörler:** siyah makaronlu kızılötesi sensörler; ileri, çapraz ve yana bakan çiftler.
+- **Ölçek:** kumpas ölçüsü yok. Oranlar fotoğraflardan; tekerlerin dış genişliği ≈100 mm varsayıldı (boy ≈118 mm). Sınıfta robot bulununca kumpasla düzeltilir.
 - Marka yazıları çizilmez.
 
 ## Simülasyon (`packages/robot-motoru/src/labirent.ts`)
@@ -100,20 +100,20 @@ while not bitti():
 - **Mikro fare akış (flood fill) algoritmasını hazır vermek:** çocuk kendi yazar, en fazla son görevde ipucu verilir.
 - **Sürekli fizik:** duvara sürtünme ve PID'li ortalama simüle edilmez. Hareket hücre düzeyinde.
 - **Vakum fanı:** simülasyonda yok; yalnızca modelde parça olarak görünür.
-- **Gerçek ölçü iddiası:** temsilî modelin ölçüleri gerçek RizBot'unkiymiş gibi sunulmaz.
+- **Gerçek ölçü iddiası:** fotoğraftan çıkarılan ölçüler kumpas ölçüsü gibi sunulmaz.
 - **Sumo ligi gibi sınıf ligi:** labirentte sınıf içi sıralama ileride düşünülür.
 
 ## Bitti tanımı
 
 - [x] Labirent motoru birim testleri: duvar algılama, çarpma, süre hesabı, MEB puanı, adım sınırı, determinizm.
 - [x] Altı görevin örnek çözümleri testte yıldız alıyor; "ada" görevinde sağ el kuralı bitiremiyor.
-- [x] 3D sahne: pist MEB ölçüleriyle, temsilî RizBot modeli; göz kontrolünden geçti.
+- [x] 3D sahne: pist MEB ölçüleriyle; RizBot modeli ürün fotoğraflarıyla yan yana göz kontrolünden geçti.
 - [x] Uçtan uca testler masaüstü, tablet ve telefonda yeşil; konsol hatası yok.
 - [ ] Ekran görüntüleri Nur'a gönderildi, onay alındı.
 
 ## Varsayılan kararlar (Nur'un yanıtı gelene kadar)
 
-- Sınıfta RizBot yok. Model temsilî.
+- Sınıfta RizBot yok. Model ürün fotoğraflarından, ölçüler yaklaşık.
 - Fanlı model: fan modelde görünür, simülasyonu etkilemez.
 - Kodlama seviyesi: hücre komutları ve duvar sensörleri. Ortaokul seviyesi; Kar Küreme ile tutarlı.
 - Görev sırası yukarıdaki gibi. Nur değiştirmek isterse görev listesi değişir, motor değişmez.

@@ -26,7 +26,7 @@ export function labirentListe(root: HTMLElement) {
     el("a", "l-geri", { href: "#" }, "← Laboratuvar"),
     el("div", "l-baslik sra-belir", {}, el("p", "l-ust", {}, "Labirent Ustası · RizBot"), el("h1", "", {}, "Labirentten çıkış yolunu bul"),
       el("p", "", {}, "Pist MEB Labirent Ustası ölçülerinde: 20 cm'lik hücreler, beyaz duvarlar, siyah zemin. RizBot'u duvar sensörleriyle programla. Her görevde yıldızlar: bitirmek, hızlı bitirmek ve kısa kod."),
-      el("p", "l-not-kucuk", {}, "RizBot modeli temsilîdir; sınıftaki robotun ölçüleriyle güncellenecek.")),
+      el("p", "l-not-kucuk", {}, "RizBot modeli ürün fotoğraflarından yapıldı; ölçüler yaklaşık, sınıftaki robotla kumpasla ölçülünce güncellenecek.")),
     liste));
 }
 

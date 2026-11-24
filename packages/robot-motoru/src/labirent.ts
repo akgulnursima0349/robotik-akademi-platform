@@ -8,7 +8,7 @@ import { DX, DY, rastgele, sagaDon, solaDon, type Yon } from "./izgara";
 export const HUCRE_MM = 200;
 export const DUVAR_MM = 18;
 export const DUVAR_YUKSEKLIK_MM = 80;
-/** RizBot hız profili (temsilî): düzde en çok 1 m/s, ivme 2,5 m/s², 90° dönüş 0,35 sn, 180° dönüş 0,6 sn */
+/** RizBot hız profili (tahmini; ürün sayfasında hız bilgisi yok): düzde en çok 1 m/s, ivme 2,5 m/s², 90° dönüş 0,35 sn, 180° dönüş 0,6 sn */
 export const RIZBOT = { azamiHiz: 1.0, ivme: 2.5, donus90: 0.35, donus180: 0.6 } as const;
 export const LABIRENT_ADIM_SINIRI = 1500;
 

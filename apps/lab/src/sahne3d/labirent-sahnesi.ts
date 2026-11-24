@@ -1,5 +1,5 @@
 /* RizBot labirent sahnesi: MEB "Labirent Ustası" pisti (hücre 20 cm, duvar 8 cm yüksek, 18 mm kalın;
-   mat siyah zemin, parlak beyaz duvar, bitiş hücresinde beyaz alan) ve temsilî RizBot modeli.
+   mat siyah zemin, parlak beyaz duvar, bitiş hücresinde beyaz alan) ve ürün fotoğraflarından RizBot modeli.
    Oynatma, simülasyonun hız profilinden gelen zamanlarla yapılır: 1× gerçek süre. */
 import * as THREE from "three";
 import { haritaOku, HUCRE_MM, DUVAR_MM, DUVAR_YUKSEKLIK_MM, type LabirentHaritasi, type LabirentKaresi } from "@sra/robot-motoru";
@@ -223,6 +223,8 @@ export class LabirentSahnesi3D {
       const k = iz[i], once = iz[i - 1], z = zaman[i];
       const sure = Math.max(0, z.son - z.bas);
       let devam = true;
+      /* robot hareket edince eski sensör ışınları söner (yoksa dönerken duvarların içinden geçer) */
+      if (k.olay !== "bak") this.isinOmru = { on: 0, sol: 0, sag: 0 };
       if (k.olay === "ileri") {
         const [x0, z0] = merkez(once.x, once.y), [x1, z1] = merkez(k.x, k.y), t0 = teker;
         devam = await this.gecis(sure, (t) => {
