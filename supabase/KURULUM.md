@@ -5,7 +5,7 @@ Platformun demosu **ayrı bir Supabase projesinde** çalışır. Gerçek öğren
 1. [supabase.com](https://supabase.com) → **New project** → ad: `platform-demo`. Ücretsiz katman yeterli.
 2. **Authentication → Sign In / Providers**: *Email* açık; *Allow anonymous sign-ins* **açık** (öğrenci girişi anonim oturumla çalışır).
    Demo için *Confirm email* kapatılabilir; açık kalırsa öğretmen hesabı açarken gelen e-postadaki bağlantıya tıklanır.
-3. **SQL Editor → New query**, sırayla üç dosyanın tamamını yapıştırıp **Run**:
+3. **SQL Editor → New query**, sırayla beş dosyanın tamamını yapıştırıp **Run**:
    1. `kurslar/ortaokul/site/supabase/kurulum.sql`
    2. `kurslar/junior/supabase/junior.sql`
    3. `supabase/platform.sql`
