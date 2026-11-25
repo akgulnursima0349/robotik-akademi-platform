@@ -1,12 +1,12 @@
 -- =====================================================================
 --  SİVAS ROBOTİK AKADEMİ PLATFORMU · ÖĞRENME ANALİTİĞİ (Supabase)
---  lab.sql'den sonra çalıştırılır. Ekleme niteliğinde, tekrar çalıştırılabilir. ŞİMDİLİK YALNIZCA DEMO PROJESİNDE.
+--  lab.sql'den sonra çalıştırılır. Ekleme niteliğinde, tekrar çalıştırılabilir.
 -- =====================================================================
 
--- Lab ve Blok Atölyesi ilerlemesi: öğrenci + uygulama başına tek kayıt
+-- Lab, Blok Atölyesi ve ders ilerlemesi: öğrenci + uygulama başına tek kayıt
 create table if not exists public.platform_ilerleme (
   ogrenci_id uuid not null references public.ogrenciler(id) on delete cascade,
-  uygulama   text not null check (uygulama in ('lab', 'blok')),
+  uygulama   text not null check (uygulama in ('lab', 'blok', 'dersler')),
   veri       jsonb not null default '{}'::jsonb,
   guncelleme timestamptz not null default now(),
   primary key (ogrenci_id, uygulama)
@@ -27,7 +27,7 @@ language plpgsql volatile security definer set search_path = public as $$
 declare og uuid := public._oturum_ogrencisi(); t timestamptz := now();
 begin
   if og is null then raise exception 'oturum_yok'; end if;
-  if p_uygulama not in ('lab', 'blok') then raise exception 'veri_gecersiz'; end if;
+  if p_uygulama not in ('lab', 'blok', 'dersler') then raise exception 'veri_gecersiz'; end if;
   if jsonb_typeof(p_veri) <> 'object' or pg_column_size(p_veri) > 200000 then raise exception 'veri_gecersiz'; end if;
   insert into public.platform_ilerleme (ogrenci_id, uygulama, veri, guncelleme) values (og, p_uygulama, p_veri, t)
     on conflict (ogrenci_id, uygulama) do update set veri = excluded.veri, guncelleme = t;

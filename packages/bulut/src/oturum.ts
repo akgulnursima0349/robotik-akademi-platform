@@ -13,7 +13,7 @@ interface BenCevabi {
 }
 interface SinifCevabi { id: string; ad: string; kod: string; kurs: string; ogrenci_sayisi: number; benim: boolean; sahip_ad: string }
 
-export type Uygulama = "lab" | "blok";
+export type Uygulama = "lab" | "blok" | "dersler";
 export interface RaporSatiri { id: string; takma_ad: string; son_giris: string | null; junior: Record<string, unknown>; ortaokul: Record<string, unknown>; lab: Record<string, unknown>; blok: Record<string, unknown> }
 export interface SinifRobotu { sahip: string; ad: string; kod: string; guncelleme: string }
 

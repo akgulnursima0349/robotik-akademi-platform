@@ -13,6 +13,7 @@ Bütün SQL dosyaları **eklemelidir ve tekrar çalıştırılabilir**: mevcut t
 3. `supabase/platform.sql`: sınıfın kursu ve kursa yönlendirme. Mevcut sınıflara `kurs` sütunu eklenir; Junior ilerlemesi olan sınıflar `junior` olarak işaretlenir, diğerleri `ortaokul` kalır.
 4. `supabase/lab.sql`: Robotik Laboratuvarı lig robotları.
 5. `supabase/analitik.sql`: platform ilerlemesi ve öğretmen analitiği.
+6. `supabase/dersler.sql`: ders motorunun ilerleme kaydı (var olan kuruluma `dersler` uygulamasını ekler).
 
 İlk iki dosya projede zaten kuruluysa yeniden çalıştırmak zararsızdır ve son sürüme günceller.
 

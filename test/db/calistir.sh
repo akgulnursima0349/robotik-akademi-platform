@@ -5,7 +5,7 @@ set -e
 K="$(cd "$(dirname "$0")/../.." && pwd)"
 P="psql -U postgres -q -v ON_ERROR_STOP=1"
 $P -c "drop database if exists platform_test" -c "create database platform_test"
-for f in test/db/supabase_taklit.sql kurslar/ortaokul/site/supabase/kurulum.sql kurslar/junior/supabase/junior.sql supabase/platform.sql supabase/platform.sql supabase/lab.sql supabase/lab.sql supabase/analitik.sql supabase/analitik.sql; do
+for f in test/db/supabase_taklit.sql kurslar/ortaokul/site/supabase/kurulum.sql kurslar/junior/supabase/junior.sql supabase/platform.sql supabase/platform.sql supabase/lab.sql supabase/lab.sql supabase/analitik.sql supabase/analitik.sql supabase/dersler.sql supabase/dersler.sql; do
   $P -d platform_test -f "$K/$f" 2>&1 | grep -v NOTICE || true
 done
 $P -d platform_test -f "$K/test/db/senaryo.sql" 2>&1 | sed 's/^psql:[^:]*:[0-9]*: //'

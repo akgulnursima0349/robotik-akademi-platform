@@ -26,6 +26,8 @@ select public.platform_ilerleme_kaydet('lab', '{"gorevler": {"kose": {"yildiz": 
 select pg_temp.esit(public.platform_ilerleme_getir('blok') -> 'veri' -> 'yildiz' ->> '1-1', '3', 'blok ilerlemesi geri geldi');
 select public.platform_ilerleme_kaydet('blok', '{"yildiz": {"1-1": 3, "1-2": 1}}');
 select pg_temp.esit(public.platform_ilerleme_getir('blok') -> 'veri' -> 'yildiz' ->> '1-2', '1', 'ikinci kayıt öncekinin yerine geçer');
+select public.platform_ilerleme_kaydet('dersler', '{"dersler": {"siroline-sensor": {"anlat": {"adim": 3, "bitti": true}}}}');
+select pg_temp.esit(public.platform_ilerleme_getir('dersler') -> 'veri' -> 'dersler' -> 'siroline-sensor' -> 'anlat' ->> 'bitti', 'true', 'ders ilerlemesi kaydedilir ve geri gelir');
 select pg_temp.hata_bekle($$select public.platform_ilerleme_kaydet('junior', '{}')$$, 'veri_gecersiz', 'bilinmeyen uygulama reddedilir');
 select pg_temp.hata_bekle($$select public.platform_ilerleme_kaydet('lab', '[1,2]')$$, 'veri_gecersiz', 'nesne olmayan veri reddedilir');
 select pg_temp.hata_bekle(format('select public.platform_sinif_raporu(%L)', :'sinif_j'), 'yetki_yok', 'öğrenci sınıf raporunu göremez');

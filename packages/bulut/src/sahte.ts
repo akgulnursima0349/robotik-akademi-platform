@@ -263,7 +263,7 @@ export class SahteBaglanti implements SunucuBaglantisi {
       }
       case "platform_ilerleme_kaydet": {
         if (!o.ogrenciId) throw new BulutHatasi("oturum_yok");
-        if (!["lab", "blok"].includes(String(p.p_uygulama)) || typeof p.p_veri !== "object" || Array.isArray(p.p_veri) || !p.p_veri) throw new BulutHatasi("veri_gecersiz");
+        if (!["lab", "blok", "dersler"].includes(String(p.p_uygulama)) || typeof p.p_veri !== "object" || Array.isArray(p.p_veri) || !p.p_veri) throw new BulutHatasi("veri_gecersiz");
         this.d.ilerleme ??= {}; this.d.sonGiris ??= {};
         this.d.ilerleme[`${o.ogrenciId}|${p.p_uygulama}`] = JSON.parse(JSON.stringify(p.p_veri));
         const t = new Date().toISOString();
