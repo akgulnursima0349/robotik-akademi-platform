@@ -44,19 +44,20 @@ for (const [ad, g, y] of BOYUTLAR) {
   const { ctx, p, hatalar } = await sayfaAc(g, y, { deneme: true });
   const shot = (n) => p.screenshot({ path: `${EKRAN}/${ad}_${n}.png`, fullPage: true });
   await p.goto(ADRES); await hazir(p);
-  ok((await p.$$(".sra-kurs")).length === 4, "dört kurs kartı");
-  ok((await p.$$("a.sra-kurs")).length === 4 && (await p.$$(".sra-kurs--yakinda")).length === 0, "dört kart da açık: Blok, Junior, ortaokul, Lab");
+  ok(await p.getAttribute('#as-seviye [aria-checked="true"]', "data-deger") === "ilkokul", "ilk açılışta seviye ilkokul");
+  ok((await p.$$eval("a.s2-atolye[data-kurs]", (a) => a.map((x) => x.dataset.kurs).join(","))) === "ilkokul,junior,lab", "ilkokul: Blok, Junior ve Lab açık");
   ok(await p.isVisible("#p-giris"), "üst barda Giriş yap");
   ok(await tasmaYok(p), "yatay taşma yok");
   await p.waitForFunction(() => [...document.images].every((i) => i.complete && i.naturalWidth > 0));
   await shot("1_karsilama");
 
-  await p.click('a.sra-kurs[data-kurs="junior"]');
+  await p.click('a.s2-atolye[data-kurs="junior"]');
   await p.waitForURL(/\/junior\/$/);
   await p.waitForFunction(() => document.querySelector("#app")?.children.length > 0);
   ok(true, "Junior kartı /junior/ adresini açtı ve Junior çalıştı");
   await p.goBack(); await hazir(p);
-  await p.click('a.sra-kurs[data-kurs="ortaokul"]');
+  await p.click('#as-seviye [data-deger="ortaokul"]');
+  await p.click('a.s2-atolye[data-kurs="ortaokul"]');
   await p.waitForURL(/\/ortaokul\/$/);
   await p.waitForFunction(() => document.querySelector("#app, body")?.innerText.length > 20);
   ok(true, "Python Atölyesi kartı /ortaokul/ adresini açtı");
@@ -134,11 +135,52 @@ for (const [ad, g, y] of BOYUTLAR) {
   const y2 = await sayfaAc(g, y, {});
   await y2.p.goto(ADRES); await hazir(y2.p);
   ok(!(await y2.p.isVisible("#p-giris")), "hesapsız modda Giriş yap düğmesi yok");
-  ok((await y2.p.$$("a.sra-kurs")).length === 4, "hesapsız modda kartlar doğrudan kursa gidiyor");
+  ok((await y2.p.$$("a.s2-atolye[data-kurs]")).length === 3, "hesapsız modda kartlar doğrudan kursa gidiyor");
   await y2.p.goto(ADRES + "#giris"); await hazir(y2.p);
   ok(/hesapsız/.test(await y2.p.textContent(".p-giris__kutu")), "hesapsız modda giriş ekranı açıklama gösteriyor");
   ok(y2.hatalar.length === 0, "hesapsız modda konsol hatası yok");
   await y2.ctx.close();
+}
+
+/* ---------------- Ana sayfa: seviyeler ve atölyeler ---------------- */
+for (const [ad, g, y] of BOYUTLAR) {
+  console.log(`\nana sayfa · ${ad}`);
+  const { ctx, p, hatalar } = await sayfaAc(g, y, { deneme: true });
+  await p.goto(ADRES); await hazir(p);
+  const beklenen = { "okul-oncesi": ["ilkokul", 2], ilkokul: ["ilkokul,junior,lab", 1], ortaokul: ["ortaokul,lab", 2], lise: ["ortaokul,lab", 2] };
+  for (const [sev, [acik, kilitli]] of Object.entries(beklenen)) {
+    await p.click(`#as-seviye [data-deger="${sev}"]`);
+    const k = await p.$$eval("a.s2-atolye[data-kurs]", (a) => a.map((x) => x.dataset.kurs).join(","));
+    const kl = await p.$$eval(".s2-atolye--kilitli", (a) => a.map((x) => [x.hasAttribute("href"), x.getAttribute("aria-disabled"), /Yakında/.test(x.textContent)]));
+    ok(k === acik && kl.length === kilitli && kl.every(([h, d, y]) => !h && d === "true" && y), `${sev}: açık ${acik}, ${kilitli} kilitli (bağlantısız, "Yakında")`);
+    ok((await p.getAttribute(".sra2", "data-seviye")) === sev, `${sev}: sayfa seviyesi uygulandı`);
+    ok(await tasmaYok(p), `${sev}: taşma yok`);
+    await p.locator("#atolyeler").screenshot({ path: resolve(EKRAN, `ana-${sev}-${ad}.png`) });
+  }
+  await p.reload(); await hazir(p);
+  ok(await p.getAttribute('#as-seviye [aria-checked="true"]', "data-deger") === "lise", "seçilen seviye yenileyince hatırlanıyor");
+  await p.screenshot({ path: resolve(EKRAN, `ana-sayfa-${ad}.png`), fullPage: true });
+  if (ad !== "masaustu") {
+    ok(!(await p.isVisible("#as-menu")), "dar ekranda menü kapalı başlıyor");
+    await p.click(".as-menu-dugme");
+    ok(await p.isVisible("#as-menu") && (await p.getAttribute(".as-menu-dugme", "aria-expanded")) === "true", "menü düğmesiyle açılıyor");
+    await p.screenshot({ path: resolve(EKRAN, `ana-sayfa-menu-${ad}.png`) });
+    await p.click(".as-menu-dugme");
+    const [s1, s2] = await p.$$eval("#as-seviye button", (b) => [b[0].getBoundingClientRect().top, b[3].getBoundingClientRect().bottom]);
+    ok(s2 - s1 < 140, "seviye seçici telefonda iki satıra sığıyor, kaydırma yok");
+  }
+  if (ad === "masaustu") {
+    /* klavye: Tab ile seviye seçicisine, ok tuşlarıyla seviye, Tab ile ilk açık karta */
+    await p.focus('#as-seviye [aria-checked="true"]');
+    await p.keyboard.press("Home");
+    ok(await p.getAttribute('#as-seviye [aria-checked="true"]', "data-deger") === "okul-oncesi", "klavyeyle seviye seçiliyor");
+    await p.keyboard.press("Tab");
+    ok(await p.evaluate(() => document.activeElement?.dataset.kurs) === "ilkokul", "Tab sonraki odağı ilk açık atölye kartına taşıyor (kilitli kart atlanıyor)");
+    await p.keyboard.press("Enter"); await p.waitForURL(/\/blok\/$/);
+    ok(true, "Enter ile kart açılıyor");
+  }
+  ok(hatalar.length === 0, "ana sayfada konsol hatası yok" + (hatalar.length ? ": " + hatalar.slice(0, 2).join(" | ") : ""));
+  await ctx.close();
 }
 
 /* ---------------- Robotik Laboratuvarı ---------------- */
@@ -150,8 +192,8 @@ for (const [ad, g, y] of BOYUTLAR) {
     const { ctx, p, hatalar } = await sayfaAc(g, y, { deneme: true });
     const shot = (n) => p.screenshot({ path: `${EKRAN}/lab_${ad}_${n}.png`, fullPage: true });
     await p.goto(ADRES); await hazir(p);
-    ok(await p.getAttribute('a.sra-kurs[data-kurs="lab"]', "href") === "lab/", "portal kartı Laboratuvar'a gidiyor");
-    await p.click('a.sra-kurs[data-kurs="lab"]'); await p.waitForURL(/\/lab\/$/); await hazir(p);
+    ok(await p.getAttribute('a.s2-atolye[data-kurs="lab"]', "href") === "lab/", "portal kartı Laboratuvar'a gidiyor");
+    await p.click('a.s2-atolye[data-kurs="lab"]'); await p.waitForURL(/\/lab\/$/); await hazir(p);
     ok((await p.$$("a.sra-kurs")).length === 4, "Laboratuvar: dört etkinlik (Kar Küreme, Lig, Çizgi İzleyen, Labirent)");
     ok(await tasmaYok(p), "Laboratuvar ana sayfasında taşma yok");
     await shot("1_ana");
@@ -495,7 +537,7 @@ for (const [ad, g, y] of BOYUTLAR) {
   const { ctx, p, hatalar } = await sayfaAc(g, y, { deneme: true }, true);
   const shot = (n) => p.screenshot({ path: `${EKRAN}/blok_${ad}_${n}.png`, fullPage: true });
   await p.goto(ADRES); await hazir(p);
-  await p.click('a.sra-kurs[data-kurs="ilkokul"]'); await p.waitForURL(/\/blok\/$/); await hazir(p);
+  await p.click('a.s2-atolye[data-kurs="ilkokul"]'); await p.waitForURL(/\/blok\/$/); await hazir(p);
   ok((await p.$$(".bk-dunya")).length === 3 && (await p.$$("a.bk-durak")).length === 1, "Blok: 3 dünya, ilk bölüm açık");
   ok(await tasmaYok(p), "Blok haritasında taşma yok");
   await shot("1_harita");

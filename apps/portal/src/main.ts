@@ -2,7 +2,7 @@
 import "@sra/tasarim";
 import "./portal.css";
 import { uygulama } from "./uygulama";
-import { karsilama } from "./ekranlar/karsilama";
+import { anaSayfa } from "./ekranlar/ana-sayfa";
 import { giris } from "./ekranlar/giris";
 import { panellerim, yakinda } from "./ekranlar/panellerim";
 import { rapor } from "./ekranlar/rapor";
@@ -13,7 +13,7 @@ let ilk = true;
 
 async function yonlendir(): Promise<void> {
   const h = location.hash.replace(/^#\/?/, "");
-  if (h === "kurslar" && !ilk) return; // sayfa içi bağlantı
+  if ((h === "kurslar" || h === "atolyeler") && !ilk) return; // sayfa içi bağlantı
   ilk = false;
   if (h === "giris") giris(root);
   else if (h === "panellerim") await panellerim(root);
@@ -21,15 +21,15 @@ async function yonlendir(): Promise<void> {
   else if (h === "nasil") nasil(root);
   else if (h === "vitrin/tasarim") { const { tasarimVitrini } = await import("./ekranlar/tasarim-vitrini"); tasarimVitrini(root); }
   else if (h.startsWith("rapor/")) await rapor(root, decodeURIComponent(h.slice(6)));
-  else karsilama(root);
-  if (h !== "kurslar") window.scrollTo({ top: 0 });
+  else anaSayfa(root);
+  if (h !== "kurslar" && h !== "atolyeler") window.scrollTo({ top: 0 });
   if (!h.startsWith("rapor/") && h !== "vitrin/tasarim") document.title = h === "giris" ? "Giriş · Sivas Robotik Akademi" : h === "panellerim" ? "Panellerim · Sivas Robotik Akademi" : h === "nasil" ? "Nasıl kuruldu? · Sivas Robotik Akademi" : "Sivas Robotik Akademi · Eğitim Platformu";
 }
 
 addEventListener("hashchange", () => { void yonlendir(); });
 uygulama.yenile().finally(() => {
   void yonlendir().then(() => {
-    if (location.hash === "#kurslar") document.getElementById("kurslar")?.scrollIntoView();
+    if (location.hash === "#kurslar" || location.hash === "#atolyeler") document.getElementById("atolyeler")?.scrollIntoView();
     document.body.dataset.hazir = "1";
   });
 });
