@@ -11,13 +11,15 @@ import {
 import { uygulama } from "../uygulama";
 import { acilisSeviyesi } from "../atolyeler";
 import { stilEkle, ustCubuk } from "./ana-sayfa";
+import { cizimGorseli, sahneGorseli } from "../gorsel";
 
 /** Deney bileşenleri (E4'te eklenir): ayar ve "bu değer denendi" bildirimiyle bir öğe kurar */
 export type DeneyBileseni = (ayar: Record<string, unknown>, denendi: (deger: string | number) => void) => HTMLElement;
 export const DENEY_BILESENLERI: Record<string, DeneyBileseni> = {};
-/** Anlatım görselleri (E3'te eklenir) */
-export type GorselCizici = (ad: string, ayar: Record<string, unknown> | undefined) => HTMLElement;
-export const GORSELLER: { sahne?: GorselCizici; cizim?: GorselCizici } = {};
+/** Anlatım görselleri: çizim kelimeye göre belirsin diye okuma olaylarını alır; adım değişince kapatılır */
+export interface GorselOynatici { kap: HTMLElement; olay?: { basladi?: () => void; kelime?: (i: number) => void; bitti?: () => void }; kapat?: () => void }
+export type GorselCizici = (ad: string, ayar: Record<string, unknown> | undefined) => GorselOynatici;
+export const GORSELLER: { sahne?: GorselCizici; cizim?: GorselCizici } = { sahne: sahneGorseli, cizim: cizimGorseli };
 
 const depoAl = (): Storage | null => { try { return localStorage; } catch { return null; } };
 let depo: DersDeposu | null = null;
@@ -52,6 +54,9 @@ const STIL = `
 .dr-govde{flex:1;width:100%;max-width:1232px;margin:0 auto;padding:28px clamp(16px,4vw,48px) 56px;display:flex;flex-direction:column;gap:20px}
 .dr-anlat{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:24px;align-items:start}
 .dr-gorsel{aspect-ratio:4/3;border-radius:var(--sra2-kose-3);background:var(--sra2-gece);color:var(--sra2-murekkep-acik);display:grid;place-items:center;text-align:center;padding:20px;box-shadow:0 var(--sra2-taban-2) 0 var(--sra2-gece-taban);overflow:hidden}
+.dr-gorsel--dolu{padding:0;display:block;position:relative}
+.dr-gorsel--dolu[data-tur=cizim]{aspect-ratio:auto;align-self:start;background:#FFF8EC;box-shadow:0 var(--sra2-taban-2) 0 var(--sra2-kart-taban)}
+.dr-yukleniyor{position:absolute;inset:0;display:grid;place-items:center;font-weight:800}
 .dr-gorsel b{display:block;color:#fff;font:800 var(--sra2-boy-4) var(--sra2-yazi-baslik);margin-bottom:6px}
 .dr-sag{display:flex;flex-direction:column;gap:16px}
 .dr-adimsay{font-weight:800;color:var(--sra2-murekkep-2);font-size:var(--sra2-boy-1)}
@@ -73,7 +78,7 @@ const STIL = `
 .dr-ogretmen{border:2px dashed var(--sra2-lavanta-taban);border-radius:var(--sra2-kose-2);padding:12px 14px;font-weight:600}
 .dr-son{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
 .dr-bitti{display:flex;flex-direction:column;gap:16px;background:var(--sra2-lavanta) !important}
-@media (max-width:900px){.dr-anlat{grid-template-columns:1fr}.dr-gorsel{aspect-ratio:16/9}}
+@media (max-width:900px){.dr-anlat{grid-template-columns:1fr}.dr-gorsel{aspect-ratio:16/9}.dr-gorsel--dolu[data-tur=cizim]{aspect-ratio:auto}}
 @media print{
   .as-ust,.as-alt,.dr-bolumler,.dr-yazdirma,.dr-bitti,.no-print{display:none !important}
   .dr-govde{padding:0}.s2-kart{box-shadow:none;border:1px solid #ccc}
@@ -95,6 +100,7 @@ export function dersSayfasi(root: HTMLElement, kimlik: string): boolean {
   const durum = () => dersDurumu(d, dp.kayit(d.kimlik), labYildizi(d));
   let bolum: DersBolumu = ilkBolum(durum(), { ogretmen, deneyVar });
   let adim = Math.min(dp.kayit(d.kimlik).anlat?.adim ?? 0, d.anlat.length - 1);
+  let aktifGorsel: GorselOynatici | null = null;
   if (durum().anlat && bolum === "anlat") adim = 0;
   let soruCozuldu = new Set<number>();
   const oncekiBitti = durum().bitti;
@@ -118,6 +124,7 @@ export function dersSayfasi(root: HTMLElement, kimlik: string): boolean {
 
   const ciz = () => {
     ses.durdur();
+    aktifGorsel?.kapat?.(); aktifGorsel = null;
     const s = durum();
     const xp = toplamXp(), sv = seviyeHesapla(xp);
     xpYeri.replaceChildren(seviyeGostergesi(sv.seviye, `${xp} XP`, sv.doluluk));
@@ -141,15 +148,16 @@ export function dersSayfasi(root: HTMLElement, kimlik: string): boolean {
   /* ---------- Anlat ---------- */
   const anlatim = () => {
     const a = d.anlat[adim], son = adim === d.anlat.length - 1;
-    const gorsel = a.gorsel && GORSELLER[a.gorsel.tur]
-      ? el("div", "dr-gorsel", {}, GORSELLER[a.gorsel.tur]!(a.gorsel.ad, a.gorsel.ayar))
+    aktifGorsel = a.gorsel && GORSELLER[a.gorsel.tur] ? GORSELLER[a.gorsel.tur]!(a.gorsel.ad, a.gorsel.ayar) : null;
+    const gorsel = aktifGorsel
+      ? el("div", "dr-gorsel dr-gorsel--dolu", { "data-gorsel": a.gorsel!.ad, "data-tur": a.gorsel!.tur }, aktifGorsel.kap)
       : el("figure", "dr-gorsel", { style: "margin:0", "data-gorsel": a.gorsel?.ad ?? "" },
           el("figcaption", "", {}, el("b", "", {}, a.gorsel ? (a.gorsel.tur === "sahne" ? "3D sahne" : "Çizim") : d.robot ?? "Bit"),
             a.gorsel ? `${a.gorsel.ad.replace(/-/g, " ")} · görsel hazırlanıyor` : ""), a.gorsel ? null : maskot(a.bit, 160, true));
     const sag = el("div", "dr-sag", {},
       el("span", "dr-adimsay", { "aria-live": "polite" }, `Adım ${adim + 1} / ${d.anlat.length}`),
       parcaliIlerleme(d.anlat.length, adim, true, "Anlatım"),
-      konusmaBalonu({ metin: a.metin, seslendirme: a.seslendirme, hal: a.bit, ses }));
+      konusmaBalonu({ metin: a.metin, seslendirme: a.seslendirme, hal: a.bit, ses, olay: aktifGorsel?.olay }));
     let gecebilir = !a.soru || soruCozuldu.has(adim);
     const ileriBtn = dugme({ metin: son ? "Anlatımı bitir" : "İleri", tur: "ana", ikon: son ? "tamam" : "ileri", ikonSonda: true, id: "dr-ileri" }) as HTMLButtonElement;
     if (a.soru) {

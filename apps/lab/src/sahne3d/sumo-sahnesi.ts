@@ -1,8 +1,8 @@
 /* Mini sumo sahnesi: 77 cm ring (dohyo), iki Kenshin, raunt oynatma, temas kıvılcımı, halkadan düşme. */
 import * as THREE from "three";
 import { baslangic, KARAR, RING, type RauntSonucu, type SumoKaresi } from "@sra/robot-motoru";
-import { Studyo } from "./studyo";
-import { kenshin, type KenshinModeli } from "./kenshin";
+import { Studyo } from "@sra/sahne/studyo";
+import { kenshin, type KenshinModeli } from "@sra/sahne/kenshin";
 
 const RING_YUK = 0.025; // m
 const TAKIM = [0xd7262e, 0x2a62d6];

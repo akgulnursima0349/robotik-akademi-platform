@@ -1,7 +1,7 @@
 /* Kurulum rehberinin sahnesi: yeşil kesim matı üstünde SiroLine, adım adım parçalar yerine iner. */
 import * as THREE from "three";
-import { Studyo } from "./studyo";
-import { PARCALAR, siroline, type ParcaAdi } from "./siroline";
+import { Studyo } from "@sra/sahne/studyo";
+import { PARCALAR, siroline, type ParcaAdi } from "@sra/sahne/siroline";
 
 /** Bir adımın kamerası: robot ekseninde (mm) hedef ve kamera konumu */
 export interface AdimKamerasi { hedef: [number, number, number]; kamera: [number, number, number] }

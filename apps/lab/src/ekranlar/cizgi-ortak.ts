@@ -4,7 +4,7 @@ import type { CizgiKaresi, Pist } from "@sra/robot-motoru";
 import type { CizgiSahnesi } from "../sahne3d/cizgi-sahnesi";
 
 export async function sahneModulu() {
-  const { webglVar } = await import("../sahne3d/studyo");
+  const { webglVar } = await import("@sra/sahne/studyo");
   if (!webglVar()) return null;
   return import("../sahne3d/cizgi-sahnesi");
 }

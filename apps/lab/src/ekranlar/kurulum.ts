@@ -1,7 +1,7 @@
 /* SiroLine (Full PCB) 3D kurulum rehberi: 10 adım, her adımda parça yerine iner; dört adımda kısa soru.
    Montaj sırası genel bir çizgi izleyen kurulumudur. */
 import { dugme, el, ikon } from "@sra/tasarim";
-import type { ParcaAdi } from "../sahne3d/siroline";
+import type { ParcaAdi } from "@sra/sahne/siroline";
 import type { AdimKamerasi } from "../sahne3d/kurulum-sahnesi";
 import { ilerleme } from "../ilerleme";
 import { ustKisim } from "./ana";
@@ -68,7 +68,7 @@ export async function kurulumRehberi(root: HTMLElement) {
       el("div", "l3-kurulum__sag", {}, kart, el("div", "l-eylem", {}, geriB, ileriB),
         el("p", "l3-not", {}, ikon("bilgi"), "Montaj sırası derste eğitmeninin gösterdiğinden biraz farklı olabilir; masada eğitmenini izle.")))));
 
-  const { webglVar } = await import("../sahne3d/studyo");
+  const { webglVar } = await import("@sra/sahne/studyo");
   let sahne: import("../sahne3d/kurulum-sahnesi").KurulumSahnesi | null = null;
   if (webglVar()) {
     const m = await import("../sahne3d/kurulum-sahnesi");

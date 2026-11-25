@@ -280,8 +280,33 @@ for (const [ad, g, y] of BOYUTLAR) {
   await p.click(".s2-dinle");
   ok((await p.evaluate(() => window.__okunan)).startsWith("SiroLine çizgiyi"), "anlatım sesli okunuyor");
   ok(await tasmasiz(), "anlatımda taşma yok");
+  /* anlatım görselleri: 1. adım 3D sahne anı (döndürülür, baştaki açıya döner) */
+  await p.waitForSelector('[data-sahne="siroline-alttan"][data-hazir="1"] canvas', { timeout: 30000 });
+  ok(await p.isVisible(".sa-etiket") && /sensör/.test(await p.textContent(".sa-etiket")), "3D sahne: SiroLine alttan, sensörler vurgulu ve etiketli");
+  const kamera = () => p.getAttribute("[data-sahne]", "data-kamera");
+  const bas = await kamera(), kutu = await p.locator(".sa-tuval canvas").boundingBox();
+  await p.mouse.move(kutu.x + kutu.width / 2, kutu.y + kutu.height / 2); await p.mouse.down();
+  await p.mouse.move(kutu.x + kutu.width / 2 + 120, kutu.y + kutu.height / 2 + 10, { steps: 8 }); await p.mouse.up();
+  await p.waitForTimeout(400);
+  ok(await kamera() !== bas, "3D sahne sürükleyince dönüyor");
+  await p.click(".sa-basa"); await p.waitForTimeout(400);
+  ok(await kamera() === bas, "Baştaki açı düğmesi kamerayı başa alıyor");
+  ok(await tasmasiz(), "3D sahneli adımda taşma yok");
   await p.screenshot({ path: resolve(EKRAN, `ders-anlat-${ad}.png`), fullPage: true });
-  await p.click("#dr-ileri"); await p.click("#dr-ileri");
+  /* 2. adım: adım adım çizim; okuma bitince bütün katmanlar görünür, Tekrar oynat baştan başlatır */
+  await p.click("#dr-ileri"); await p.waitForSelector('[data-cizim="sensor-isik-yolu"]');
+  const katman = () => p.$$eval("[data-cizim] .cz-katman", (k) => [k.length, k.filter((x) => x.classList.contains("gorunur")).length]);
+  let [toplam, gorunen] = await katman();
+  ok(toplam > 5 && gorunen < toplam, `çizim adım adım beliriyor (${gorunen} / ${toplam})`);
+  await p.click(".s2-dinle"); await p.waitForFunction(() => { const k = document.querySelectorAll("[data-cizim] .cz-katman"); return [...k].every((x) => x.classList.contains("gorunur")); });
+  ok(true, "sesli okuma bitince çizimin tamamı görünüyor");
+  await p.click(".cz-tekrar"); await p.waitForTimeout(300);
+  [toplam, gorunen] = await katman();
+  ok(gorunen < toplam, "Tekrar oynat çizimi baştan başlatıyor");
+  ok(!(await p.$("[data-sahne] canvas")), "çizim adımında 3D sahne kapalı");
+  ok(await tasmasiz(), "çizimli adımda taşma yok");
+  await p.screenshot({ path: resolve(EKRAN, `ders-cizim-${ad}.png`), fullPage: true });
+  await p.click("#dr-ileri");
   ok(/Adım 3 \/ 4/.test(await p.textContent(".dr-adimsay")) && await p.isDisabled("#dr-ileri"), "soru adımında cevaplamadan ilerlenmiyor");
   await p.click('#dr-soru button:has-text("Çok ışık döner")');
   ok(await p.getAttribute("#dr-soru [data-sonuc]", "data-sonuc") === "yanlis" && await p.isDisabled("#dr-ileri"), "yanlış yanıt: Bit şaşırıyor, tekrar denenir");
@@ -296,6 +321,9 @@ for (const [ad, g, y] of BOYUTLAR) {
   } else await p.click("#dr-ileri");
   await p.reload(); await p.waitForSelector(".dr-anlat");
   ok(/Adım 4 \/ 4/.test(await p.textContent(".dr-adimsay")), "sayfa yenilenince kalınan adımdan devam");
+  await p.waitForSelector('[data-sahne="siroline-bant-ustunde"][data-hazir="1"] canvas', { timeout: 30000 });
+  ok(await tasmasiz(), "bant üstündeki SiroLine sahnesinde taşma yok");
+  await p.screenshot({ path: resolve(EKRAN, `ders-bant-${ad}.png`), fullPage: true });
   await p.click("#dr-ileri"); await p.waitForSelector('[data-bolum="dene"][aria-current="step"]');
   ok(/hazırlanıyor/.test(await p.textContent(".dr-govde")) && await p.isVisible("#dr-goreve"), "deney bileşeni yokken açık bildirim; göreve geçilebiliyor");
   await p.click("#dr-goreve"); await p.waitForSelector("#dr-lab");
@@ -322,6 +350,34 @@ for (const [ad, g, y] of BOYUTLAR) {
   ok(await p.$eval('[data-ders="siroline-sensor"]', (e) => e.classList.contains("bitti")), "atölye sayfasında ders bitti görünüyor");
   ok(hatalar.length === 0, "ders oynatıcıda konsol hatası yok" + (hatalar.length ? ": " + hatalar.slice(0, 2).join(" | ") : ""));
   await ctx.close();
+}
+{
+  /* görseller: hareketi azaltta çizim hemen tam; 3D'siz adımda 3D kodu indirilmez; WebGL yoksa açıklamalı kart */
+  console.log("\nders görselleri · özel durumlar");
+  const [, g, y] = BOYUTLAR[0];
+  const adim2 = () => localStorage.setItem("sra-ders-v1", JSON.stringify({ surum: 1, dersler: { "siroline-sensor": { anlat: { adim: 1, bitti: false } } } }));
+  {
+    const { ctx, p, hatalar } = await sayfaAc(g, y, {}, true);
+    const istekler = []; p.on("request", (r) => istekler.push(r.url()));
+    await p.addInitScript(adim2);
+    await p.goto(ADRES + "#ders/siroline-sensor"); await p.waitForSelector('[data-cizim="sensor-isik-yolu"]');
+    ok(await p.$$eval("[data-cizim] .cz-katman", (k) => k.every((x) => x.classList.contains("gorunur"))), "hareketi azaltta çizimin tamamı hemen görünüyor");
+    ok(!istekler.some((u) => /sahne-ani/.test(u)), "3D'siz adımda 3D kodu indirilmiyor");
+    await p.click("#dr-geri"); await p.waitForSelector('[data-sahne][data-hazir="1"]', { timeout: 30000 });
+    ok(istekler.some((u) => /sahne-ani/.test(u)), "3D'li adıma gelince 3D kodu indiriliyor");
+    ok(hatalar.length === 0, "konsol hatası yok" + (hatalar.length ? ": " + hatalar.slice(0, 2).join(" | ") : ""));
+    await ctx.close();
+  }
+  {
+    const { ctx, p, hatalar } = await sayfaAc(g, y, {});
+    await p.addInitScript(() => { const asil = HTMLCanvasElement.prototype.getContext; HTMLCanvasElement.prototype.getContext = function (t, ...a) { return /webgl/.test(t) ? null : asil.call(this, t, ...a); }; });
+    await p.goto(ADRES + "#ders/siroline-sensor"); await p.waitForSelector('[data-sahne][data-hazir="yedek"]', { timeout: 30000 });
+    await p.waitForFunction(() => document.querySelector(".sa--yedek img")?.complete);
+    ok(await p.$eval(".sa--yedek img", (i) => i.naturalWidth > 0) && /sensör/.test(await p.textContent(".sa--yedek")), "WebGL yoksa sahnenin hazır resmi ve açıklaması gösteriliyor");
+    await p.screenshot({ path: resolve(EKRAN, "ders-webgl-yok.png") });
+    ok(hatalar.length === 0, "WebGL yokken konsol hatası yok" + (hatalar.length ? ": " + hatalar.slice(0, 2).join(" | ") : ""));
+    await ctx.close();
+  }
 }
 
 /* ---------------- Robotik Laboratuvarı ---------------- */

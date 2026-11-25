@@ -47,7 +47,7 @@ dist/ortaokul/   Python Atölyesi
 - **Python:** `packages/python`, çocuğun kodunu Skulpt ile tarayıcıda çalıştırır.
   - Her satırda adım sayar; bitmeyen döngüleri durdurur.
   - Hataları satır numarasıyla sade Türkçe cümlelere çevirir.
-- **3D:** `apps/lab/src/sahne3d` (Three.js).
+- **3D:** `packages/sahne` (Three.js): stüdyo, kalite ayarı ve robot modelleri (SiroLine, Kenshin, RizBot). Lab bunları kullanır; portaldaki ders anlatımı aynı modelleri hazır açılardan "sahne anı" olarak gösterir. Anlatım görsellerinin kataloğu (`packages/mufredat/src/gorseller.ts`) saf veridir; 3D kodu yalnız sahneli bir adım açılınca indirilir.
   - Robot modelleri kodla üretilir: Kenshin, SiroLine, RizBot. Kaynak, akademinin robotlarının fotoğrafları ve kumpas ölçüleri.
   - Ortak `Studyo` ilk saniyelerde kare hızını ölçer; düşük donanımda gölge ve çözünürlüğü kendiliğinden düşürür.
   - Three.js her ekranda ayrı yüklenir.

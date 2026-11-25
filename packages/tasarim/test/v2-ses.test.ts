@@ -96,6 +96,18 @@ describe("maskot ve konuşma balonu", () => {
     expect(b.querySelectorAll(".okunan")).toHaveLength(0);
     b.remove();
   });
+  it("balon okuma olaylarını (başladı, kelime sırası, bitti) dışarı bildirir; Durdur da bitti sayılır", () => {
+    const { m, kayit } = sahteMotor();
+    const ses = new SesServisi(m, depo());
+    const olaylar: string[] = [];
+    const b = konusmaBalonu({ metin: "Kırmızı yıldızı bul", ses, kendiliginden: false,
+      olay: { basladi: () => olaylar.push("basladi"), kelime: (i) => olaylar.push(`k${i}`), bitti: () => olaylar.push("bitti") } });
+    const d = b.querySelector<HTMLButtonElement>(".s2-dinle")!;
+    d.click(); kayit[0].kelime(10); kayit[0].bitti();
+    expect(olaylar).toEqual(["basladi", "k1", "bitti"]);
+    d.click(); d.click();
+    expect(olaylar.slice(3)).toEqual(["basladi", "bitti"]);
+  });
   it("Türkçe ses yoksa Dinle düğmesi gizli, metin görünür", () => {
     const b = konusmaBalonu({ metin: "Merhaba", ses: new SesServisi(sahteMotor(false).m, depo()) });
     expect(b.querySelector<HTMLButtonElement>(".s2-dinle")!.hidden).toBe(true);

@@ -8,6 +8,7 @@
    durum hesabına ayrıca verilir. */
 import { CIZGI_GOREVLERI, GOREVLER, LABIRENT_GOREVLERI } from "@sra/robot-motoru";
 import type { Seviye } from "./model";
+import { gorselVarMi } from "./gorseller";
 
 export type BitHali = "anlatiyor" | "dusunuyor" | "ipucu" | "seviniyor" | "sasiriyor" | "bekliyor";
 export const BIT_HALLERI: readonly BitHali[] = ["anlatiyor", "dusunuyor", "ipucu", "seviniyor", "sasiriyor", "bekliyor"];
@@ -74,6 +75,7 @@ export function dersiDogrula(d: DersTanimi): string[] {
   d.anlat?.forEach((a, i) => {
     if (!a.metin?.trim()) y(`anlatım adımı ${i + 1}: metin boş`);
     if (!BIT_HALLERI.includes(a.bit)) y(`anlatım adımı ${i + 1}: Bit'in hâli tanınmıyor (${a.bit})`);
+    if (a.gorsel && !gorselVarMi(a.gorsel.tur, a.gorsel.ad)) y(`anlatım adımı ${i + 1}: görsel katalogda yok (${a.gorsel.tur}/${a.gorsel.ad})`);
     if (a.soru) {
       const dogru = a.soru.secenekler.filter((s) => s.dogru).length;
       if (a.soru.secenekler.length < 2) y(`anlatım adımı ${i + 1}: soruda en az iki seçenek olmalı`);

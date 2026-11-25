@@ -5,7 +5,7 @@
 import { el } from "@sra/tasarim";
 import { DIZILISLER, rauntOyna, type Dizilis, type RauntSonucu, type SumoBeyni } from "@sra/robot-motoru";
 import { ORNEK_ROBOTLAR, pythonBeyin } from "@sra/python";
-import { webglVar } from "./studyo";
+import { webglVar } from "@sra/sahne/studyo";
 
 const DIZILIS_AD: Record<Dizilis, string> = { karsi: "Karşı karşıya", yan: "Yan yana", sirt: "Sırt sırta" };
 const STIL = `

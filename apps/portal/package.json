@@ -11,6 +11,8 @@
     "@sra/tasarim": "*",
     "@sra/bulut": "*",
     "@sra/analitik": "*",
-    "@sra/mufredat": "*"
+    "@sra/mufredat": "*",
+    "@sra/sahne": "*",
+    "three": "^0.187.0"
   }
 }

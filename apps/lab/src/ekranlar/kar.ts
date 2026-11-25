@@ -72,7 +72,7 @@ export async function karGorev(root: HTMLElement, kimlik: string) {
   const sag = el("section", "l-gorev-sag", {}, el("div", "l-sahne-kap sra-kart", {}, gosterge, sahneKutu, haritaSecim));
   root.replaceChildren(ustKisim(), el("main", "l-gorev-sayfa sra-sarmal", { id: "ana" }, sol, sag));
 
-  const { webglVar } = await import("../sahne3d/studyo");
+  const { webglVar } = await import("@sra/sahne/studyo");
   if (!webglVar()) { sahneKutu.replaceChildren(webglYok()); calistirB.disabled = true; return; }
   const { KarSahnesi3D } = await import("../sahne3d/kar-sahnesi");
   if (!sahneKutu.isConnected) return;

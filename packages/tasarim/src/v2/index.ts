@@ -201,6 +201,8 @@ export interface KonusmaAyari {
   /** okul öncesinde ve ses açıksa sayfaya eklenince kendiliğinden okunur (seviye kökten okunur) */
   kendiliginden?: boolean;
   ses?: SesServisi;
+  /** okuma olayları (anlatım çizimleri kelimeye göre belirsin diye) */
+  olay?: { basladi?: () => void; kelime?: (sira: number) => void; bitti?: () => void };
 }
 /** Bit + konuşma balonu + "Dinle" düğmesi. Okurken söylenen kelime vurgulanır. Türkçe ses yoksa düğme yok, metin hep görünür. */
 export function konusmaBalonu(a: KonusmaAyari): HTMLElement {
@@ -221,10 +223,14 @@ export function konusmaBalonu(a: KonusmaAyari): HTMLElement {
     if (!okuyor) vurgu(-1);
   };
   const oku = (zorla: boolean) => {
-    no = ses.oku(a.seslendirme ?? a.metin, { zorla, kelime: a.seslendirme ? undefined : vurgu, bitti: () => durum(false) });
-    if (no) { durum(true); if (!a.seslendirme) vurgu(0); }
+    no = ses.oku(a.seslendirme ?? a.metin, {
+      zorla,
+      kelime: (i) => { if (!a.seslendirme) vurgu(i); a.olay?.kelime?.(i); },
+      bitti: () => { durum(false); a.olay?.bitti?.(); }
+    });
+    if (no) { durum(true); if (!a.seslendirme) vurgu(0); a.olay?.basladi?.(); }
   };
-  dinle.addEventListener("click", () => { if (no && ses.okunan === no) { ses.durdur(); durum(false); } else oku(true); });
+  dinle.addEventListener("click", () => { if (no && ses.okunan === no) { ses.durdur(); durum(false); a.olay?.bitti?.(); } else oku(true); });
   const goster = () => { dinle.hidden = !ses.var; };
   goster();
   ses.degisince(() => { goster(); if (no && ses.okunan !== no) durum(false); });

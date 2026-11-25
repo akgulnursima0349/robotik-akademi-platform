@@ -13,7 +13,8 @@
     "@sra/python": "*",
     "@sra/robot-motoru": "*",
     "@sra/tasarim": "*",
-    "three": "^0.187.0"
+    "three": "^0.187.0",
+    "@sra/sahne": "*"
   },
   "devDependencies": {
     "@types/three": "^0.187.0"

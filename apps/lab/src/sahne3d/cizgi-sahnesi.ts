@@ -2,8 +2,8 @@
    Simülasyon önceden koşturulur (deterministik); sahne kareleri zamana göre ara değerleyerek oynatır. */
 import * as THREE from "three";
 import { DONGU_ARALIGI, type CizgiKaresi, type CizgiSonucu, type Pist } from "@sra/robot-motoru";
-import { Studyo, type Kalite } from "./studyo";
-import { siroline, type SiroLineModeli } from "./siroline";
+import { Studyo, type Kalite } from "@sra/sahne/studyo";
+import { siroline, type SiroLineModeli } from "@sra/sahne/siroline";
 import { HALI_KALINLIK, pistHalisi } from "./pist";
 
 export type KameraKipi = "takip" | "serbest" | "ust";

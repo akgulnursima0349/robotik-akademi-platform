@@ -3,8 +3,8 @@
    Oynatma, simülasyonun hız profilinden gelen zamanlarla yapılır: 1× gerçek süre. */
 import * as THREE from "three";
 import { haritaOku, HUCRE_MM, DUVAR_MM, DUVAR_YUKSEKLIK_MM, type LabirentHaritasi, type LabirentKaresi } from "@sra/robot-motoru";
-import { Studyo } from "./studyo";
-import { rizbot, type RizbotModeli } from "./rizbot";
+import { Studyo } from "@sra/sahne/studyo";
+import { rizbot, type RizbotModeli } from "@sra/sahne/rizbot";
 
 const C = HUCRE_MM / 1000, T = DUVAR_MM / 1000, H = DUVAR_YUKSEKLIK_MM / 1000;
 const TABAN = 0.018;

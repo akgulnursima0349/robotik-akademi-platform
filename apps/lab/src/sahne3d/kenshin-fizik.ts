@@ -5,8 +5,8 @@
    Ekranda: hız, teker devirleri, her tekerin zemine bastığı kuvvet, karşıdaki cismin kalkışı, sensörler ve düşme. */
 import * as THREE from "three";
 import { el } from "@sra/tasarim";
-import { Studyo } from "./studyo";
-import { kenshin } from "./kenshin";
+import { Studyo } from "@sra/sahne/studyo";
+import { kenshin } from "@sra/sahne/kenshin";
 
 type Senaryo = "kutu" | "duvar" | "rakip" | "ring";
 const SENARYOLAR: [Senaryo, string][] = [["ring", "Ring"], ["kutu", "Kutu"], ["duvar", "Duvara dayalı kutu"], ["rakip", "Duran rakip"]];

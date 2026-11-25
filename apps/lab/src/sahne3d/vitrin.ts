@@ -1,10 +1,10 @@
 /* Model inceleme sahnesi (geliştirme): #vitrin/<açı> */
 import * as THREE from "three";
 import { CIZGI_GOREVLERI, Pist } from "@sra/robot-motoru";
-import { Studyo } from "./studyo";
-import { siroline } from "./siroline";
-import { kenshin } from "./kenshin";
-import { rizbot } from "./rizbot";
+import { Studyo } from "@sra/sahne/studyo";
+import { siroline } from "@sra/sahne/siroline";
+import { kenshin } from "@sra/sahne/kenshin";
+import { rizbot } from "@sra/sahne/rizbot";
 import { pistHalisi, HALI_KALINLIK } from "./pist";
 
 const ACILAR: Record<string, [number, number, number, number]> = {

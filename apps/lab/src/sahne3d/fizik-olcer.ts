@@ -3,7 +3,7 @@
    Ekranda canlı: fizik adımı süresi (ms), kare hızı (fps), cisim sayısı, ekran kartı. Sonuç tek satır, kopyalanabilir. */
 import * as THREE from "three";
 import { el } from "@sra/tasarim";
-import { Studyo } from "./studyo";
+import { Studyo } from "@sra/sahne/studyo";
 
 const RENKLER = [0xe8262f, 0x2b6fd6, 0xffc21f, 0x2bb673, 0x8a5cf0, 0xf28c28];
 

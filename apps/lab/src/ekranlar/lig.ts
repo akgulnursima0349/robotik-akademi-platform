@@ -98,7 +98,7 @@ export async function lig(root: HTMLElement) {
   const sag = el("section", "l-gorev-sag", {}, el("div", "l3-sahne-kap sra-kart", {}, skor, el("div", "l3-ust", {}, rauntSec, kamera, hiz), sahneKutu, durum), tabloKutu);
   root.replaceChildren(ustKisim(), el("main", "l-gorev-sayfa sra-sarmal", { id: "ana" }, sol, sag));
 
-  const { webglVar } = await import("../sahne3d/studyo");
+  const { webglVar } = await import("@sra/sahne/studyo");
   let sahne: import("../sahne3d/sumo-sahnesi").SumoSahnesi | null = null;
   if (webglVar()) {
     const m = await import("../sahne3d/sumo-sahnesi");

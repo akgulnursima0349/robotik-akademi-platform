@@ -3,7 +3,7 @@
    Ölçek: bir kare 16 cm'lik maket karesi (sahne metre). Kuzey -z, doğu +x. */
 import * as THREE from "three";
 import { Izgara, type Kare } from "@sra/robot-motoru";
-import { Studyo } from "./studyo";
+import { Studyo } from "@sra/sahne/studyo";
 
 const C = 0.16;                    // kare kenarı (m)
 const KAL = 0.05;                  // maket tabanının kalınlığı
