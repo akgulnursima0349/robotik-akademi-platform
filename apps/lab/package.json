@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@sra/bulut": "*",
+    "@sra/fizik": "*",
     "@sra/python": "*",
     "@sra/robot-motoru": "*",
     "@sra/tasarim": "*",

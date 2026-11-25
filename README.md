@@ -39,6 +39,7 @@ apps/lab               Robotik Laboratuvarı: 3D sahneler (Three.js) ve kod edit
 packages/tasarim       ortak tasarım sistemi (örnekler: /ornekler.html)
 packages/bulut         oturum ve kurs yönlendirme (Supabase ya da sahte sunucu)
 packages/robot-motoru  deterministik simülasyonlar: ızgara, sumo fiziği, çizgi izleyen, labirent
+packages/fizik         3D katı cisim fiziği (Rapier, belirlenimci sürüm): sabit adım, kayıt ve tekrar
 packages/analitik      ısı haritası, kazanım özeti, etki büyüklüğü, zor bölümler, CSV
 packages/python        Skulpt köprüsü: Türkçe hata mesajları, sonsuz döngü koruması
 kurslar/junior         python-atolyesi-junior (submodule)

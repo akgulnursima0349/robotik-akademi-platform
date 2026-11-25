@@ -311,6 +311,17 @@ for (const [ad, g, y] of BOYUTLAR) {
   }
 }
 
+/* ---------------- Fizik altyapısı: hız ölçer ---------------- */
+for (const [ad, g, y] of BOYUTLAR) {
+  console.log(`\nfizik · ${ad}`);
+  const { ctx, p, hatalar } = await sayfaAc(g, y, { deneme: true });
+  await p.goto(ADRES + "lab/#vitrin/fizik"); await p.waitForSelector("body[data-hazir]", { timeout: 90000 });
+  const sonuc = await p.textContent("#fo-sonuc");
+  ok(/60 cisim · adım [\d.]+ ms · \d+ fps/.test(sonuc), "fizik hız ölçer çalışıyor: " + sonuc.split(" · ").slice(1, 4).join(" · "));
+  ok(hatalar.length === 0, "fizik ölçerde konsol hatası yok" + (hatalar.length ? ": " + hatalar.slice(0, 2).join(" | ") : ""));
+  await ctx.close();
+}
+
 /* ---------------- Lab 3D: RizBot labirent ---------------- */
 const SAG_EL = "while not bitti():\n    if not duvar_sag():\n        saga_don()\n        ileri()\n    elif not duvar_on():\n        ileri()\n    else:\n        sola_don()\n";
 for (const [ad, g, y] of BOYUTLAR) {

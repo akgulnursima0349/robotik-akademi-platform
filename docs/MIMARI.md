@@ -39,6 +39,11 @@ dist/ortaokul/   Python Atölyesi
   - **Mini Sumo:** katı cisim fiziği, SAT çarpışma, bıçak altına girme, ışın sensörleri, üç rauntluk maç ve turnuva.
   - **Çizgi İzleyen:** diferansiyel sürüş, QTR sensör modeli, kitin PID beyni; 10 ms kontrol döngüsü, 2,5 ms fizik adımı.
   - **Labirent:** MEB Labirent Ustası ölçüleri (hücre 20 cm, duvar 18 mm). Hız profilinden süre hesabı, MEB puanlaması.
+- **3D fizik:** `packages/fizik`, Rapier'in belirlenimci (deterministik) sürümü üzerine ince bir katman.
+  - Sabit adım (1/240 sn); aynı girdiler her cihazda bit bit aynı sonucu verir. Maç tekrarı kayıttan yeniden oynatılır.
+  - Malzemeler (lastik, ring, çelik, plastik) ve gövde kurucuları (kutu, silindir, kama, dışbükey).
+  - Birim testleri fiziği analitik sonuçlarla karşılaştırır: serbest düşüş ve eğik düzlemde kayma açısı.
+  - Yalnız onu kullanan ekranlarda indirilir. `lab/#vitrin/fizik` sayfası cihazdaki fizik ve çizim hızını ölçer.
 - **Python:** `packages/python`, çocuğun kodunu Skulpt ile tarayıcıda çalıştırır.
   - Her satırda adım sayar; bitmeyen döngüleri durdurur.
   - Hataları satır numarasıyla sade Türkçe cümlelere çevirir.
