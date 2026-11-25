@@ -1,1 +1,1 @@
-{ "name": "@sra/fizik", "version": "0.1.0", "private": true, "type": "module", "exports": { ".": "./src/fizik.ts" }, "dependencies": { "@dimforge/rapier3d-deterministic-compat": "0.21.0" } }
+{ "name": "@sra/fizik", "version": "0.1.0", "private": true, "type": "module", "exports": { ".": "./src/fizik.ts", "./kenshin": "./src/robotlar/kenshin.ts", "./kenshin-parametreleri": "./src/robotlar/kenshin-parametreleri.ts" }, "dependencies": { "@dimforge/rapier3d-deterministic-compat": "0.21.0" } }

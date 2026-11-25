@@ -322,6 +322,42 @@ for (const [ad, g, y] of BOYUTLAR) {
   await ctx.close();
 }
 
+/* ---------------- Fizik: Kenshin deneme sayfası ---------------- */
+for (const [ad, g, y] of BOYUTLAR) {
+  console.log(`\nkenshin fizik · ${ad}`);
+  const { ctx, p, hatalar } = await sayfaAc(g, y, { deneme: true });
+  await p.goto(ADRES + "lab/#vitrin/kenshin-fizik"); await p.waitForSelector("body[data-hazir]", { timeout: 90000 });
+  ok(await tasmaYok(p), "kenshin fizik sayfasında taşma yok");
+  const sayi = async (sec) => parseFloat((await p.textContent(sec)).replace(",", "."));
+  if (ad === "masaustu") {
+    /* klavye: ileri sür, kutuya bıçakla gir */
+    await p.keyboard.down("ArrowUp"); await p.waitForTimeout(700);
+    const hiz = await sayi("#kf-hiz");
+    ok(hiz > 0.3, `ok tuşuyla ileri gidiyor (${hiz} m/s)`);
+    await p.waitForTimeout(1500); await p.keyboard.up("ArrowUp");
+    const kalkis = (await p.textContent("#kf-hedef")).match(/en çok ([\d.]+) mm/);
+    ok(kalkis && parseFloat(kalkis[1]) > 0.3, "bıçak kutunun kenarını kaldırıyor: " + (kalkis?.[0] ?? "?"));
+    await p.screenshot({ path: resolve(EKRAN, `kenshin-fizik-kutu-${ad}.png`) });
+    /* rakip senaryosu: arkasından girince rakibin teker yükü düşüyor */
+    await p.click('button[data-senaryo="rakip"]'); await p.waitForTimeout(300);
+    await p.keyboard.down("ArrowUp"); await p.waitForTimeout(2500);
+    const metin = await p.textContent("#kf-hedef"), [, once, enAz] = [...metin.matchAll(/([\d.]+)/g)].map((m) => parseFloat(m[1]));
+    ok(enAz < once * 0.6, `rakip kaldırılınca teker yükü düşüyor (${metin})`);
+    await p.screenshot({ path: resolve(EKRAN, `kenshin-fizik-rakip-${ad}.png`) });
+    await p.keyboard.up("ArrowUp");
+  } else {
+    /* dokunmatik sürgüler görünür ve sürer */
+    ok(await p.isVisible("#kf-surgu-sol") && await p.isVisible("#kf-surgu-sag"), "dokunmatik motor sürgüleri görünür");
+    await p.evaluate(() => { for (const id of ["kf-surgu-sol", "kf-surgu-sag"]) (document.getElementById(id)).value = "100"; });
+    await p.waitForTimeout(900);
+    const hiz = await sayi("#kf-hiz");
+    ok(hiz > 0.3, `sürgülerle ileri gidiyor (${hiz} m/s)`);
+    await p.screenshot({ path: resolve(EKRAN, `kenshin-fizik-${ad}.png`) });
+  }
+  ok(hatalar.length === 0, "kenshin fizik sayfasında konsol hatası yok" + (hatalar.length ? ": " + hatalar.slice(0, 2).join(" | ") : ""));
+  await ctx.close();
+}
+
 /* ---------------- Lab 3D: RizBot labirent ---------------- */
 const SAG_EL = "while not bitti():\n    if not duvar_sag():\n        saga_don()\n        ileri()\n    elif not duvar_on():\n        ileri()\n    else:\n        sola_don()\n";
 for (const [ad, g, y] of BOYUTLAR) {

@@ -39,6 +39,8 @@ export interface DunyaAyari {
   yercekimi?: number;
   /** çözücü yinelemesi: temas ve eklem doğruluğu */
   cozucuYinelemesi?: number;
+  /** sahnenin tipik cisim boyu, metre (temas toleranslarını ölçekler); varsayılan 0,1 */
+  uzunlukOlcegi?: number;
 }
 
 /** Bir adımda dünyaya uygulanacak girdi (ör. motor komutları). Kayıt ve tekrar için düz veri olmalı. */
@@ -53,6 +55,8 @@ export class Dunya {
   /** her adımda uygulanan girdiler (kayıt): aynı kurulum + aynı girdiler = aynı sonuç */
   readonly kayit: (Girdi | undefined)[] = [];
   girdiUygula: GirdiUygula | null = null;
+  /** her adımdan önce çağrılır (motor torkları gibi); girdiden sonra, eklenme sırasıyla */
+  readonly oncesi: ((dunya: Dunya) => void)[] = [];
   /** ölçüm: son adımların ortalama süresi (ms) */
   private sureler: number[] = [];
 
@@ -62,6 +66,10 @@ export class Dunya {
     this.world = new R.World({ x: 0, y: -(ayar.yercekimi ?? 9.81), z: 0 });
     this.world.timestep = this.adim;
     this.world.integrationParameters.numSolverIterations = ayar.cozucuYinelemesi ?? 8;
+    /* uzunluk ölçeği: sahnedeki cisimler 10 cm mertebesinde. Rapier'in temas toleransları (izinli iç içe geçme,
+       öngörü mesafesi) bu ölçekle çarpılır; varsayılan 1 m ile 2 mm'lik öngörü, bıçak ucunun rakibin 2-3 mm'lik
+       taban boşluğuna girmesini engelleyen hayalet temaslar üretiyordu. */
+    this.world.lengthUnit = ayar.uzunlukOlcegi ?? 0.1;
   }
   static async kur(ayar?: DunyaAyari): Promise<Dunya> { return new Dunya(await fizikHazirla(), ayar); }
 
@@ -71,6 +79,7 @@ export class Dunya {
   ilerle(girdi?: Girdi): void {
     const t0 = performance.now();
     this.girdiUygula?.(this, girdi, this.adimNo);
+    for (const f of this.oncesi) f(this);
     this.kayit.push(girdi ? { ...girdi } : undefined);
     this.world.step();
     this.adimNo++;
@@ -138,6 +147,14 @@ export class Dunya {
     let h = 0x811c9dc5;
     for (let i = 0; i < v.length; i++) { h ^= v[i]; h = Math.imul(h, 0x01000193) >>> 0; }
     return h.toString(16).padStart(8, "0");
+  }
+  /** Bir çarpışma şeklinin o anda değdiği bütün yüzeylerden aldığı toplam normal kuvvet (N) */
+  normalKuvvet(c: Carpisan): number {
+    let toplam = 0;
+    this.world.contactPairsWith(c, (o) => {
+      this.world.contactPair(c, o, (m) => { for (let i = 0; i < m.numContacts(); i++) toplam += m.contactImpulse(i); });
+    });
+    return toplam / this.adim;
   }
   /** Gövdenin konumu ve dönmesi (görüntüye aktarmak için) */
   static poz(g: Govde) { return { konum: g.translation(), donme: g.rotation() }; }

@@ -13,6 +13,7 @@ const root = document.getElementById("app")!;
 async function yonlendir() {
   document.body.removeAttribute("data-hazir");
   const h = location.hash.replace(/^#\/?/, "");
+  if (h === "vitrin/kenshin-fizik") { const { kenshinFizik } = await import("./sahne3d/kenshin-fizik"); void kenshinFizik(root); return; }
   if (h === "vitrin/fizik") { const { fizikOlcer } = await import("./sahne3d/fizik-olcer"); void fizikOlcer(root); return; }
   if (h.startsWith("vitrin")) { const { vitrin } = await import("./sahne3d/vitrin"); vitrin(root, h.split("/")[1] ?? ""); return; }
   if (h === "kar") karListe(root);
