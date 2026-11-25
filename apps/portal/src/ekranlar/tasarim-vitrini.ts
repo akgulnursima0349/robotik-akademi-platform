@@ -2,7 +2,7 @@
    Belirteçler (renk, kontrast, yazı ölçeği), her bileşen bütün durumlarıyla, dört seviye anahtarı ve bileşenlerden kurulmuş
    küçük bir örnek ana sayfa şeridi. */
 import {
-  adimGostergesi, atolyeKarti, bildirim, dugme, el, hap, kodCercevesi, kok, parcaliIlerleme, rozet, secici, sekmeler,
+  adimGostergesi, atolyeKarti, bildirim, konusmaBalonu, maskot, MASKOT_HALLERI, sesAyarlari, dugme, el, hap, kodCercevesi, kok, parcaliIlerleme, rozet, secici, sekmeler,
   SEVIYELER, seviyeGostergesi, xpHap, yildizlar, type AtolyeKimligi, type Seviye
 } from "@sra/tasarim/v2";
 import logo from "@sra/tasarim/logo.webp";
@@ -32,6 +32,8 @@ const STIL = `
 .tv-atolyeler{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px}
 .tv-ornek{background:var(--sra2-lavanta);border-radius:var(--sra2-kose-3);padding:20px;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:20px;align-items:center}
 @media (max-width:760px){.tv-ornek{grid-template-columns:1fr}}
+.tv-maskotlar{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:16px}
+.tv-maskot{margin:0;background:#fff;border-radius:var(--sra2-kose-3);padding:16px 8px 10px;box-shadow:0 4px 0 var(--sra2-kart-taban);display:flex;flex-direction:column;align-items:center;gap:6px;font-weight:800;font-size:14px}
 .tv-ornek h3{font-size:var(--sra2-boy-6);margin:0 0 12px}
 `;
 
@@ -95,6 +97,15 @@ export function tasarimVitrini(root: HTMLElement) {
         bildirim("ipucu", "İpucu", "Dönüş süresini biraz azalt."),
         bildirim("hata", "Olmadı.", "3. satırda parantez kapanmamış."),
         bildirim("bilgi", "Bilgi", "Bu ders gerçek Kenshin ile de yapılabilir."))),
+    bolum("Maskot: Bit", "Junior'dan tanıdık robot Bit, platformun rehberi. Altı hâli var; hareketleri \"hareketi azalt\" ayarında durur.",
+      el("div", "tv-maskotlar", { id: "tv-maskotlar" }, ...MASKOT_HALLERI.map(([h, ad]) => el("figure", "tv-maskot", {}, maskot(h, 96), el("figcaption", "", {}, ad)))),
+      el("div", "tv-sira", { style: "margin-top:16px;align-items:flex-end" }, maskot("seviniyor", 160), maskot("anlatiyor", 96), maskot("bekliyor", 64))),
+    bolum("Sesli anlatım", "Dinle'ye basınca Bit okur, söylenen kelime sarıyla izlenir. Okul öncesinde ses açıksa yönerge kendiliğinden okunur. Türkçe ses yoksa düğme gizlenir, metin hep ekranda.",
+      el("div", "", { style: "display:flex;flex-direction:column;gap:20px" },
+        sesAyarlari(),
+        konusmaBalonu({ metin: "Kırmızı yıldızı bul, üstüne dokun!", hal: "anlatiyor", kendiliginden: false }),
+        konusmaBalonu({ metin: "Kenshin dört kez ileri gidip sola dönecek. Çalıştır, sonra dönüş süresini değiştirip ringin içinde kalan bir kare çiz.", hal: "ipucu", kendiliginden: false }),
+        konusmaBalonu({ metin: "Süper! Dört yıldızın üçünü topladın.", hal: "seviniyor", kendiliginden: false }))),
     bolum("Örnek", "Aynı parçalarla kurulmuş küçük bir ana sayfa şeridi.",
       el("div", "tv-ornek", {},
         el("div", "", {}, el("h3", "s2-baslik", {}, "Robotunu kur, kodla, ", el("span", "", { style: "color:var(--sra2-kirmizi)" }, "kazan!")),

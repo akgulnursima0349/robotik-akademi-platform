@@ -13,8 +13,12 @@ import "./belirtecler.css";
 import "./bilesenler.css";
 import { el } from "../dom";
 import { IKONLAR2, type Ikon2 } from "./ikonlar";
+import { maskot, type MaskotHali } from "./maskot";
+import { kelimeler, kendiligindenOkunsunMu, sesServisi, type SesServisi } from "./ses";
 
 export { el, IKONLAR2, type Ikon2 };
+export { maskot, maskotSvg, MASKOT_HALLERI, type MaskotHali } from "./maskot";
+export { SesServisi, sesServisi, tarayiciMotoru, kelimeler, kelimeSirasi, kendiligindenOkunsunMu, type SesMotoru, type SesAyari, type SesHizi } from "./ses";
 export type Seviye = "okul-oncesi" | "ilkokul" | "ortaokul" | "lise";
 export const SEVIYELER: [Seviye, string][] = [["okul-oncesi", "Okul öncesi"], ["ilkokul", "İlkokul"], ["ortaokul", "Ortaokul"], ["lise", "Lise"]];
 
@@ -186,4 +190,57 @@ export function bildirim(tur: BildirimTuru, baslik: string, metin: string, eylem
 /* ---------- kod çerçevesi (koyu) ---------- */
 export function kodCercevesi(dosya: string, kod: string): HTMLElement {
   return el("figure", "s2-kod", { style: "margin:0" }, el("figcaption", "s2-kod__ust", {}, dosya), el("pre", "", {}, el("code", "", {}, kod)));
+}
+
+/* ---------- konuşma balonu ---------- */
+export interface KonusmaAyari {
+  metin: string;
+  hal?: MaskotHali;
+  /** okul öncesinde ve ses açıksa sayfaya eklenince kendiliğinden okunur (seviye kökten okunur) */
+  kendiliginden?: boolean;
+  ses?: SesServisi;
+}
+/** Bit + konuşma balonu + "Dinle" düğmesi. Okurken söylenen kelime vurgulanır. Türkçe ses yoksa düğme yok, metin hep görünür. */
+export function konusmaBalonu(a: KonusmaAyari): HTMLElement {
+  const ses = a.ses ?? sesServisi();
+  const k = kelimeler(a.metin);
+  const metin = el("p", "s2-balon__metin");
+  k.forEach((w, i) => { if (i) metin.append(" "); metin.append(el("span", "", { "data-i": String(i) }, w.kelime)); });
+  const balon = el("div", "s2-balon", { role: "status" }, metin);
+  const kap = el("div", "s2-konusma", {}, maskot(a.hal ?? "anlatiyor", 96, true), balon);
+  let no = 0;
+  const vurgu = (i: number) => metin.querySelectorAll("span").forEach((s, j) => s.classList.toggle("okunan", j === i));
+  const dinle = dugme({ metin: "Dinle", tur: "ana", ikon: "ses", kucuk: true }) as HTMLButtonElement;
+  dinle.classList.add("s2-dinle");
+  dinle.setAttribute("aria-pressed", "false");
+  const durum = (okuyor: boolean) => {
+    dinle.setAttribute("aria-pressed", String(okuyor));
+    dinle.querySelector("span:not(.s2-ikon)")!.textContent = okuyor ? "Durdur" : "Dinle";
+    if (!okuyor) vurgu(-1);
+  };
+  const oku = (zorla: boolean) => {
+    no = ses.oku(a.metin, { zorla, kelime: vurgu, bitti: () => durum(false) });
+    if (no) { durum(true); vurgu(0); }
+  };
+  dinle.addEventListener("click", () => { if (no && ses.okunan === no) { ses.durdur(); durum(false); } else oku(true); });
+  const goster = () => { dinle.hidden = !ses.var; };
+  goster();
+  ses.degisince(() => { goster(); if (no && ses.okunan !== no) durum(false); });
+  balon.append(dinle);
+  if (a.kendiliginden !== false) queueMicrotask(() => {
+    const seviye = (kap.closest(".sra2") as HTMLElement | null)?.dataset.seviye;
+    if (kendiligindenOkunsunMu(seviye, ses.acik)) oku(false);
+  });
+  return kap;
+}
+
+/** Ses ayarları: açık/kapalı anahtarı ve hız */
+export function sesAyarlari(ses: SesServisi = sesServisi()): HTMLElement {
+  const anahtar = el("button", "s2-anahtar", { type: "button", role: "switch", "aria-checked": String(ses.acik), id: "s2-ses-anahtar" }, el("span", "s2-anahtar__yuva", { "aria-hidden": "true" }), "Sesli anlatım");
+  anahtar.addEventListener("click", () => { ses.acik = !ses.acik; });
+  const hiz = secici("Okuma hızı", [["normal", "Normal"], ["yavas", "Yavaş"]], ses.ayar.hiz, (h) => { ses.ayar = { ...ses.ayar, hiz: h }; });
+  const kap = el("div", "s2-ses-ayar", {}, anahtar, hiz);
+  ses.degisince(() => { anahtar.setAttribute("aria-checked", String(ses.acik)); });
+  if (!ses.var) kap.append(el("span", "", { style: "font-weight:700;color:var(--sra2-murekkep-2)" }, "Bu tarayıcıda Türkçe ses yok; metinler ekranda."));
+  return kap;
 }

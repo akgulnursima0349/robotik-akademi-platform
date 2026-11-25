@@ -1,26 +1,16 @@
-/* Sesli yönerge: tarayıcının kendi Türkçe sesi (internetsiz, ücretsiz). Türkçe ses yoksa sessizce devre dışı. */
-const ANAHTAR = "sra-blok-ses";
-let turkce: SpeechSynthesisVoice | null = null;
-const destek = typeof window !== "undefined" && "speechSynthesis" in window;
+/* Sesli yönerge: platformun ortak ses servisi (tarayıcının Türkçe sesi; internetsiz, ücretsiz). Türkçe ses yoksa sessiz.
+   Blok Atölyesi'nin kendi ayar anahtarı korunur: öğrencinin daha önce kapattığı ses kapalı kalır. */
+import { SesServisi, tarayiciMotoru } from "@sra/tasarim/v2/ses";
 
-function sesBul() {
-  if (!destek) return;
-  turkce = speechSynthesis.getVoices().find((v) => v.lang?.toLowerCase().startsWith("tr")) ?? null;
-}
-if (destek) { sesBul(); speechSynthesis.addEventListener?.("voiceschanged", () => { sesBul(); dinleyiciler.forEach((f) => f()); }); }
-const dinleyiciler = new Set<() => void>();
+let depo: Storage | null = null;
+try { depo = localStorage; } catch { /* depolama kapalı */ }
+const servis = new SesServisi(tarayiciMotoru(), depo, "sra-blok-ses");
 
 export const ses = {
   /** Türkçe ses var mı? (yoksa ses düğmesi gizlenir) */
-  get var(): boolean { return !!turkce; },
-  get acik(): boolean { try { return localStorage.getItem(ANAHTAR) !== "kapali"; } catch { return true; } },
-  set acik(v: boolean) { try { localStorage.setItem(ANAHTAR, v ? "acik" : "kapali"); } catch { /* yok */ } if (!v && destek) speechSynthesis.cancel(); },
-  oku(metin: string, zorla = false) {
-    if (!turkce || (!this.acik && !zorla)) return;
-    speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(metin);
-    u.voice = turkce; u.lang = turkce.lang; u.rate = 0.92; u.pitch = 1.05;
-    speechSynthesis.speak(u);
-  },
-  degisince(f: () => void) { dinleyiciler.add(f); return () => dinleyiciler.delete(f); }
+  get var(): boolean { return servis.var; },
+  get acik(): boolean { return servis.acik; },
+  set acik(v: boolean) { servis.acik = v; },
+  oku(metin: string, zorla = false) { servis.oku(metin, { zorla }); },
+  degisince(f: () => void) { return servis.degisince(f); }
 };

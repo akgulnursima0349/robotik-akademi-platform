@@ -115,3 +115,38 @@
 .s2-kod { background: var(--sra2-gece); color: #fff; border-radius: var(--sra2-kose-3); box-shadow: 0 var(--sra2-taban-2) 0 var(--sra2-gece-taban); overflow: hidden }
 .s2-kod__ust { display: flex; align-items: center; gap: 8px; padding: 12px 16px; font-weight: 800; font-size: var(--sra2-boy-1); color: var(--sra2-murekkep-acik) }
 .s2-kod pre { margin: 0; padding: 4px 20px 16px; font: 500 var(--sra2-boy-3)/1.75 var(--sra2-yazi-kod); overflow-x: auto }
+
+/* ---------- maskot (Bit) ---------- */
+.s2-maskot { display: inline-block; flex: none; line-height: 0 }
+.s2-maskot svg { width: 100%; height: 100%; overflow: visible }
+.s2-maskot__goz { transform-box: fill-box; transform-origin: center; animation: s2-kirp 4.2s infinite }
+.s2-maskot--anlatiyor .s2-maskot__agiz { transform-box: fill-box; transform-origin: center; animation: s2-konus 360ms ease-in-out infinite alternate }
+.s2-maskot--seviniyor svg { animation: s2-zipla 900ms var(--sra2-yay) infinite }
+.s2-maskot--seviniyor .s2-maskot__yildiz { transform-box: fill-box; transform-origin: center; animation: s2-parla 1.2s ease-in-out infinite alternate }
+.s2-maskot--ipucu .s2-maskot__isik { transform-box: fill-box; transform-origin: center; animation: s2-parla 1s ease-in-out infinite alternate }
+.s2-maskot--dusunuyor .s2-maskot__dusunce { animation: s2-parla 1.4s ease-in-out infinite alternate }
+.s2-maskot--sasiriyor svg { animation: s2-sars 500ms ease-in-out 1 }
+@keyframes s2-kirp { 0%, 92%, 100% { transform: scaleY(1) } 95% { transform: scaleY(.1) } }
+@keyframes s2-konus { from { transform: scaleY(.45) } to { transform: scaleY(1.1) } }
+@keyframes s2-zipla { 0%, 100% { transform: translateY(0) } 40% { transform: translateY(-10%) } }
+@keyframes s2-parla { from { opacity: .45; transform: scale(.92) } to { opacity: 1; transform: scale(1.06) } }
+@keyframes s2-sars { 0%, 100% { transform: rotate(0) } 25% { transform: rotate(-6deg) } 75% { transform: rotate(6deg) } }
+
+/* ---------- konuşma balonu ---------- */
+.s2-konusma { display: flex; align-items: flex-end; gap: var(--sra2-b3) }
+.s2-balon { position: relative; flex: 1; min-width: 0; background: var(--sra2-beyaz); border-radius: var(--sra2-kose-3); padding: var(--sra2-b4) var(--sra2-b5); box-shadow: 0 var(--sra2-taban-2) 0 var(--sra2-kart-taban); display: flex; flex-direction: column; gap: var(--sra2-b3); align-items: flex-start }
+.s2-balon::before { content: ""; position: absolute; left: -9px; bottom: 26px; width: 20px; height: 20px; background: var(--sra2-beyaz); transform: rotate(45deg); border-radius: 4px }
+.s2-balon__metin { position: relative; margin: 0; font-family: var(--sra2-yazi-baslik); font-weight: 700; font-size: var(--sra2-boy-4); line-height: 1.35 }
+.sra2[data-seviye="okul-oncesi"] .s2-balon__metin { font-size: var(--sra2-boy-5) }
+.s2-balon__metin span { border-radius: 6px; transition: background var(--sra2-hizli), color var(--sra2-hizli) }
+.s2-balon__metin span.okunan { background: var(--sra2-sari); color: var(--sra2-murekkep) }
+.s2-dinle[aria-pressed="true"] { --zemin: var(--sra2-gece); --taban: var(--sra2-gece-taban) }
+
+/* ---------- ses ayarları ---------- */
+.s2-ses-ayar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sra2-b3) }
+.s2-anahtar { display: inline-flex; align-items: center; gap: 10px; min-height: var(--sra2-hedef); padding: 0 14px 0 6px; border: 0; border-radius: var(--sra2-kose-hap); background: var(--sra2-beyaz); box-shadow: 0 var(--sra2-taban-1) 0 var(--sra2-kart-taban); font: 800 var(--sra2-boy-2) var(--sra2-yazi); color: var(--sra2-murekkep); cursor: pointer }
+.s2-anahtar__yuva { width: 46px; height: 28px; border-radius: 14px; background: #D9D1C2; position: relative; transition: background var(--sra2-orta) }
+.s2-anahtar__yuva::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; transition: transform var(--sra2-orta) var(--sra2-yay) }
+.s2-anahtar[aria-checked="true"] .s2-anahtar__yuva { background: var(--sra2-yesil) }
+.s2-anahtar[aria-checked="true"] .s2-anahtar__yuva::after { transform: translateX(18px) }
+.s2-anahtar:focus-visible { box-shadow: 0 var(--sra2-taban-1) 0 var(--sra2-kart-taban), var(--sra2-odak) }

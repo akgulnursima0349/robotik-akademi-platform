@@ -426,6 +426,8 @@ for (const [ad, g, y] of BOYUTLAR) {
     const odak = await p.evaluate(() => ({ deger: document.activeElement?.getAttribute("data-deger"), golge: getComputedStyle(document.activeElement).boxShadow }));
     ok(odak.deger === "ilkokul" && /rgb\(106, 72, 240\)/.test(odak.golge), "ok tuşuyla seviye değişiyor ve mor odak halkası görünüyor");
     await p.click('#tv-seviye [data-deger=""]');
+    ok((await p.$$("#tv-maskotlar [role=img]")).length === 6, "Bit'in altı hâli, her biri erişilebilir adla");
+    await p.locator("#tv-maskotlar").screenshot({ path: resolve(EKRAN, `maskot-halleri.png`) });
     await p.screenshot({ path: resolve(EKRAN, `tasarim-v2-${ad}.png`), fullPage: true });
     await p.click('#tv-seviye [data-deger="okul-oncesi"]');
     await p.screenshot({ path: resolve(EKRAN, `tasarim-v2-okul-oncesi-${ad}.png`) });
@@ -437,12 +439,40 @@ for (const [ad, g, y] of BOYUTLAR) {
   await ctx.close();
 }
 {
+  console.log("\nsesli anlatım (sahte Türkçe ses)");
+  const { ctx, p, hatalar } = await sayfaAc(1280, 860, { deneme: true });
+  await p.addInitScript(() => {
+    const ses = { getVoices: () => [{ lang: "tr-TR", name: "Türkçe" }], cancel() {}, addEventListener() {},
+      speak(u) { window.__okunan = u.text; window.__hiz = u.rate; setTimeout(() => u.onboundary?.({ name: "word", charIndex: 8 }), 30); setTimeout(() => u.onend?.(), 400); } };
+    Object.defineProperty(window, "speechSynthesis", { value: ses, configurable: true });
+    window.SpeechSynthesisUtterance = function (t) { this.text = t; };
+  });
+  await p.goto(ADRES + "#vitrin/tasarim"); await hazir(p);
+  await p.waitForSelector(".s2-dinle:not([hidden])");
+  const dinle = p.locator(".s2-dinle").first();
+  await dinle.click();
+  await p.waitForFunction(() => document.querySelector(".s2-balon__metin .okunan")?.textContent === "yıldızı", null, { timeout: 3000 }).catch(() => {});
+  ok((await p.evaluate(() => window.__okunan)) === "Kırmızı yıldızı bul, üstüne dokun!" && (await dinle.getAttribute("aria-pressed")) === "true", "Dinle metni okuyor, düğme Durdur oluyor");
+  ok((await p.textContent(".s2-balon__metin .okunan")) === "yıldızı", "söylenen kelime vurgulanıyor");
+  await p.locator(".s2-konusma").first().screenshot({ path: resolve(EKRAN, "konusma-balonu-okurken.png") });
+  await p.waitForFunction(() => !document.querySelector(".s2-balon__metin .okunan"));
+  ok((await dinle.getAttribute("aria-pressed")) === "false", "okuma bitince düğme ve vurgu sıfırlanıyor");
+  await p.click('.s2-ses-ayar [data-deger="yavas"]'); await dinle.click();
+  ok((await p.evaluate(() => window.__hiz)) < 0.8, "yavaş hız ayarı okumaya uygulanıyor");
+  await p.click("#s2-ses-anahtar");
+  ok((await p.getAttribute("#s2-ses-anahtar", "aria-checked")) === "false", "sesli anlatım kapatılabiliyor");
+  ok(hatalar.length === 0, "sesli anlatımda konsol hatası yok" + (hatalar.length ? ": " + hatalar.join(" | ") : ""));
+  await ctx.close();
+}
+{
   console.log("\ntasarım v2 · hareketi azalt");
   const { ctx, p } = await sayfaAc(1280, 800, { deneme: true }, true);
   await p.goto(ADRES + "#vitrin/tasarim"); await hazir(p);
   await p.waitForSelector(".sra2 .s2-dugme");
   const sure = await p.$eval(".s2-dugme", (e) => getComputedStyle(e).transitionDuration);
   ok(sure.split(",").every((x) => parseFloat(x) <= 0.001), "hareketi azalt ayarında geçişler kapalı: " + sure);
+  const anim = await p.$$eval(".s2-maskot svg, .s2-maskot__goz", (e) => e.map((x) => getComputedStyle(x).animationDuration));
+  ok(anim.length > 6 && anim.every((x) => parseFloat(x) <= 0.001), "hareketi azalt ayarında Bit kıpırdamıyor");
   await ctx.close();
 }
 
