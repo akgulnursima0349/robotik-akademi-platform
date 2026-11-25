@@ -10,11 +10,11 @@ import { KENSHIN_FIZIK as P } from "./kenshin-parametreleri";
 
 type Q = { x: number; y: number; z: number; w: number };
 /** vektörü dörtlükle döndür: v' = v + w·t + q×t, t = 2·(q×v) */
-const dondur = (q: Q, v: V3): V3 => {
+export const dondur = (q: Q, v: V3): V3 => {
   const tx = 2 * (q.y * v.z - q.z * v.y), ty = 2 * (q.z * v.x - q.x * v.z), tz = 2 * (q.x * v.y - q.y * v.x);
   return { x: v.x + q.w * tx + (q.y * tz - q.z * ty), y: v.y + q.w * ty + (q.z * tx - q.x * tz), z: v.z + q.w * tz + (q.x * ty - q.y * tx) };
 };
-const yonQ = (yon: number): Q => ({ x: 0, y: Math.sin(yon / 2), z: 0, w: Math.cos(yon / 2) });
+export const yonQ = (yon: number): Q => ({ x: 0, y: Math.sin(yon / 2), z: 0, w: Math.cos(yon / 2) });
 const nokta = (a: V3, b: V3) => a.x * b.x + a.y * b.y + a.z * b.z;
 
 /** bıçak ucundaki kızağın yarıçapı */
@@ -34,10 +34,11 @@ export class KenshinFizik {
   readonly tekerAcisi: [number, number] = [0, 0];
   private sonDevir: [number, number] = [0, 0];
 
-  constructor(private readonly d: Dunya, konum: { x: number; z: number }, yon = 0) {
+  /** konum: zemindeki nokta; yon: y ekseni etrafında (rad, 0: +x); zeminY: robotun durduğu yüzeyin yüksekliği (ring üstü) */
+  constructor(private readonly d: Dunya, konum: { x: number; z: number }, yon = 0, zeminY = 0) {
     const R = d.R, q = yonQ(yon);
     /* gövde: kütle ve eylemsizlik elle verilir; çarpışma şekillerinin yoğunluğu 0 */
-    this.govde = d.hareketli({ x: konum.x, y: 0, z: konum.z }, q);
+    this.govde = d.hareketli({ x: konum.x, y: zeminY, z: konum.z }, q);
     const e = P.en / 2, b = P.bicak;
     /* bıçak kaması ucundan 0,8 mm yukarıda biter; zemine ucun ortasındaki küçük yuvarlak "kızak" değer.
        Böylece robot iki teker ve bıçak ucu üzerinde, üç noktaya oturur: yük dağılımı belirli olur (dört noktada belirsiz
@@ -61,7 +62,7 @@ export class KenshinFizik {
     for (const s of [-1, 1]) {
       const yerel = { x: P.tekerX, y: P.tekerYaricap, z: s * P.tekerZ };
       const dunyaYer = dondur(q, yerel);
-      const t = d.hareketli({ x: konum.x + dunyaYer.x, y: dunyaYer.y, z: konum.z + dunyaYer.z }, q);
+      const t = d.hareketli({ x: konum.x + dunyaYer.x, y: zeminY + dunyaYer.y, z: konum.z + dunyaYer.z }, q);
       const desc = R.ColliderDesc.cylinder(P.tekerEni / 2, P.tekerYaricap).setRotation(yatir)
         .setFriction(P.malzeme.lastik.surtunme).setRestitution(P.malzeme.lastik.sekme)
         .setFrictionCombineRule(R.CoefficientCombineRule.Min).setRestitutionCombineRule(R.CoefficientCombineRule.Min)

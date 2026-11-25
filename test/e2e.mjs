@@ -329,8 +329,18 @@ for (const [ad, g, y] of BOYUTLAR) {
   await p.goto(ADRES + "lab/#vitrin/kenshin-fizik"); await p.waitForSelector("body[data-hazir]", { timeout: 90000 });
   ok(await tasmaYok(p), "kenshin fizik sayfasında taşma yok");
   const sayi = async (sec) => parseFloat((await p.textContent(sec)).replace(",", "."));
+  /* açılışta Ring: iki robot, sensör ışıkları */
+  ok(await p.getAttribute('button[data-senaryo="ring"]', "aria-pressed") === "true" && (await p.$$("#kf-isik i")).length === 7, "Ring senaryosu açık, 5 rakip ve 2 zemin sensörü ışığı");
   if (ad === "masaustu") {
+    /* ring: ileri sür; biri ringden düşer, tespit edilir */
+    await p.keyboard.down("ArrowUp");
+    await p.waitForSelector("#kf-dustu:not([hidden])", { timeout: 20000 }).catch(() => {});
+    await p.keyboard.up("ArrowUp");
+    ok(await p.isVisible("#kf-dustu"), "ringden düşme tespit ediliyor: " + (await p.textContent("#kf-dustu")));
+    await p.screenshot({ path: resolve(EKRAN, `kenshin-fizik-ring-${ad}.png`) });
     /* klavye: ileri sür, kutuya bıçakla gir */
+    await p.click('button[data-senaryo="kutu"]'); await p.waitForTimeout(300);
+    ok(!(await p.isVisible("#kf-dustu")), "senaryo değişince düşme uyarısı kalkıyor");
     await p.keyboard.down("ArrowUp"); await p.waitForTimeout(700);
     const hiz = await sayi("#kf-hiz");
     ok(hiz > 0.3, `ok tuşuyla ileri gidiyor (${hiz} m/s)`);
@@ -346,7 +356,9 @@ for (const [ad, g, y] of BOYUTLAR) {
     await p.screenshot({ path: resolve(EKRAN, `kenshin-fizik-rakip-${ad}.png`) });
     await p.keyboard.up("ArrowUp");
   } else {
-    /* dokunmatik sürgüler görünür ve sürer */
+    await p.waitForTimeout(1500); await p.screenshot({ path: resolve(EKRAN, `kenshin-fizik-ring-${ad}.png`) });
+    /* dokunmatik sürgüler görünür ve sürer (kutu senaryosunda; ring'de mavi saldırır) */
+    await p.click('button[data-senaryo="kutu"]'); await p.waitForTimeout(300);
     ok(await p.isVisible("#kf-surgu-sol") && await p.isVisible("#kf-surgu-sag"), "dokunmatik motor sürgüleri görünür");
     await p.evaluate(() => { for (const id of ["kf-surgu-sol", "kf-surgu-sag"]) (document.getElementById(id)).value = "100"; });
     await p.waitForTimeout(900);
