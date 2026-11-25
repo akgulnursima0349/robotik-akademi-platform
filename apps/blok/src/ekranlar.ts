@@ -87,7 +87,7 @@ export function bolumEkrani(root: HTMLElement, kimlik: string) {
   const bas = el("div", "bk-bolum-bas sra-sarmal", {},
     el("a", "bk-geri", { href: "#", "aria-label": "Bölümlere dön" }, "←"),
     el("div", "", {}, el("p", "bk-ust", { style: `color:${d.renk}` }, `${d.ad} · ${b.sira}`), el("h1", "", {}, b.ad)));
-  root.replaceChildren(ustKisim(), el("main", "bk-bolum", { id: "ana" }, bas, el("div", "bk-izgara sra-sarmal", {}, el("div", "bk-sol", {}, yonerge, sahne), kod), sonuc));
+  root.replaceChildren(ustKisim(), el("main", "bk-bolum", { id: "ana" }, bas, el("div", "bk-izgara sra-sarmal", {}, el("div", "bk-sol-sutun", {}, yonerge, sahne), kod), sonuc));
   setTimeout(() => ses.oku(b.yonerge), 300);
 
   let oynuyor = false;

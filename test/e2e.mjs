@@ -405,6 +405,32 @@ for (const [ad, g, y] of BOYUTLAR) {
   await p.mouse.move(kaynak.x + 20, kaynak.y + 20); await p.mouse.down();
   await p.mouse.move(hedef.x + 30, hedef.y + 4, { steps: 8 }); await p.mouse.up();
   ok((await p.$$eval(".bk-alan .bk-programda", (e) => e.map((x) => x.getAttribute("aria-label")))).join(",") === "ileri git,sağa dön", "sürükleyerek araya blok bırakıldı");
+  /* sürükle-bırak sağlamlığı: iptal yolları iz bırakmaz, program değişmez */
+  const sira = () => p.$$eval(".bk-alan .bk-programda", (e) => e.map((x) => x.getAttribute("aria-label")).join(","));
+  const iz = () => p.evaluate(() => document.querySelectorAll(".bk-hayalet, .bk-isaret, .bk-tasiniyor").length);
+  const surukleBasla = async () => {
+    const k = await p.locator('.bk-palet [data-tur="sol"]').boundingBox(), h = await p.locator(".bk-alan .bk-programda").first().boundingBox();
+    await p.mouse.move(k.x + 20, k.y + 20); await p.mouse.down(); await p.mouse.move(h.x + 30, h.y + 4, { steps: 8 });
+  };
+  await surukleBasla(); await p.keyboard.press("Escape"); await p.mouse.up();
+  ok((await sira()) === "ileri git,sağa dön" && (await iz()) === 0, "Esc sürüklemeyi iptal ediyor, iz kalmıyor");
+  await surukleBasla(); await p.evaluate(() => window.dispatchEvent(new Event("blur"))); await p.mouse.up();
+  ok((await sira()) === "ileri git,sağa dön" && (await iz()) === 0, "pencere odağı kaybolunca sürükleme iptal, iz kalmıyor");
+  await p.focus(".bk-alan .bk-programda"); await p.keyboard.press("Alt+ArrowDown");
+  ok((await sira()) === "sağa dön,ileri git", "Alt+↓ ile blok klavyeyle taşındı");
+  await p.click('.bk-palet [data-tur="sol"]');
+  ok(await p.$eval(".bk-alan .bk-programda.bk-tur-sol", (e) => getComputedStyle(e).position === "relative" && getComputedStyle(e).whiteSpace === "nowrap"), "sola dön bloğu sayfa düzeni sınıfından etkilenmiyor (yapışkan değil, tek satır)");
+  if (await p.evaluate(() => document.documentElement.scrollHeight > innerHeight + 200)) {
+    await p.evaluate(() => scrollTo(0, 0));
+    const k = await p.locator('.bk-palet [data-tur="ileri"]').boundingBox();
+    if (k.y > 0 && k.y < y - 80) {
+      await p.mouse.move(k.x + 20, k.y + 20); await p.mouse.down(); await p.mouse.move(k.x + 20, y - 8, { steps: 10 });
+      await p.waitForTimeout(700);
+      const kaydi = await p.evaluate(() => scrollY);
+      await p.keyboard.press("Escape"); await p.mouse.up();
+      ok(kaydi > 50 && (await iz()) === 0, "sürüklerken ekranın altına gelince sayfa kendiliğinden kayıyor");
+    }
+  }
   ok(await p.evaluate(() => speechSynthesis.getVoices().some((v) => v.lang.startsWith("tr"))) || await p.isHidden(".bk-ses"), "Türkçe ses yokken ses düğmesi gizli");
   ok(await tasmaYok(p), "bölüm ekranında taşma yok");
   ok(hatalar.length === 0, "Blok konsol hatası yok" + (hatalar.length ? ": " + hatalar.slice(0, 2).join(" | ") : ""));

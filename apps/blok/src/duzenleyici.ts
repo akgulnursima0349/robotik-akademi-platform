@@ -26,7 +26,7 @@ export class Duzenleyici {
     this.program = program;
     this.palet = el("div", "bk-palet", { role: "toolbar", "aria-label": "Bloklar" });
     for (const t of paletTurleri) {
-      const b = el("button", `bk-blok bk-${t}`, { type: "button", "data-tur": t, "aria-label": `${BLOK_AD[t]} bloğu ekle` });
+      const b = el("button", `bk-blok bk-tur-${t}`, { type: "button", "data-tur": t, "aria-label": `${BLOK_AD[t]} bloğu ekle` });
       b.innerHTML = `<span class="bk-ik">${IKON[t]}</span><span>${BLOK_AD[t]}</span>`;
       b.addEventListener("click", () => { if (!this.surukleniyor) this.ekle(t); });
       this.surukle(b, () => yeniBlok(t), true);
@@ -82,10 +82,13 @@ export class Duzenleyici {
       this.degisti();
     });
     if (b.tur !== "tekrar") {
-      const d = el("div", `bk-blok bk-${b.tur} bk-programda`, { "data-id": b.id, role: "listitem", tabindex: "0", "aria-label": BLOK_AD[b.tur] });
+      const d = el("div", `bk-blok bk-tur-${b.tur} bk-programda`, { "data-id": b.id, role: "listitem", tabindex: "0", "aria-label": BLOK_AD[b.tur] });
       d.innerHTML = `<span class="bk-ik">${IKON[b.tur]}</span><span>${BLOK_AD[b.tur]}</span>`;
       d.append(sil);
-      d.addEventListener("keydown", (e) => { if (e.key === "Delete" || e.key === "Backspace") sil.click(); });
+      d.addEventListener("keydown", (e) => {
+        if (e.key === "Delete" || e.key === "Backspace") sil.click();
+        else if (e.altKey && (e.key === "ArrowUp" || e.key === "ArrowDown")) { e.preventDefault(); this.klavyeyleTasi(b.id, e.key === "ArrowUp" ? -1 : 1); }
+      });
       this.surukle(d, () => b, false);
       return d;
     }
@@ -98,7 +101,11 @@ export class Duzenleyici {
     bas.querySelector(".bk-ik")!.innerHTML = IKON.tekrar;
     const ic = this.liste(b.ic, b.id);
     ic.classList.add("bk-ic");
-    const kap = el("div", "bk-tekrar" + (this.hedef === b.id ? " bk-hedef" : ""), { "data-id": b.id, role: "listitem", "aria-label": `tekrarla ${b.sayi} kez` }, bas, ic, el("div", "bk-tekrar-alt"));
+    const kap = el("div", "bk-tekrar" + (this.hedef === b.id ? " bk-hedef" : ""), { "data-id": b.id, role: "listitem", tabindex: "0", "aria-label": `tekrarla ${b.sayi} kez` }, bas, ic, el("div", "bk-tekrar-alt"));
+    kap.addEventListener("keydown", (e) => {
+      if (e.target !== kap) return;
+      if (e.altKey && (e.key === "ArrowUp" || e.key === "ArrowDown")) { e.preventDefault(); this.klavyeyleTasi(b.id, e.key === "ArrowUp" ? -1 : 1); }
+    });
     kap.addEventListener("click", (e) => {
       if ((e.target as HTMLElement).closest(".bk-programda, button")) return;
       e.stopPropagation(); this.hedef = this.hedef === b.id ? null : b.id; this.ciz();
@@ -107,50 +114,116 @@ export class Duzenleyici {
     return kap;
   }
 
-  /* ---------- sürükle-bırak (fare ve dokunma) ---------- */
+  /* ---------- sürükle-bırak (fare ve dokunma) ----------
+     Öğe işaretçiyi yakalar: bırakma ya da iptal her durumda gelir (imleç pencereden çıksa da).
+     İptal yolları: pointercancel, yakalamanın kaybı, Esc, pencere odağını kaybetme, sekmenin gizlenmesi.
+     Aynı anda tek sürükleme; ikinci parmak yok sayılır. Ekran kenarına yaklaşınca sayfa kendiliğinden kayar. */
   private surukleniyor = false;
+  private aktif: { iptal: () => void } | null = null;
   private surukle(tutamak: HTMLElement, blok: () => Blok, yeni: boolean, kaynak: HTMLElement = tutamak) {
     tutamak.addEventListener("pointerdown", (e) => {
-      if (this.kilitli || (e.target as HTMLElement).closest(".bk-sil, .bk-arti") || e.button > 0) return;
-      const x0 = e.clientX, y0 = e.clientY;
-      let hayalet: HTMLElement | null = null, b: Blok | null = null, isaret: HTMLElement | null = null, yer: { liste: Blok[]; i: number } | null = null;
-      const hareket = (m: PointerEvent) => {
-        if (!hayalet) {
-          if (Math.hypot(m.clientX - x0, m.clientY - y0) < 8) return;
-          this.surukleniyor = true;
-          b = yeni ? blok() : blok();
-          hayalet = kaynak.cloneNode(true) as HTMLElement;
-          hayalet.classList.add("bk-hayalet");
-          hayalet.style.width = Math.min(kaynak.getBoundingClientRect().width, 320) + "px";
-          document.body.append(hayalet);
-          if (!yeni) kaynak.classList.add("bk-tasiniyor");
-          isaret = el("div", "bk-isaret");
-        }
-        hayalet.style.transform = `translate(${m.clientX - 30}px, ${m.clientY - 26}px)`;
-        yer = this.yerBul(m.clientX, m.clientY, b!);
+      if (this.kilitli || this.aktif || !e.isPrimary || e.button > 0 || (e.target as HTMLElement).closest(".bk-sil, .bk-arti")) return;
+      const x0 = e.clientX, y0 = e.clientY, esik = e.pointerType === "mouse" ? 8 : 6;
+      const kutu0 = kaynak.getBoundingClientRect();
+      const tutX = Math.min(x0 - kutu0.left, kutu0.width), tutY = Math.min(y0 - kutu0.top, kutu0.height);
+      let hayalet: HTMLElement | null = null, isaret: HTMLElement | null = null, b: Blok | null = null;
+      let yer: { liste: Blok[]; i: number } | null = null, x = x0, y = y0, kaydirma = 0, bitti = false;
+      try { tutamak.setPointerCapture(e.pointerId); } catch { /* öğe sayfadan çıkmışsa */ }
+      /* farenin sürüklerken sayfadaki yazıları seçmesini önle */
+      if (e.pointerType === "mouse") e.preventDefault();
+
+      const yerGuncelle = () => {
+        if (!hayalet || !b) return;
+        hayalet.style.transform = `translate(${x - tutX}px, ${y - tutY}px) rotate(-2deg)`;
+        yer = this.yerBul(x, y, b);
         isaret!.remove();
-        if (yer) {
-          const listeEl = yer.liste === this.program ? this.alan.querySelector('.bk-liste[data-ust="kok"]') : this.alan.querySelector(`.bk-liste[data-ust="${this.ustId(yer.liste)}"]`);
-          const cocuklar = listeEl ? [...listeEl.children].filter((c) => c.matches(".bk-blok, .bk-tekrar")) : [];
-          if (listeEl) listeEl.insertBefore(isaret!, cocuklar[yer.i] ?? null);
-        }
+        if (!yer) return;
+        const listeEl = this.alan.querySelector(`.bk-liste[data-ust="${yer.liste === this.program ? "kok" : this.ustId(yer.liste)}"]`);
+        if (!listeEl) return;
+        const cocuklar = [...listeEl.children].filter((c) => c.matches(".bk-blok, .bk-tekrar"));
+        const once = yer.i < yer.liste.length ? cocuklar.find((c) => (c as HTMLElement).dataset.id === yer!.liste[yer!.i].id) ?? null : null;
+        listeEl.insertBefore(isaret!, once ?? listeEl.querySelector(":scope > .bk-bos") ?? null);
       };
-      const birak = () => {
-        removeEventListener("pointermove", hareket); removeEventListener("pointerup", birak); removeEventListener("pointercancel", birak);
-        if (!hayalet) return;
-        hayalet.remove(); isaret?.remove(); kaynak.classList.remove("bk-tasiniyor");
-        if (yer && b) {
-          const eski = yeni ? null : bul(this.program, b.id);
-          let { liste, i } = yer;
-          if (eski) { eski.liste.splice(eski.i, 1); if (eski.liste === liste && eski.i < i) i--; }
-          liste.splice(i, 0, b);
-          if (yeni) ses.oku(BLOK_AD[b.tur]);
-          this.degisti();
-        }
+      /* ekranın üst/alt 64 pikseline girince kenara yakınlıkla hızlanan kaydırma */
+      const kaydir = () => {
+        if (bitti || !hayalet) return;
+        const kenar = 64, h = innerHeight;
+        const hiz = y < kenar ? -Math.ceil((kenar - y) / 4) : y > h - kenar ? Math.ceil((y - (h - kenar)) / 4) : 0;
+        if (hiz) { const once = scrollY; scrollBy(0, hiz); if (scrollY !== once) yerGuncelle(); }
+        kaydirma = requestAnimationFrame(kaydir);
+      };
+      const basla = () => {
+        this.surukleniyor = true;
+        document.documentElement.classList.add("bk-surukleme");
+        getSelection()?.removeAllRanges();
+        b = blok();
+        hayalet = kaynak.cloneNode(true) as HTMLElement;
+        hayalet.classList.add("bk-hayalet");
+        hayalet.querySelectorAll("[tabindex]").forEach((t) => t.removeAttribute("tabindex"));
+        hayalet.setAttribute("aria-hidden", "true");
+        hayalet.style.width = Math.min(kutu0.width, 360) + "px";
+        document.body.append(hayalet);
+        if (!yeni) kaynak.classList.add("bk-tasiniyor");
+        isaret = el("div", "bk-isaret", { "aria-hidden": "true" });
+        kaydirma = requestAnimationFrame(kaydir);
+      };
+      const temizle = () => {
+        bitti = true; this.aktif = null;
+        cancelAnimationFrame(kaydirma);
+        tutamak.removeEventListener("pointermove", hareket);
+        tutamak.removeEventListener("pointerup", birak);
+        tutamak.removeEventListener("pointercancel", iptal);
+        tutamak.removeEventListener("lostpointercapture", iptal);
+        removeEventListener("keydown", tus, true);
+        removeEventListener("blur", iptal);
+        document.removeEventListener("visibilitychange", gizlenince);
+        try { if (tutamak.hasPointerCapture(e.pointerId)) tutamak.releasePointerCapture(e.pointerId); } catch { /* yok */ }
+        hayalet?.remove(); isaret?.remove(); kaynak.classList.remove("bk-tasiniyor");
+        document.documentElement.classList.remove("bk-surukleme");
+        /* sürüklemenin ardından gelen "click" bloğu bir daha eklemesin */
         setTimeout(() => (this.surukleniyor = false), 0);
       };
-      addEventListener("pointermove", hareket); addEventListener("pointerup", birak); addEventListener("pointercancel", birak);
+      const hareket = (m: PointerEvent) => {
+        if (m.pointerId !== e.pointerId) return;
+        x = m.clientX; y = m.clientY;
+        if (!hayalet) { if (Math.hypot(x - x0, y - y0) < esik) return; basla(); }
+        yerGuncelle();
+      };
+      const birak = (m: PointerEvent) => {
+        if (m.pointerId !== e.pointerId || bitti) return;
+        const surukledi = !!hayalet, son = yer, tasinan = b;
+        temizle();
+        if (!surukledi || !son || !tasinan) return;
+        const eski = yeni ? null : bul(this.program, tasinan.id);
+        let { liste, i } = son;
+        if (eski) { eski.liste.splice(eski.i, 1); if (eski.liste === liste && eski.i < i) i--; }
+        liste.splice(i, 0, tasinan);
+        if (yeni) ses.oku(BLOK_AD[tasinan.tur]);
+        this.degisti();
+      };
+      const iptal = () => { if (!bitti) temizle(); };
+      const tus = (k: KeyboardEvent) => { if (k.key === "Escape") { k.preventDefault(); iptal(); } };
+      const gizlenince = () => { if (document.hidden) iptal(); };
+      tutamak.addEventListener("pointermove", hareket);
+      tutamak.addEventListener("pointerup", birak);
+      tutamak.addEventListener("pointercancel", iptal);
+      tutamak.addEventListener("lostpointercapture", iptal);
+      addEventListener("keydown", tus, true);
+      addEventListener("blur", iptal);
+      document.addEventListener("visibilitychange", gizlenince);
+      this.aktif = { iptal };
     });
+  }
+  /** Programdaki bir bloğu kendi listesinde bir yukarı (-1) ya da aşağı (+1) taşır; odak blokta kalır. */
+  private klavyeyleTasi(id: string, yon: -1 | 1) {
+    if (this.kilitli) return;
+    const r = bul(this.program, id); if (!r) return;
+    const j = r.i + yon;
+    if (j < 0 || j >= r.liste.length) return;
+    const [blok] = r.liste.splice(r.i, 1);
+    r.liste.splice(j, 0, blok);
+    this.degisti();
+    (this.alan.querySelector(`[data-id="${id}"]`) as HTMLElement | null)?.focus();
   }
   private ustId(liste: Blok[]): string {
     const ara = (p: Blok[]): string | null => { for (const b of p) if (b.tur === "tekrar") { if (b.ic === liste) return b.id; const r = ara(b.ic); if (r) return r; } return null; };

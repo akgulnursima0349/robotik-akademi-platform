@@ -35,8 +35,9 @@ a.bk-durak:hover { transform: translateY(-3px) scale(1.02); box-shadow: var(--sr
 .bk-geri { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: #fff; border: 2px solid #f0dcb4; text-decoration: none; font-size: 26px; font-weight: 700; color: var(--sra-murekkep); flex: none }
 .bk-izgara { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--sra-bosluk-5); align-items: start }
 @media (max-width: 900px) { .bk-izgara { grid-template-columns: 1fr } }
-.bk-sol { display: flex; flex-direction: column; gap: var(--sra-bosluk-4) }
-@media (min-width: 901px) { .bk-sol { position: sticky; top: 84px } }
+/* sayfanın sol sütunu: yönerge ve sahne; masaüstünde kayarken yerinde kalır */
+.bk-sol-sutun { display: flex; flex-direction: column; gap: var(--sra-bosluk-4) }
+@media (min-width: 901px) { .bk-sol-sutun { position: sticky; top: 84px } }
 .bk-yonerge { display: flex; align-items: center; gap: var(--sra-bosluk-3); background: #fff; border: 2px solid #f3dcae; border-radius: 22px; padding: var(--sra-bosluk-3) var(--sra-bosluk-4) }
 .bk-yonerge .bit { width: 54px; height: 54px; flex: none }
 .bk-yonerge p { margin: 0; flex: 1; font-size: clamp(17px, 2.2vw, 20px); font-weight: 600; line-height: 1.35 }
@@ -65,10 +66,11 @@ a.bk-durak:hover { transform: translateY(-3px) scale(1.02); box-shadow: var(--sr
 
 /* bloklar */
 .bk-palet { display: flex; flex-wrap: wrap; gap: var(--sra-bosluk-2) }
-.bk-blok { --c: #3a8ff0; --k: #2a6fc4; display: inline-flex; align-items: center; gap: 10px; min-height: 56px; padding: 0 18px 0 12px; border-radius: 16px; border: 0; background: var(--c); color: #fff; font: 700 18px var(--sra-yazi); cursor: grab; box-shadow: 0 4px 0 var(--k); user-select: none; touch-action: none; position: relative }
+.bk-blok { --c: #3a8ff0; --k: #2a6fc4; display: inline-flex; align-items: center; gap: 10px; min-height: 56px; padding: 0 18px 0 12px; border-radius: 16px; border: 0; background: var(--c); color: #fff; font: 700 18px var(--sra-yazi); cursor: grab; box-shadow: 0 4px 0 var(--k); user-select: none; touch-action: none; position: relative; white-space: nowrap; flex-shrink: 0 }
 .bk-blok:active { cursor: grabbing }
-.bk-sol.bk-blok, .bk-blok.bk-sol, .bk-blok.bk-sag { --c: #7a5cf0; --k: #5b3fd0 }
-.bk-blok.bk-tekrar { --c: #f0a020; --k: #c98210 }
+/* blok türü sınıfları "bk-tur-" önekiyle: sayfa düzeni sınıflarıyla (bk-sol-sutun, bk-tekrar kabı) çakışmasın */
+.bk-blok.bk-tur-sol, .bk-blok.bk-tur-sag { --c: #7a5cf0; --k: #5b3fd0 }
+.bk-blok.bk-tur-tekrar { --c: #f0a020; --k: #c98210 }
 .bk-ik { width: 30px; height: 30px; display: grid; place-items: center; background: rgba(255, 255, 255, .22); border-radius: 9px; flex: none }
 .bk-ik svg { width: 22px; height: 22px }
 .bk-palet .bk-blok:hover { filter: brightness(1.06) }
@@ -89,7 +91,9 @@ a.bk-durak:hover { transform: translateY(-3px) scale(1.02); box-shadow: var(--sr
 .bk-ic .bk-bos { padding: 8px; border: 2px dashed #f0c780; border-radius: 12px }
 .bk-calisiyor { outline: 4px solid #ffd84d; outline-offset: 2px; transform: scale(1.04) }
 .bk-tasiniyor { opacity: .35 }
-.bk-hayalet { position: fixed; left: 0; top: 0; z-index: 100; pointer-events: none; opacity: .92; box-shadow: var(--sra-golge-ust) }
+.bk-hayalet { position: fixed; left: 0; top: 0; z-index: 10000; pointer-events: none; opacity: .95; box-shadow: 0 4px 0 var(--k, #0002), 0 14px 28px rgb(20 30 60 / .28); transform-origin: 20% 50%; will-change: transform; margin: 0 }
+.bk-hayalet .bk-sil, .bk-hayalet .bk-arti { visibility: hidden }
+.bk-surukleme, .bk-surukleme * { user-select: none !important; cursor: grabbing !important }
 .bk-isaret { width: 160px; height: 6px; border-radius: 3px; background: #f0a020; margin: -1px 0 }
 
 .bk-eylem { display: flex; flex-wrap: wrap; gap: var(--sra-bosluk-2); align-items: center }
