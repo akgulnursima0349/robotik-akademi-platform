@@ -79,37 +79,13 @@ const ADIMLAR: [string, string][] = [
 function depo(): Storage | null { try { return localStorage; } catch { return null; } }
 
 export function anaSayfa(root: HTMLElement): void {
-  document.getElementById("as-stil") ?? document.head.append(el("style", "", { id: "as-stil" }, STIL));
+  stilEkle();
   const k = uygulama.kullanici;
   const ogrenci = k instanceof Ogrenci ? k : null;
   let seviye: Seviye = acilisSeviyesi(depo(), ogrenci?.kurs);
   const sayfa = kok(el("div", "as"), seviye);
 
-  /* ---------- üst bar ---------- */
-  const menu = el("ul", "as-menu", { id: "as-menu" },
-    el("li", "", {}, el("a", "", { href: "#atolyeler", "aria-current": "page" }, "Atölyeler")),
-    el("li", "", {}, el("a", "", { href: "lab/" }, "Robotik Laboratuvarı")),
-    el("li", "", {}, el("a", "", { href: "lab/#lig" }, "Sumo Ligi")),
-    el("li", "", {}, el("a", "", { href: k instanceof Ogretmen ? "#panellerim" : uygulama.hesapli ? "#giris" : "#nasil" }, "Öğretmen")));
-  const menuDugme = dugme({ metin: "Menü", ikon: "menu", yalnizIkon: true, kucuk: true }) as HTMLButtonElement;
-  menuDugme.classList.add("as-menu-dugme");
-  menuDugme.setAttribute("aria-expanded", "false"); menuDugme.setAttribute("aria-controls", "as-menu");
-  menuDugme.addEventListener("click", () => { const a = menu.classList.toggle("acik"); menuDugme.setAttribute("aria-expanded", String(a)); });
-  menu.addEventListener("click", (e) => { if ((e.target as HTMLElement).closest("a")) { menu.classList.remove("acik"); menuDugme.setAttribute("aria-expanded", "false"); } });
-
-  const hesap = el("div", "as-hesap");
-  if (uygulama.hesapli) {
-    if (k) {
-      hesap.append(el("span", "as-kim", {}, k.gorunenAd));
-      const c = dugme({ metin: "Çıkış", ikon: "cikis", kucuk: true, tur: "sessiz", id: "p-cikis" });
-      c.addEventListener("click", async () => { await uygulama.cikis(); location.hash = ""; dispatchEvent(new HashChangeEvent("hashchange")); });
-      hesap.append(c);
-    } else hesap.append(dugme({ metin: "Giriş yap", ikon: "giris", kucuk: true, tur: "ana", href: "#giris", id: "p-giris" }));
-  }
-  hesap.append(menuDugme);
-  const bar = el("nav", "as-bar", { "aria-label": "Ana menü" },
-    el("a", "as-marka", { href: "#" }, el("img", "", { src: logo, alt: "", width: "48", height: "48" }), el("span", "", {}, "Sivas Robotik ", el("span", "", {}, "Akademi"))),
-    menu, hesap);
+  const bar = ustCubuk("atolyeler");
 
   /* ---------- kahraman ---------- */
   const eylem = el("div", "as-eylem");
@@ -182,4 +158,39 @@ export function anaSayfa(root: HTMLElement): void {
 
   sayfa.append(ust, el("main", "as-govde", { id: "ana" }, atolyeler, nasil), alt);
   root.replaceChildren(sayfa);
+}
+
+/** v2 sayfalarının ortak stili (ana sayfa ve atölye sayfaları) */
+export function stilEkle(): void {
+  if (!document.getElementById("as-stil")) document.head.append(el("style", "", { id: "as-stil" }, STIL));
+}
+
+/** Ortak üst çubuk: logo, menü (dar ekranda düğmeyle açılır), oturum. aktif: menüde vurgulanan bağlantı */
+export function ustCubuk(aktif: "atolyeler" | "yok" = "yok"): HTMLElement {
+  const k = uygulama.kullanici;
+  const menu = el("ul", "as-menu", { id: "as-menu" },
+    el("li", "", {}, el("a", "", { href: "#atolyeler", ...(aktif === "atolyeler" ? { "aria-current": "page" } : {}) }, "Atölyeler")),
+    el("li", "", {}, el("a", "", { href: "lab/" }, "Robotik Laboratuvarı")),
+    el("li", "", {}, el("a", "", { href: "lab/#lig" }, "Sumo Ligi")),
+    el("li", "", {}, el("a", "", { href: k instanceof Ogretmen ? "#panellerim" : uygulama.hesapli ? "#giris" : "#nasil" }, "Öğretmen")));
+  const menuDugme = dugme({ metin: "Menü", ikon: "menu", yalnizIkon: true, kucuk: true }) as HTMLButtonElement;
+  menuDugme.classList.add("as-menu-dugme");
+  menuDugme.setAttribute("aria-expanded", "false"); menuDugme.setAttribute("aria-controls", "as-menu");
+  menuDugme.addEventListener("click", () => { const a = menu.classList.toggle("acik"); menuDugme.setAttribute("aria-expanded", String(a)); });
+  menu.addEventListener("click", (e) => { if ((e.target as HTMLElement).closest("a")) { menu.classList.remove("acik"); menuDugme.setAttribute("aria-expanded", "false"); } });
+
+  const hesap = el("div", "as-hesap");
+  if (uygulama.hesapli) {
+    if (k) {
+      hesap.append(el("span", "as-kim", {}, k.gorunenAd));
+      const c = dugme({ metin: "Çıkış", ikon: "cikis", kucuk: true, tur: "sessiz", id: "p-cikis" });
+      c.addEventListener("click", async () => { await uygulama.cikis(); location.hash = ""; dispatchEvent(new HashChangeEvent("hashchange")); });
+      hesap.append(c);
+    } else hesap.append(dugme({ metin: "Giriş yap", ikon: "giris", kucuk: true, tur: "ana", href: "#giris", id: "p-giris" }));
+  }
+  hesap.append(menuDugme);
+  return el("nav", "as-bar", { "aria-label": "Ana menü" },
+    el("a", "as-marka", { href: "#" }, el("img", "", { src: logo, alt: "", width: "48", height: "48" }), el("span", "", {}, "Sivas Robotik ", el("span", "", {}, "Akademi"))),
+    menu, hesap);
+
 }

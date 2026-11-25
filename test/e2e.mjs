@@ -183,6 +183,43 @@ for (const [ad, g, y] of BOYUTLAR) {
   await ctx.close();
 }
 
+/* ---------------- Atölye sayfası: Robotik ---------------- */
+for (const [ad, g, y] of BOYUTLAR) {
+  console.log(`\natölye sayfası · ${ad}`);
+  const { ctx, p, hatalar } = await sayfaAc(g, y, { deneme: true });
+  await p.goto(ADRES); await hazir(p);
+  await p.click('a.s2-atolye[data-kurs="lab"]');
+  await p.waitForSelector("#at-ozet");
+  ok(await p.evaluate(() => location.hash) === "#atolye/robotik", "ana sayfadaki Robotik kartı atölye sayfasını açıyor");
+  ok((await p.$$eval("#at-onerilen [data-modul]", (m) => m.map((x) => x.dataset.modul).join(","))) === "kar", "ilkokulda önerilen modül Kar Küreme; diğerleri ayrı başlıkta");
+  ok((await p.$$("#at-diger [data-modul]")).length === 3, "diğer üç modül: Çizgi, Labirent, Sumo");
+  ok(await p.getAttribute('.at-ders[aria-current="step"]', "data-ders") === "ilk-sokak" && (await p.getAttribute("#at-devam", "href")) === "lab/#kar/ilk-sokak", "boş ilerlemede ilk görev şimdiki, 'Başla' onu açıyor");
+  ok((await p.$$('#at-onerilen .at-ders.kilitli[aria-disabled="true"]')).length >= 4 && (await p.$$("#at-onerilen div.at-ders a, #at-onerilen .at-ders.kilitli[href]")).length === 0, "sıradaki görevler kilitli, bağlantısız");
+  ok(await tasmaYok(p) && await p.evaluate(() => [...document.querySelectorAll(".at-ust *, .at-govde *")].every((e) => e.getBoundingClientRect().right <= innerWidth + 1)), "atölye sayfasında hiçbir öğe ekrandan taşmıyor");
+  await p.screenshot({ path: resolve(EKRAN, `atolye-robotik-bos-${ad}.png`), fullPage: true });
+  /* Lab'ın kaydı (görev bitince Lab buraya yazar) */
+  await p.evaluate(() => localStorage.setItem("sra-lab-v1", JSON.stringify({ gorevler: { "ilk-sokak": { yildiz: 3 }, kose: { yildiz: 2 }, "cizgi-oval": { yildiz: 1 } }, lig: null, bayrak: { "siro-kurulum": true } })));
+  await p.reload(); await p.waitForSelector("#at-ozet");
+  const ozet = await p.textContent("#at-ozet");
+  ok(/4 \/ 17\s*ders bitti/.test(ozet) && /6 \/ 45 yıldız/.test(ozet), "Lab kaydından: 4 ders bitti (iki Kar, bir Çizgi, kurulum rehberi), 6 yıldız (" + ozet.replace(/\s+/g, " ").slice(0, 60) + ")");
+  ok(await p.getAttribute('.at-ders[aria-current="step"]', "data-ders") === "uzun-cadde" && /devam/i.test(await p.textContent("#at-devam")), "kaldığın yer üçüncü görev; düğme 'Kaldığın yerden devam et'");
+  ok((await p.$$('[data-modul="kar"] .at-ders.bitti')).length === 2 && (await p.$$('[data-modul="cizgi"] .at-ders.bitti')).length === 2, "biten dersler yeşil (rehber dahil)");
+  await p.screenshot({ path: resolve(EKRAN, `atolye-robotik-${ad}.png`), fullPage: true });
+  if (ad === "masaustu") {
+    /* klavye: kapalı modülün ders listesi Enter ile açılıyor */
+    await p.focus('[data-modul="labirent"] summary');
+    await p.keyboard.press("Enter");
+    ok(await p.$eval('[data-modul="labirent"] details', (d) => d.open), "ders listesi klavyeyle açılıyor");
+    await p.click("#at-devam"); await p.waitForURL(/\/lab\/#kar\/uzun-cadde$/); await hazir(p);
+    ok(true, "devam düğmesi Lab'da doğru görevi açtı");
+    await p.goBack(); await p.waitForSelector("#at-ozet");
+    await p.click(".at-geri"); await p.waitForSelector("#atolyeler");
+    ok(await p.evaluate(() => location.hash) === "#atolyeler", "geri bağlantısı ana sayfadaki atölyelere dönüyor");
+  }
+  ok(hatalar.length === 0, "atölye sayfasında konsol hatası yok" + (hatalar.length ? ": " + hatalar.slice(0, 2).join(" | ") : ""));
+  await ctx.close();
+}
+
 /* ---------------- Robotik Laboratuvarı ---------------- */
 const yaz = (p, kod) => p.evaluate((k) => { const a = document.querySelector(".e-alan"); a.value = k; a.dispatchEvent(new Event("input")); }, kod);
 for (const [ad, g, y] of BOYUTLAR) {
@@ -192,8 +229,8 @@ for (const [ad, g, y] of BOYUTLAR) {
     const { ctx, p, hatalar } = await sayfaAc(g, y, { deneme: true });
     const shot = (n) => p.screenshot({ path: `${EKRAN}/lab_${ad}_${n}.png`, fullPage: true });
     await p.goto(ADRES); await hazir(p);
-    ok(await p.getAttribute('a.s2-atolye[data-kurs="lab"]', "href") === "lab/", "portal kartı Laboratuvar'a gidiyor");
-    await p.click('a.s2-atolye[data-kurs="lab"]'); await p.waitForURL(/\/lab\/$/); await hazir(p);
+    ok(await p.getAttribute('a.s2-atolye[data-kurs="lab"]', "href") === "#atolye/robotik", "portal kartı Robotik atölyesine gidiyor");
+    await p.goto(ADRES + "lab/"); await hazir(p);
     ok((await p.$$("a.sra-kurs")).length === 4, "Laboratuvar: dört etkinlik (Kar Küreme, Lig, Çizgi İzleyen, Labirent)");
     ok(await tasmaYok(p), "Laboratuvar ana sayfasında taşma yok");
     await shot("1_ana");

@@ -14,7 +14,8 @@ export interface Atolye { kimlik: AtolyeKimligi; ad: string; aciklama: string; h
 const BLOK: Hedef = { kurs: "ilkokul", yol: "blok/" };
 const JUNIOR: Hedef = { kurs: "junior", yol: "junior/" };
 const PYTHON: Hedef = { kurs: "ortaokul", yol: "ortaokul/" };
-const LAB: Hedef = { kurs: "lab", yol: "lab/" };
+/** Robotik atölyesinin kendi sayfası (modüller, dersler, ilerleme); görevler Lab'da açılır */
+const LAB: Hedef = { kurs: "lab", yol: "#atolye/robotik" };
 
 const a = (kimlik: AtolyeKimligi, ad: string, aciklama: string, hedef: Hedef): Atolye => ({ kimlik, ad, aciklama, hedef });
 
