@@ -99,6 +99,7 @@ export function dersiDogrula(d: DersTanimi): string[] {
   if (d.gercek) {
     if (!d.gercek.adimlar.length) y("Gerçek robotta: adım yok");
     if (d.gercek.malzeme.some((m) => !(m.adet > 0) || !m.parca.trim())) y("Gerçek robotta: malzeme adı ve adedi gerekli");
+    for (const m of d.gercek.malzeme) if (m.parca.trim() && !(m.parca in PARCALAR)) y(`Gerçek robotta: parça listede yok (${m.parca})`);
   }
   return h;
 }
@@ -180,3 +181,29 @@ export function seviyeHesapla(xp: number): { seviye: number; doluluk: number } {
   while (kalan >= gereken) { kalan -= gereken; s++; gereken += 50; }
   return { seviye: s, doluluk: kalan / gereken };
 }
+
+/* ---------- bölümlerin açılışı ---------- */
+export type DersBolumu = "anlat" | "dene" | "gorev" | "gercek";
+export const DERS_BOLUMLERI: [DersBolumu, string][] = [["anlat", "Anlat"], ["dene", "Dene"], ["gorev", "Görev"], ["gercek", "Gerçek robotta"]];
+/** Hangi bölüm açık: Anlat ve Gerçek robotta her zaman; Dene anlatım bitince; Görev deneme bitince (deney bileşeni henüz yoksa
+    deneme atlanabilir, ama ders yine de tamamlanmaz). Öğretmende hepsi açık. */
+export function bolumAcik(s: DersDurumuOzeti, b: DersBolumu, o: { ogretmen?: boolean; deneyVar?: boolean } = {}): boolean {
+  if (o.ogretmen || b === "anlat" || b === "gercek") return true;
+  if (b === "dene") return s.anlat;
+  return s.anlat && (s.dene || o.deneyVar === false);
+}
+/** Ders açılınca gösterilecek bölüm: ilk bitmemiş ve açık olan; hepsi bittiyse Anlat */
+export function ilkBolum(s: DersDurumuOzeti, o: { ogretmen?: boolean; deneyVar?: boolean } = {}): DersBolumu {
+  const bitmis: Record<DersBolumu, boolean> = { anlat: s.anlat, dene: s.dene, gorev: s.gorev, gercek: s.gercek };
+  return (["anlat", "dene", "gorev"] as DersBolumu[]).find((b) => !bitmis[b] && bolumAcik(s, b, o)) ?? "anlat";
+}
+
+/* ---------- gerçek robotta: parça adları ---------- */
+/** Ders malzemelerinde geçen parçalar (Robot Atölyesi kataloğu G'de bunu genişletir) */
+export const PARCALAR: Record<string, string> = {
+  siroline: "SiroLine çizgi izleyen robot",
+  kenshin: "Kenshin mini sumo robotu",
+  rizbot: "RizBot labirent robotu",
+  "siyah-elektrik-bandi": "Siyah elektrik bandı",
+  "beyaz-a4-kagit": "Beyaz A4 kâğıt"
+};

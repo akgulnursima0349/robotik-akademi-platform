@@ -195,6 +195,8 @@ export function kodCercevesi(dosya: string, kod: string): HTMLElement {
 /* ---------- konuşma balonu ---------- */
 export interface KonusmaAyari {
   metin: string;
+  /** ekrandakinden farklı okunacaksa (sembol, kod); bu durumda kelime vurgusu yapılmaz */
+  seslendirme?: string;
   hal?: MaskotHali;
   /** okul öncesinde ve ses açıksa sayfaya eklenince kendiliğinden okunur (seviye kökten okunur) */
   kendiliginden?: boolean;
@@ -219,8 +221,8 @@ export function konusmaBalonu(a: KonusmaAyari): HTMLElement {
     if (!okuyor) vurgu(-1);
   };
   const oku = (zorla: boolean) => {
-    no = ses.oku(a.metin, { zorla, kelime: vurgu, bitti: () => durum(false) });
-    if (no) { durum(true); vurgu(0); }
+    no = ses.oku(a.seslendirme ?? a.metin, { zorla, kelime: a.seslendirme ? undefined : vurgu, bitti: () => durum(false) });
+    if (no) { durum(true); if (!a.seslendirme) vurgu(0); }
   };
   dinle.addEventListener("click", () => { if (no && ses.okunan === no) { ses.durdur(); durum(false); } else oku(true); });
   const goster = () => { dinle.hidden = !ses.var; };

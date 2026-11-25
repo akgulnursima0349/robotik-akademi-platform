@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { IlerlemeEsitleyici, Oturum, SahteBaglanti } from "@sra/bulut";
 import {
-  DERSLER, DersDeposu, dersDurumu, dersiDogrula, dersKaydiBirlestir, dersKayitlariOku, dersOgesi, dersXp, modulIlerlemesi, seviyeHesapla,
+  bolumAcik, DERSLER, DersDeposu, ilkBolum, dersDurumu, dersiDogrula, dersKaydiBirlestir, dersKayitlariOku, dersOgesi, dersXp, modulIlerlemesi, seviyeHesapla,
   XP, yinelenenKimlikler, type DersTanimi, type Modul
 } from "../src";
 import { SIROLINE_SENSOR } from "../src/dersler/siroline-sensor";
@@ -63,9 +63,31 @@ describe("ders ilerlemesi", () => {
   it("atölye sayfası modelinde ders türü: bitmesi bölümlerden, yıldızı Lab'dan", () => {
     const m: Modul = { kimlik: "x", ad: "X", aciklama: "", seviyeler: ["ortaokul"], dersler: [dersOgesi(SIROLINE_SENSOR)] };
     const bos = modulIlerlemesi(m, { gorevler: {} });
-    expect([bos.dersler[0].durum, bos.sayilan, bos.biten, bos.enCokYildiz]).toEqual(["acik", 1, 0, 3]);
+    expect([bos.dersler[0].durum, bos.sayilan, bos.biten, bos.enCokYildiz]).toEqual(["acik", 1, 0, 0]);
     const dolu = modulIlerlemesi(m, { gorevler: { "cizgi-oval": { yildiz: 2 } }, dersler: { "siroline-sensor": { anlat: { adim: 4, bitti: true }, dene: { degerler: 3, bitti: true } } } });
-    expect([dolu.dersler[0].durum, dolu.biten, dolu.yildiz]).toEqual(["bitti", 1, 2]);
+    expect([dolu.dersler[0].durum, dolu.biten, dolu.dersler[0].yildiz, dolu.yildiz]).toEqual(["bitti", 1, 2, 0]); // yıldız görevde sayılır, iki kez değil
+  });
+});
+
+describe("bölümlerin açılışı ve malzeme", () => {
+  const s = (o: Partial<Record<"anlat" | "dene" | "gorev", boolean>>) => dersDurumu(SIROLINE_SENSOR, { anlat: { adim: 0, bitti: !!o.anlat }, dene: { degerler: 0, bitti: !!o.dene } }, o.gorev ? 1 : 0);
+  it("öğrencide sırayla açılır; deney yoksa deneme atlanabilir; öğretmende hepsi açık", () => {
+    expect(["anlat", "dene", "gorev", "gercek"].map((b) => bolumAcik(s({}), b as any))).toEqual([true, false, false, true]);
+    expect(["dene", "gorev"].map((b) => bolumAcik(s({ anlat: true }), b as any))).toEqual([true, false]);
+    expect(bolumAcik(s({ anlat: true }), "gorev", { deneyVar: false })).toBe(true);
+    expect(bolumAcik(s({ anlat: true, dene: true }), "gorev")).toBe(true);
+    expect(["anlat", "dene", "gorev", "gercek"].every((b) => bolumAcik(s({}), b as any, { ogretmen: true }))).toBe(true);
+  });
+  it("ders ilk bitmemiş açık bölümden açılır; deney yokken ders bitmez", () => {
+    expect(ilkBolum(s({}))).toBe("anlat");
+    expect(ilkBolum(s({ anlat: true }))).toBe("dene");
+    expect(ilkBolum(s({ anlat: true, dene: true }))).toBe("gorev");
+    expect(ilkBolum(s({ anlat: true }), { deneyVar: false })).toBe("dene");
+    expect(s({ anlat: true, gorev: true }).bitti).toBe(false);
+  });
+  it("malzemedeki parça listede olmalı", () => {
+    const d = kopya(SIROLINE_SENSOR); d.gercek!.malzeme.push({ parca: "uzay-gemisi", adet: 1 });
+    expect(dersiDogrula(d).join()).toContain("parça listede yok (uzay-gemisi)");
   });
 });
 

@@ -38,20 +38,23 @@ describe("ilerleme", () => {
   it("rehber bayrakla, lig kayıtlı robotla biter; serbest çalışma sayılmaz", () => {
     const c = modulIlerlemesi(modul("cizgi"), kayit({}, { bayrak: { "siro-kurulum": true } }));
     expect(c.dersler.find((d) => d.ders.tur === "rehber")!.durum).toBe("bitti");
-    expect(c.sayilan).toBe(CIZGI_GOREVLERI.length + 1);
+    expect(c.sayilan).toBe(CIZGI_GOREVLERI.length + 2); // görevler + kurulum rehberi + ders
     expect(modulIlerlemesi(modul("sumo"), kayit({}, { lig: { ad: "Ok" } })).biten).toBe(1);
   });
   it("kaldığın yer: seviyenin önerdiği modüllerde ilk açık ve bitmemiş ders", () => {
     expect(kaldigiYer(ROBOTIK, BOS_KAYIT, "ilkokul")!.ders.anahtar).toBe(GOREVLER[0].kimlik);
-    expect(kaldigiYer(ROBOTIK, BOS_KAYIT, "lise")!.ders.anahtar).toBe("cizgi-" + CIZGI_GOREVLERI[0].kimlik);
+    expect(kaldigiYer(ROBOTIK, BOS_KAYIT, "lise")!.ders.anahtar).toBe("siroline-sensor"); // modülün başındaki ders
+    const dersBitti = { dersler: { "siroline-sensor": { anlat: { adim: 4, bitti: true }, dene: { degerler: 3, bitti: true } } } };
     const hepsi = Object.fromEntries(CIZGI_GOREVLERI.map((g) => ["cizgi-" + g.kimlik, 2]));
-    expect(kaldigiYer(ROBOTIK, kayit(hepsi), "lise")!.ders.kimlik).toBe("kurulum");
-    expect(kaldigiYer(ROBOTIK, kayit(hepsi, { bayrak: { "siro-kurulum": true } }), "lise")!.ders.anahtar).toBe(LABIRENT_GOREVLERI[0].kimlik);
+    expect(kaldigiYer(ROBOTIK, kayit({}, dersBitti), "lise")!.ders.anahtar).toBe("siroline-sensor"); // görevi (İlk tur) bitmeden ders bitmez
+    expect(kaldigiYer(ROBOTIK, kayit(hepsi), "lise")!.ders.kimlik).toBe("siroline-sensor");
+    expect(kaldigiYer(ROBOTIK, kayit(hepsi, dersBitti), "lise")!.ders.kimlik).toBe("kurulum");
+    expect(kaldigiYer(ROBOTIK, kayit(hepsi, { ...dersBitti, bayrak: { "siro-kurulum": true } }), "lise")!.ders.anahtar).toBe(LABIRENT_GOREVLERI[0].kimlik);
   });
   it("her şey bittiyse kaldığın yer yok; özet toplamları doğru", () => {
     const gorevler: Record<string, number> = {};
     for (const m of ROBOTIK.moduller) for (const d of m.dersler) if (d.tur === "gorev") gorevler[d.anahtar] = 3;
-    const k = kayit(gorevler, { bayrak: { "siro-kurulum": true }, lig: { ad: "x" } });
+    const k = kayit(gorevler, { bayrak: { "siro-kurulum": true }, lig: { ad: "x" }, dersler: { "siroline-sensor": { anlat: { adim: 4, bitti: true }, dene: { degerler: 3, bitti: true } } } });
     expect(kaldigiYer(ROBOTIK, k, "ortaokul")).toBeNull();
     const o = atolyeOzeti(ROBOTIK, k);
     expect(o.biten).toBe(o.sayilan);

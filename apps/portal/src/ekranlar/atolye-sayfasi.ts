@@ -7,10 +7,11 @@ import { atolyeOzeti, BLOK_KAYIT_ANAHTARI, blokKaydiOku, kaldigiYer, kayitOku, K
 import { uygulama } from "../uygulama";
 import { acilisSeviyesi, SEVIYE_ADLARI } from "../atolyeler";
 import { stilEkle, ustCubuk } from "./ana-sayfa";
+import { dersDeposu } from "./ders-sayfasi";
 
 const oku = (anahtar: string) => { try { return localStorage.getItem(anahtar); } catch { return null; } };
 const ATOLYELER: Record<string, { atolye: Atolye; kayit: () => IlerlemeKaydi }> = {
-  robotik: { atolye: ROBOTIK, kayit: () => kayitOku(oku(LAB_KAYIT_ANAHTARI)) },
+  robotik: { atolye: ROBOTIK, kayit: () => ({ ...kayitOku(oku(LAB_KAYIT_ANAHTARI)), dersler: dersDeposu().veri().dersler }) },
   "kodla-oyna": { atolye: KODLA_OYNA, kayit: () => blokKaydiOku(oku(BLOK_KAYIT_ANAHTARI)) },
   python: { atolye: PYTHON, kayit: () => kayitOku(null) }
 };
@@ -24,8 +25,6 @@ export const atolyeVarMi = (k: string) => k in ATOLYELER;
 const STIL = `
 .at-ust{background:var(--sra2-lavanta);border-radius:0 0 40px 40px;padding:18px clamp(16px,4vw,48px) 36px;position:relative}
 .at-bas{max-width:1184px;margin:28px auto 0;display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:32px;align-items:end}
-.at-geri{display:inline-flex;align-items:center;gap:6px;font-weight:800;color:var(--sra2-mor-taban);text-decoration:none;margin-bottom:10px}
-.at-geri .s2-ikon{width:18px;height:18px}
 .at-bas h1{font-size:var(--sra2-boy-8);margin:0 0 10px}
 .at-bas p{margin:0;max-width:56ch;font-size:var(--sra2-boy-3);font-weight:600;color:var(--sra2-murekkep-2)}
 .at-ozet{display:flex;flex-direction:column;gap:12px}

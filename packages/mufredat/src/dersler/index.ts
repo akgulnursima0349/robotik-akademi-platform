@@ -8,5 +8,5 @@ export const dersBul = (kimlik: string) => DERSLER.find((d) => d.kimlik === kiml
 
 /** Ders tanımından atölye sayfasındaki ders ögesi */
 export function dersOgesi(t: DersTanimi): Ders {
-  return { kimlik: t.kimlik, ad: t.ad, ogretir: t.kazanim, tur: "ders", adres: `#ders/${t.kimlik}`, enCokYildiz: 3, anahtar: t.kimlik, tanim: t };
+  return { kimlik: t.kimlik, ad: t.ad, ogretir: t.kazanim, tur: "ders", adres: `#ders/${t.kimlik}`, enCokYildiz: 0, anahtar: t.kimlik, tanim: t };
 }

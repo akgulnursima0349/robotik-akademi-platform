@@ -91,7 +91,8 @@ export function modulIlerlemesi(m: Modul, k: IlerlemeKaydi, hepsiAcik = false, o
   return {
     modul: m, dersler,
     biten: sayilan.filter((d) => d.durum === "bitti").length, sayilan: sayilan.length,
-    yildiz: dersler.reduce((t, d) => t + d.yildiz, 0), enCokYildiz: m.dersler.reduce((t, d) => t + d.enCokYildiz, 0)
+    /* ders yıldızı bağlı olduğu görevin yıldızıdır: toplamda iki kez sayılmaz (satırda gösterilir) */
+    yildiz: dersler.reduce((t, d) => t + (d.ders.tur === "ders" ? 0 : d.yildiz), 0), enCokYildiz: m.dersler.reduce((t, d) => t + d.enCokYildiz, 0)
   };
 }
 

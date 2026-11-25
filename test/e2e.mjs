@@ -206,7 +206,7 @@ for (const [ad, g, y] of BOYUTLAR) {
   await p.evaluate(() => localStorage.setItem("sra-lab-v1", JSON.stringify({ gorevler: { "ilk-sokak": { yildiz: 3 }, kose: { yildiz: 2 }, "cizgi-oval": { yildiz: 1 } }, lig: null, bayrak: { "siro-kurulum": true } })));
   await p.reload(); await p.waitForSelector("#at-ozet");
   const ozet = await p.textContent("#at-ozet");
-  ok(/4 \/ 17\s*ders bitti/.test(ozet) && /6 \/ 45 yıldız/.test(ozet), "Lab kaydından: 4 ders bitti (iki Kar, bir Çizgi, kurulum rehberi), 6 yıldız (" + ozet.replace(/\s+/g, " ").slice(0, 60) + ")");
+  ok(/4 \/ 18\s*ders bitti/.test(ozet) && /6 \/ 45 yıldız/.test(ozet), "Lab kaydından: 18 dersin 4'ü bitti (iki Kar, bir Çizgi, kurulum rehberi), 6 yıldız (" + ozet.replace(/\s+/g, " ").slice(0, 60) + ")");
   ok(await p.getAttribute('.at-ders[aria-current="step"]', "data-ders") === "uzun-cadde" && /devam/i.test(await p.textContent("#at-devam")), "kaldığın yer üçüncü görev; düğme 'Kaldığın yerden devam et'");
   ok((await p.$$('[data-modul="kar"] .at-ders.bitti')).length === 2 && (await p.$$('[data-modul="cizgi"] .at-ders.bitti')).length === 2, "biten dersler yeşil (rehber dahil)");
   await p.screenshot({ path: resolve(EKRAN, `atolye-robotik-${ad}.png`), fullPage: true });
@@ -259,6 +259,68 @@ for (const [ad, g, y] of BOYUTLAR) {
   ok(await p.evaluate(() => getComputedStyle(document.querySelector(".p-giris__kutu")).fontFamily.includes("Nunito")), "giriş ekranı yeni yazı tipinde");
   ok(!(await p.evaluate(() => [...document.styleSheets].some((ss) => { try { return [...ss.cssRules].some((r) => r.cssText.includes("Lexend")); } catch { return false; } }))), "portal eski stil dosyasını (Lexend) yüklemiyor");
   ok(hatalar.length === 0, "konsol hatası yok" + (hatalar.length ? ": " + hatalar.slice(0, 2).join(" | ") : ""));
+  await ctx.close();
+}
+
+/* ---------------- Ders oynatıcı ---------------- */
+for (const [ad, g, y] of BOYUTLAR) {
+  console.log(`\nders oynatıcı · ${ad}`);
+  const { ctx, p, hatalar } = await sayfaAc(g, y, { deneme: true });
+  await p.addInitScript(() => {
+    const ses = { getVoices: () => [{ lang: "tr-TR", name: "Türkçe" }], cancel() {}, addEventListener() {}, speak(u) { window.__okunan = u.text; setTimeout(() => u.onend?.(), 50); } };
+    Object.defineProperty(window, "speechSynthesis", { value: ses, configurable: true });
+    window.SpeechSynthesisUtterance = function (t) { this.text = t; };
+  });
+  const tasmasiz = async () => (await tasmaYok(p)) && p.evaluate(() => [...document.querySelectorAll(".dr-govde *, .dr-ust *")].every((e) => e.getBoundingClientRect().right <= innerWidth + 1));
+  await p.goto(ADRES + "#atolye/robotik"); await p.waitForSelector("#at-ozet");
+  ok((await p.$$('a[href="#ders/siroline-sensor"]')).length >= 1, "örnek ders Robotik atölye sayfasında listeleniyor");
+  await p.goto(ADRES + "#ders/siroline-sensor"); await p.waitForSelector(".dr-anlat");
+  ok(await p.getAttribute('[data-bolum="anlat"]', "aria-current") === "step" && await p.isDisabled('[data-bolum="dene"]') && await p.isDisabled('[data-bolum="gorev"]') && !(await p.isDisabled('[data-bolum="gercek"]')), "Anlat açık; Dene ve Görev kilitli; Gerçek robotta açık");
+  ok(await p.isVisible(".s2-dinle"), "Dinle düğmesi (Türkçe ses varken)");
+  await p.click(".s2-dinle");
+  ok((await p.evaluate(() => window.__okunan)).startsWith("SiroLine çizgiyi"), "anlatım sesli okunuyor");
+  ok(await tasmasiz(), "anlatımda taşma yok");
+  await p.screenshot({ path: resolve(EKRAN, `ders-anlat-${ad}.png`), fullPage: true });
+  await p.click("#dr-ileri"); await p.click("#dr-ileri");
+  ok(/Adım 3 \/ 4/.test(await p.textContent(".dr-adimsay")) && await p.isDisabled("#dr-ileri"), "soru adımında cevaplamadan ilerlenmiyor");
+  await p.click('#dr-soru button:has-text("Çok ışık döner")');
+  ok(await p.getAttribute("#dr-soru [data-sonuc]", "data-sonuc") === "yanlis" && await p.isDisabled("#dr-ileri"), "yanlış yanıt: Bit şaşırıyor, tekrar denenir");
+  await p.click('#dr-soru button:has-text("Az ışık döner")');
+  ok(await p.getAttribute("#dr-soru [data-sonuc]", "data-sonuc") === "dogru" && !(await p.isDisabled("#dr-ileri")), "doğru yanıt: açıklama ve ilerleme");
+  await p.screenshot({ path: resolve(EKRAN, `ders-soru-${ad}.png`), fullPage: true });
+  if (ad === "masaustu") {
+    await p.click("body", { position: { x: 5, y: 600 } });
+    await p.keyboard.press("ArrowRight");
+    ok(/Adım 4 \/ 4/.test(await p.textContent(".dr-adimsay")), "klavyede sağ ok sonraki adıma geçiyor");
+    await p.keyboard.press("ArrowLeft"); await p.keyboard.press("ArrowRight");
+  } else await p.click("#dr-ileri");
+  await p.reload(); await p.waitForSelector(".dr-anlat");
+  ok(/Adım 4 \/ 4/.test(await p.textContent(".dr-adimsay")), "sayfa yenilenince kalınan adımdan devam");
+  await p.click("#dr-ileri"); await p.waitForSelector('[data-bolum="dene"][aria-current="step"]');
+  ok(/hazırlanıyor/.test(await p.textContent(".dr-govde")) && await p.isVisible("#dr-goreve"), "deney bileşeni yokken açık bildirim; göreve geçilebiliyor");
+  await p.click("#dr-goreve"); await p.waitForSelector("#dr-lab");
+  ok(await p.getAttribute("#dr-lab", "href") === "lab/#cizgi/oval", "görev Lab'daki İlk tur'a götürüyor");
+  if (ad === "masaustu") { await p.click("#dr-lab"); await p.waitForURL(/\/lab\/#cizgi\/oval$/); await hazir(p); ok(true, "Lab'da görev açıldı"); await p.goBack(); await p.waitForSelector(".dr-govde"); }
+  await p.evaluate(() => localStorage.setItem("sra-lab-v1", JSON.stringify({ gorevler: { "cizgi-oval": { yildiz: 2 } }, lig: null })));
+  await p.reload(); await p.waitForSelector(".dr-govde"); await p.click('[data-bolum="gorev"]');
+  ok(/2 \/ 3 yıldız/.test(await p.textContent("#dr-gorev-yildiz")) && !(await p.isVisible("#dr-bitti")), "Lab'daki yıldız görünüyor; deneme bitmeden ders bitmiyor");
+  await p.click('[data-bolum="gercek"]'); await p.waitForSelector("#dr-yaptim");
+  ok(!(await p.$("#dr-ogretmen-notu")), "öğretmen notu öğrenciye ve misafire görünmüyor");
+  await p.check("#dr-a0"); await p.click("#dr-yaptim");
+  ok(await p.getAttribute("#dr-yaptim", "aria-pressed") === "true", "Sınıfta yaptım kaydedildi");
+  ok(await tasmasiz(), "gerçek robotta bölümünde taşma yok");
+  await p.screenshot({ path: resolve(EKRAN, `ders-gercek-${ad}.png`), fullPage: true });
+  await p.emulateMedia({ media: "print" });
+  ok(!(await p.isVisible(".dr-bolumler")) && !(await p.isVisible(".as-ust")) && await p.isVisible(".dr-etkinlik") && !(await p.isVisible("#dr-yaptim")), "yazdırırken yalnız etkinlik kâğıdı");
+  await p.emulateMedia({ media: "screen" });
+  /* deneme bitti (deney bileşeni E4'te; burada kayıtla) → ders biter */
+  await p.evaluate(() => { const k = JSON.parse(localStorage.getItem("sra-ders-v1")); k.dersler["siroline-sensor"].dene = { degerler: 3, bitti: true }; localStorage.setItem("sra-ders-v1", JSON.stringify(k)); });
+  await p.reload(); await p.waitForSelector("#dr-bitti");
+  ok(/XP kazandın/.test(await p.textContent("#dr-bitti")) && (await p.getAttribute("#dr-sonraki", "href")) === "lab/#cizgi/oval", "ders bitti: kutlama, XP ve sıradaki ders");
+  await p.screenshot({ path: resolve(EKRAN, `ders-bitti-${ad}.png`), fullPage: true });
+  await p.goto(ADRES + "#atolye/robotik"); await p.waitForSelector("#at-ozet");
+  ok(await p.$eval('[data-ders="siroline-sensor"]', (e) => e.classList.contains("bitti")), "atölye sayfasında ders bitti görünüyor");
+  ok(hatalar.length === 0, "ders oynatıcıda konsol hatası yok" + (hatalar.length ? ": " + hatalar.slice(0, 2).join(" | ") : ""));
   await ctx.close();
 }
 
