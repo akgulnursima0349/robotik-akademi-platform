@@ -1,0 +1,117 @@
+/* Tasarım sistemi v2 · bileşenler. Sınıf öneki .s2-; değerler belirtecler.css'teki --sra2-* değişkenlerinden. */
+.sra2 *, .sra2 *::before, .sra2 *::after { box-sizing: border-box }
+.sra2 :focus-visible { outline: none; box-shadow: var(--sra2-odak); border-radius: var(--sra2-kose-1) }
+.s2-ikon { display: inline-flex; width: 1.25em; height: 1.25em; flex: none }
+.s2-ikon svg { width: 100%; height: 100% }
+.s2-baslik { font-family: var(--sra2-yazi-baslik); font-weight: 800; line-height: 1.08; margin: 0 }
+.s2-gizli { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap }
+
+/* ---------- düğme ---------- */
+.s2-dugme {
+  --zemin: var(--sra2-beyaz); --yazi: var(--sra2-murekkep); --taban: var(--sra2-kart-taban);
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: var(--sra2-hedef-buyuk); padding: 0 24px; border: 0; border-radius: var(--sra2-kose-2);
+  background: var(--zemin); color: var(--yazi); font: 800 var(--sra2-boy-3) / 1 var(--sra2-yazi); text-decoration: none; cursor: pointer;
+  box-shadow: 0 var(--sra2-taban-2) 0 var(--taban); transform: translateY(0); user-select: none; white-space: nowrap;
+  transition: transform var(--sra2-hizli) var(--sra2-yumusak), box-shadow var(--sra2-hizli) var(--sra2-yumusak), filter var(--sra2-hizli);
+}
+.s2-dugme:hover { filter: brightness(1.04) }
+.s2-dugme:active, .s2-dugme.basili { transform: translateY(var(--sra2-taban-2)); box-shadow: 0 0 0 var(--taban) }
+.s2-dugme:focus-visible { box-shadow: 0 var(--sra2-taban-2) 0 var(--taban), var(--sra2-odak) }
+.s2-dugme--ana { --zemin: var(--sra2-kirmizi); --yazi: #fff; --taban: var(--sra2-kirmizi-taban) }
+.s2-dugme--ipucu { --zemin: var(--sra2-sari-acik); --taban: var(--sra2-sari-taban) }
+.s2-dugme--mor { --zemin: var(--sra2-mor); --yazi: #fff; --taban: var(--sra2-mor-taban) }
+.s2-dugme--sessiz { --zemin: transparent; --taban: transparent; box-shadow: none; color: var(--sra2-mor) }
+.s2-dugme--sessiz:hover { background: var(--sra2-mor-acik) }
+.s2-dugme--kucuk { min-height: var(--sra2-hedef); padding: 0 16px; font-size: var(--sra2-boy-2); border-radius: var(--sra2-kose-1); box-shadow: 0 var(--sra2-taban-1) 0 var(--taban) }
+.s2-dugme--kucuk:active { transform: translateY(var(--sra2-taban-1)) }
+.s2-dugme--ikon { width: var(--sra2-hedef-buyuk); padding: 0 }
+.s2-dugme--ikon.s2-dugme--kucuk { width: var(--sra2-hedef) }
+.s2-dugme[disabled], .s2-dugme[aria-disabled="true"] { --zemin: #EFEAE0; --yazi: #605B78; --taban: #DCD3C2; cursor: not-allowed; filter: none; transform: none }
+.s2-dugme[aria-busy="true"] .s2-ikon { animation: s2-don 900ms linear infinite }
+.s2-dugme__ek { font-size: var(--sra2-boy-1); font-weight: 800; opacity: .8 }
+@keyframes s2-don { to { transform: rotate(360deg) } }
+
+/* ---------- kartlar ---------- */
+.s2-kart { background: var(--sra2-beyaz); border-radius: var(--sra2-kose-3); padding: var(--sra2-b5) var(--sra2-b6); box-shadow: 0 var(--sra2-taban-2) 0 var(--sra2-kart-taban) }
+.s2-kart--lavanta { box-shadow: 0 8px 0 var(--sra2-lavanta-taban) }
+.s2-atolye {
+  display: flex; flex-direction: column; gap: var(--sra2-b2); padding: var(--sra2-b4); border-radius: var(--sra2-kose-3);
+  background: var(--sra2-beyaz); color: var(--sra2-murekkep); text-decoration: none; box-shadow: 0 var(--sra2-taban-2) 0 var(--sra2-kart-taban);
+  transition: transform var(--sra2-orta) var(--sra2-yay), box-shadow var(--sra2-hizli);
+}
+.s2-atolye:hover { transform: translateY(-3px) }
+.s2-atolye:active { transform: translateY(var(--sra2-taban-2)); box-shadow: 0 0 0 var(--sra2-kart-taban) }
+.s2-atolye:focus-visible { box-shadow: 0 var(--sra2-taban-2) 0 var(--sra2-kart-taban), var(--sra2-odak); border-radius: var(--sra2-kose-3) }
+.s2-atolye__ikon { height: 72px; border-radius: var(--sra2-kose-2); display: grid; place-items: center; background: var(--atolye, var(--sra2-mor-acik)) }
+.s2-atolye__ikon .s2-ikon { width: 38px; height: 38px }
+.s2-atolye__ad { font-family: var(--sra2-yazi-baslik); font-weight: 800; font-size: var(--sra2-boy-4); line-height: 1.1 }
+.s2-atolye__aciklama { font-size: var(--sra2-boy-1); font-weight: 700; color: var(--sra2-murekkep-2) }
+.s2-atolye[aria-current="true"] { background: var(--sra2-kirmizi); color: #fff; box-shadow: 0 var(--sra2-taban-2) 0 var(--sra2-kirmizi-taban) }
+.s2-atolye[aria-current="true"] .s2-atolye__ikon { background: #fff; color: var(--sra2-kirmizi) }
+.s2-atolye[aria-current="true"] .s2-atolye__aciklama { color: #fff }
+.s2-atolye--kilitli { opacity: .72; box-shadow: 0 var(--sra2-taban-2) 0 var(--sra2-kart-taban); pointer-events: none }
+
+/* ---------- hap, rozet, seviye ---------- */
+.s2-hap { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 4px 12px; border-radius: var(--sra2-kose-hap); font-size: var(--sra2-boy-1); font-weight: 800; background: var(--sra2-sari-acik); color: var(--sra2-murekkep); white-space: nowrap }
+.s2-hap--mor { background: var(--sra2-mor-acik); color: var(--sra2-mor-taban) }
+.s2-hap--yesil { background: var(--sra2-yesil-acik); color: var(--sra2-yesil-taban) }
+.s2-hap--gece { background: var(--sra2-gece); color: #fff }
+.s2-hap .s2-ikon { width: 16px; height: 16px }
+.s2-xp .s2-ikon { color: var(--sra2-sari-koyu) }
+.s2-rozet { display: inline-flex; flex-direction: column; align-items: center; gap: 6px; width: 96px; text-align: center; font-size: var(--sra2-boy-1); font-weight: 800 }
+.s2-rozet__daire { width: 72px; height: 72px; border-radius: 50%; display: grid; place-items: center; background: var(--sra2-sari); color: var(--sra2-murekkep); box-shadow: 0 var(--sra2-taban-1) 0 var(--sra2-sari-taban) }
+.s2-rozet__daire .s2-ikon { width: 34px; height: 34px }
+.s2-rozet--kilitli .s2-rozet__daire { background: #EFEAE0; color: #605B78; box-shadow: 0 var(--sra2-taban-1) 0 #DCD3C2 }
+.s2-rozet--kilitli { color: var(--sra2-murekkep-2) }
+.s2-seviye { display: inline-flex; align-items: center; gap: 10px; padding: 6px 16px 6px 6px; border-radius: var(--sra2-kose-hap); background: var(--sra2-beyaz); box-shadow: 0 var(--sra2-taban-1) 0 var(--sra2-lavanta-taban) }
+.s2-seviye__no { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--sra2-sari); font: 800 17px var(--sra2-yazi-baslik) }
+.s2-seviye__yazi { display: flex; flex-direction: column; gap: 3px; font-size: var(--sra2-boy-1); font-weight: 800 }
+.s2-seviye__cubuk { width: 120px; height: 8px; border-radius: 4px; background: var(--sra2-mor-acik); overflow: hidden }
+.s2-seviye__cubuk > span { display: block; height: 100%; background: var(--sra2-sari-koyu); border-radius: 4px }
+
+/* ---------- ilerleme ---------- */
+.s2-ilerleme { display: flex; gap: 8px }
+.s2-ilerleme > span { flex: 1; height: 16px; border-radius: 8px; background: var(--sra2-mor-acik) }
+.s2-ilerleme > span.bitti { background: var(--sra2-yesil) }
+.s2-ilerleme > span.simdi { background: repeating-linear-gradient(-45deg, var(--sra2-mor) 0 8px, var(--sra2-mor-taban) 8px 16px) }
+.s2-yildizlar { display: inline-flex; gap: 4px }
+.s2-yildizlar .s2-ikon { width: 28px; height: 28px; color: #D9D1C2 }
+.s2-yildizlar .s2-ikon.dolu { color: var(--sra2-sari-koyu) }
+.s2-yildizlar .s2-ikon svg { fill: currentColor }
+
+/* ---------- seçiciler ---------- */
+.s2-secici { display: flex; flex-wrap: wrap; gap: var(--sra2-b3) }
+.s2-secici > button { min-height: var(--sra2-hedef-buyuk); padding: 0 20px; border: 0; border-radius: var(--sra2-kose-2); background: var(--sra2-beyaz); color: var(--sra2-murekkep); font: 800 var(--sra2-boy-2) var(--sra2-yazi); cursor: pointer; box-shadow: 0 var(--sra2-taban-1) 0 var(--sra2-kart-taban); transition: transform var(--sra2-hizli) var(--sra2-yumusak) }
+.s2-secici > button:active { transform: translateY(var(--sra2-taban-1)); box-shadow: none }
+.s2-secici > button[aria-checked="true"] { background: var(--sra2-mor); color: #fff; box-shadow: 0 var(--sra2-taban-1) 0 var(--sra2-mor-taban) }
+.s2-secici > button:focus-visible { box-shadow: 0 var(--sra2-taban-1) 0 var(--sra2-kart-taban), var(--sra2-odak) }
+.s2-sekmeler { display: flex; gap: 4px; padding: 5px; border-radius: var(--sra2-kose-hap); background: var(--sra2-lavanta); width: max-content; max-width: 100%; overflow-x: auto }
+.s2-sekmeler > [role="tab"] { min-height: var(--sra2-hedef); padding: 0 18px; border: 0; border-radius: var(--sra2-kose-hap); background: transparent; color: var(--sra2-murekkep); font: 800 var(--sra2-boy-2) var(--sra2-yazi); cursor: pointer; white-space: nowrap }
+.s2-sekmeler > [role="tab"][aria-selected="true"] { background: var(--sra2-gece); color: #fff }
+.s2-sekme-paneli:focus-visible { border-radius: var(--sra2-kose-2) }
+
+/* ---------- adım göstergesi ---------- */
+.s2-adimlar { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; font-weight: 800; font-size: var(--sra2-boy-2) }
+.s2-adimlar > li { display: flex; align-items: center; gap: 6px }
+.s2-adimlar__ad { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: var(--sra2-kose-hap); background: var(--sra2-beyaz); color: var(--sra2-murekkep-2) }
+.s2-adimlar__cizgi { width: 18px; height: 4px; border-radius: 2px; background: var(--sra2-kart-taban) }
+.s2-adimlar .bitti .s2-adimlar__ad { background: var(--sra2-yesil); color: #fff }
+.s2-adimlar .bitti .s2-adimlar__cizgi { background: var(--sra2-yesil) }
+.s2-adimlar [aria-current="step"] .s2-adimlar__ad { background: var(--sra2-mor); color: #fff; box-shadow: 0 var(--sra2-taban-1) 0 var(--sra2-mor-taban) }
+.s2-adimlar .s2-ikon { width: 16px; height: 16px }
+
+/* ---------- bildirim şeridi ---------- */
+.s2-bildirim { display: flex; align-items: center; gap: var(--sra2-b3); padding: var(--sra2-b3) var(--sra2-b4); border-radius: var(--sra2-kose-3); background: var(--sra2-bilgi-acik); font-weight: 700 }
+.s2-bildirim__ikon { width: 44px; height: 44px; flex: none; border-radius: 50%; display: grid; place-items: center; background: var(--sra2-bilgi); color: #fff }
+.s2-bildirim__ikon .s2-ikon { width: 24px; height: 24px }
+.s2-bildirim strong { font-family: var(--sra2-yazi-baslik); font-size: var(--sra2-boy-4); margin-right: 4px }
+.s2-bildirim--basari { background: var(--sra2-basari-acik) } .s2-bildirim--basari .s2-bildirim__ikon { background: var(--sra2-basari) }
+.s2-bildirim--ipucu { background: var(--sra2-uyari-acik) } .s2-bildirim--ipucu .s2-bildirim__ikon { background: var(--sra2-gece) }
+.s2-bildirim--hata { background: var(--sra2-hata-acik) } .s2-bildirim--hata .s2-bildirim__ikon { background: var(--sra2-hata) }
+.s2-bildirim__eylem { margin-left: auto }
+
+/* ---------- kod ve sahne çerçevesi (koyu) ---------- */
+.s2-kod { background: var(--sra2-gece); color: #fff; border-radius: var(--sra2-kose-3); box-shadow: 0 var(--sra2-taban-2) 0 var(--sra2-gece-taban); overflow: hidden }
+.s2-kod__ust { display: flex; align-items: center; gap: 8px; padding: 12px 16px; font-weight: 800; font-size: var(--sra2-boy-1); color: var(--sra2-murekkep-acik) }
+.s2-kod pre { margin: 0; padding: 4px 20px 16px; font: 500 var(--sra2-boy-3)/1.75 var(--sra2-yazi-kod); overflow-x: auto }

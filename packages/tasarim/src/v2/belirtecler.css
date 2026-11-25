@@ -1,0 +1,132 @@
+/* Sivas Robotik Akademi · tasarım sistemi v2 ("Oyun") · belirteçler
+   Canlı renkler, kalın yuvarlak şekiller, basılabilir düğmeler. Krem ve lavanta zemin; kod alanı ve 3D sahne çerçevesi gece mavisi.
+   Bütün değerler .sra2 kökünde tanımlıdır: v1 sayfaları etkilenmez. Bileşenler yalnız --sra2-* değişkenlerini kullanır.
+   Kontrast: test/v2-kontrast.test.ts her yazı/zemin çiftini denetler (normal yazı 4,5:1, büyük yazı 3:1). */
+.sra2 {
+  color-scheme: light;
+
+  /* zeminler */
+  --sra2-krem: #FFF8EC;
+  --sra2-lavanta: #EEEAFF;
+  --sra2-lavanta-2: #E2DBFF;
+  --sra2-beyaz: #FFFFFF;
+  --sra2-gece: #17144A;
+  --sra2-gece-2: #2B2770;
+  --sra2-gece-taban: #0D0B33;
+
+  /* yazı */
+  --sra2-murekkep: #17144A;
+  --sra2-murekkep-2: #5A5478;
+  --sra2-murekkep-acik: #D8D5FA;   /* gece zemin üstünde ikincil yazı */
+
+  /* vurgular ve basılabilir tabanları */
+  --sra2-kirmizi: #E3262F;
+  --sra2-kirmizi-taban: #A9161E;
+  --sra2-mor: #6A48F0;
+  --sra2-mor-taban: #4A2DC2;
+  --sra2-mor-acik: #EDE9FF;
+  --sra2-yesil: #0A7A71;
+  --sra2-yesil-taban: #065952;
+  --sra2-yesil-acik: #D4F2EE;
+  --sra2-sari: #FFC531;
+  --sra2-sari-koyu: #F5A300;
+  --sra2-sari-taban: #E8C35A;
+  --sra2-sari-acik: #FFE7A3;
+  --sra2-kart-taban: #E6DDCB;
+  --sra2-lavanta-taban: #CFC6FA;
+
+  /* durum: her zaman ikon + yazıyla */
+  --sra2-basari: #0A7A71;
+  --sra2-basari-acik: #D4F2EE;
+  --sra2-uyari-acik: #FFE7A3;
+  --sra2-hata: #C21F28;
+  --sra2-hata-acik: #FFE3E4;
+  --sra2-bilgi: #2F5FD0;
+  --sra2-bilgi-acik: #DDEBFF;
+
+  /* atölye zeminleri (ikon alanı) */
+  --sra2-atolye-bilgisayar: #FFE7A3;
+  --sra2-atolye-blok: #D4F2EE;
+  --sra2-atolye-python: #FFE3E4;
+  --sra2-atolye-cpp: #EDE9FF;
+  --sra2-atolye-arduino: #DDEBFF;
+  --sra2-atolye-robotik: #FFE0CC;
+
+  /* yazı */
+  --sra2-yazi-baslik: "Baloo 2", "Nunito", system-ui, sans-serif;
+  --sra2-yazi: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --sra2-yazi-kod: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  --sra2-boy-1: 13px;
+  --sra2-boy-2: 15px;
+  --sra2-boy-3: 17px;
+  --sra2-boy-4: 20px;
+  --sra2-boy-5: 26px;
+  --sra2-boy-6: 34px;
+  --sra2-boy-7: 48px;
+  --sra2-boy-8: clamp(40px, 6vw, 64px);
+  --sra2-govde: var(--sra2-boy-2);
+
+  /* şekil */
+  --sra2-kose-1: 12px;
+  --sra2-kose-2: 18px;
+  --sra2-kose-3: 24px;
+  --sra2-kose-hap: 999px;
+  --sra2-taban-1: 4px;
+  --sra2-taban-2: 6px;
+
+  /* boşluk (4'ün katları) */
+  --sra2-b1: 4px;
+  --sra2-b2: 8px;
+  --sra2-b3: 12px;
+  --sra2-b4: 16px;
+  --sra2-b5: 20px;
+  --sra2-b6: 24px;
+  --sra2-b8: 32px;
+  --sra2-b10: 40px;
+  --sra2-b12: 48px;
+
+  /* dokunma hedefi */
+  --sra2-hedef: 44px;
+  --sra2-hedef-buyuk: 52px;
+
+  /* hareket */
+  --sra2-hizli: 120ms;
+  --sra2-orta: 200ms;
+  --sra2-yavas: 320ms;
+  --sra2-yay: cubic-bezier(.34, 1.56, .64, 1);
+  --sra2-yumusak: cubic-bezier(.2, .7, .3, 1);
+
+  --sra2-odak: 0 0 0 3px var(--sra2-krem), 0 0 0 6px var(--sra2-mor);
+
+  font-family: var(--sra2-yazi);
+  font-size: var(--sra2-govde);
+  line-height: 1.5;
+  color: var(--sra2-murekkep);
+  background: var(--sra2-krem);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* seviye düzeyi: renkler aynı kalır; ölçü ve yoğunluk değişir */
+.sra2[data-seviye="okul-oncesi"] {
+  --sra2-govde: var(--sra2-boy-3);
+  --sra2-hedef: 56px;
+  --sra2-hedef-buyuk: 64px;
+  --sra2-kose-2: 22px;
+  --sra2-kose-3: 28px;
+}
+.sra2[data-seviye="ilkokul"] {
+  --sra2-govde: var(--sra2-boy-3);
+  --sra2-hedef: 48px;
+  --sra2-hedef-buyuk: 56px;
+}
+.sra2[data-seviye="lise"] {
+  --sra2-taban-1: 3px;
+  --sra2-taban-2: 4px;
+  --sra2-kose-2: 14px;
+  --sra2-kose-3: 18px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sra2 { --sra2-hizli: 1ms; --sra2-orta: 1ms; --sra2-yavas: 1ms; --sra2-yay: linear; }
+  .sra2 *, .sra2 *::before, .sra2 *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; }
+}

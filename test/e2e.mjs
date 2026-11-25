@@ -322,6 +322,51 @@ for (const [ad, g, y] of BOYUTLAR) {
   await ctx.close();
 }
 
+/* ---------------- Tasarım sistemi v2 vitrini ---------------- */
+for (const [ad, g, y] of BOYUTLAR) {
+  console.log(`\ntasarım v2 · ${ad}`);
+  const { ctx, p, hatalar } = await sayfaAc(g, y, { deneme: true });
+  await p.goto(ADRES + "#vitrin/tasarim"); await hazir(p);
+  await p.waitForSelector(".sra2 .s2-dugme");
+  await p.evaluate(() => document.fonts.ready);
+  ok(await tasmaYok(p), "vitrinde taşma yok");
+  const fontlar = await p.evaluate(() => ["Baloo 2", "Nunito"].map((ad) => [...document.fonts].some((f) => f.family.replace(/["']/g, "") === ad && f.status === "loaded" && /U\+0?100-0?2BA/i.test(f.unicodeRange))));
+  ok(fontlar.every(Boolean), "Baloo 2 ve Nunito Türkçe harf kümesiyle (latin-ext) paketten yüklendi");
+  const renk = await p.textContent('[data-renk="kirmizi"]');
+  ok(renk === "#E3262F", "renk kodları belirteçten okunuyor: " + renk);
+  const yukseklik = async () => p.$eval(".s2-dugme--ana", (e) => e.getBoundingClientRect().height);
+  const once = await yukseklik();
+  ok(once >= 44, `düğme dokunma hedefi en az 44 px (${once})`);
+  await p.click('#tv-seviye [data-deger="okul-oncesi"]');
+  const sonra = await yukseklik();
+  ok(sonra >= 64 && (await p.getAttribute(".sra2", "data-seviye")) === "okul-oncesi", `okul öncesinde düğmeler büyüyor (${once} → ${sonra} px)`);
+  if (ad === "masaustu") {
+    /* klavye: seçici grubunda ok tuşları, odak halkası görünür */
+    await p.focus('#tv-seviye [aria-checked="true"]');
+    await p.keyboard.press("ArrowRight");
+    const odak = await p.evaluate(() => ({ deger: document.activeElement?.getAttribute("data-deger"), golge: getComputedStyle(document.activeElement).boxShadow }));
+    ok(odak.deger === "ilkokul" && /rgb\(106, 72, 240\)/.test(odak.golge), "ok tuşuyla seviye değişiyor ve mor odak halkası görünüyor");
+    await p.click('#tv-seviye [data-deger=""]');
+    await p.screenshot({ path: resolve(EKRAN, `tasarim-v2-${ad}.png`), fullPage: true });
+    await p.click('#tv-seviye [data-deger="okul-oncesi"]');
+    await p.screenshot({ path: resolve(EKRAN, `tasarim-v2-okul-oncesi-${ad}.png`) });
+  } else {
+    await p.click('#tv-seviye [data-deger=""]');
+    await p.screenshot({ path: resolve(EKRAN, `tasarim-v2-${ad}.png`), fullPage: ad === "telefon" ? false : true });
+  }
+  ok(hatalar.length === 0, "vitrinde konsol hatası yok" + (hatalar.length ? ": " + hatalar.slice(0, 2).join(" | ") : ""));
+  await ctx.close();
+}
+{
+  console.log("\ntasarım v2 · hareketi azalt");
+  const { ctx, p } = await sayfaAc(1280, 800, { deneme: true }, true);
+  await p.goto(ADRES + "#vitrin/tasarim"); await hazir(p);
+  await p.waitForSelector(".sra2 .s2-dugme");
+  const sure = await p.$eval(".s2-dugme", (e) => getComputedStyle(e).transitionDuration);
+  ok(sure.split(",").every((x) => parseFloat(x) <= 0.001), "hareketi azalt ayarında geçişler kapalı: " + sure);
+  await ctx.close();
+}
+
 /* ---------------- Fizik: Kenshin deneme sayfası ---------------- */
 for (const [ad, g, y] of BOYUTLAR) {
   console.log(`\nkenshin fizik · ${ad}`);
