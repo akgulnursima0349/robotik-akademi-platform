@@ -370,6 +370,33 @@ for (const [ad, g, y] of BOYUTLAR) {
   await ctx.close();
 }
 
+/* ---------------- Fizik: iki sumo motoru yan yana ---------------- */
+for (const [ad, g, y] of BOYUTLAR) {
+  console.log(`\nsumo karşılaştırma · ${ad}`);
+  const { ctx, p, hatalar } = await sayfaAc(g, y, { deneme: true });
+  await p.goto(ADRES + "lab/#vitrin/sumo-karsilastir"); await p.waitForSelector("body[data-hazir]", { timeout: 90000 });
+  await p.waitForSelector("body[data-sonuc]", { timeout: 120000 });
+  const [eski, yeni] = [await p.textContent("#sk-sonuc-eski"), await p.textContent("#sk-sonuc-yeni")];
+  ok(/kazandı|Berabere/.test(eski) && /kazandı|Berabere/.test(yeni), `açılışta raunt iki motorda oynadı: "${eski}" / "${yeni}"`);
+  ok(await tasmaYok(p), "karşılaştırma sayfasında taşma yok");
+  if (ad === "telefon") {
+    const [a, b] = await p.$$eval(".sk-gorunum", (e) => e.map((x) => x.getBoundingClientRect().top));
+    ok(b > a + 100, "telefonda iki görünüm alt alta");
+  }
+  await p.screenshot({ path: resolve(EKRAN, `sumo-karsilastir-${ad}.png`) });
+  if (ad === "masaustu") {
+    await p.click("#sk-toplu");
+    await p.waitForSelector("body[data-toplu]", { timeout: 240000 });
+    const satir = await p.$$eval(".sk tbody tr", (r) => r.length);
+    ok(satir === 30, `toplu karşılaştırma: 6 örnek robot × 3 diziliş = 30 raunt (${satir})`);
+    const olcum = await p.textContent("#sk-olcum");
+    ok(/aynı kazanan \d+\/30 · ortalama hesap: bugünkü \d+ ms, yeni \d+ ms/.test(olcum), "kopyalanabilir ölçüm satırı: " + olcum);
+    await p.locator(".sk-toplu").screenshot({ path: resolve(EKRAN, `sumo-karsilastir-tablo.png`) });
+  }
+  ok(hatalar.length === 0, "karşılaştırma sayfasında konsol hatası yok" + (hatalar.length ? ": " + hatalar.slice(0, 2).join(" | ") : ""));
+  await ctx.close();
+}
+
 /* ---------------- Lab 3D: RizBot labirent ---------------- */
 const SAG_EL = "while not bitti():\n    if not duvar_sag():\n        saga_don()\n        ileri()\n    elif not duvar_on():\n        ileri()\n    else:\n        sola_don()\n";
 for (const [ad, g, y] of BOYUTLAR) {

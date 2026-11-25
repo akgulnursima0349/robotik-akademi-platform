@@ -166,7 +166,11 @@ function okuma(g: Govde, rakip: Govde, zaman: number): SumoGirdi {
 }
 
 /* ---------- raunt ve maç ---------- */
-export interface SumoRobotKaresi { x: number; y: number; yon: number; sol: number; sag: number; solYol: number; sagYol: number; rakip: number[]; kenar: number[]; kaldirildi: boolean; dustu: boolean }
+export interface SumoRobotKaresi {
+  x: number; y: number; yon: number; sol: number; sag: number; solYol: number; sagYol: number; rakip: number[]; kenar: number[]; kaldirildi: boolean; dustu: boolean;
+  /** 3D fizik motorunda gövdenin tam duruşu: yükseklik (m) ve dönme dörtlüsü (x, y, z, w; y yukarı); düz motor bunu yazmaz */
+  poz?: { y: number; q: [number, number, number, number] };
+}
 export interface SumoKaresi { t: number; robotlar: [SumoRobotKaresi, SumoRobotKaresi]; temas: boolean }
 export interface RauntSonucu {
   /** 0 ya da 1: raundu kazanan; null berabere */

@@ -69,6 +69,14 @@ export class SumoSahnesi {
   private konumla(k: SumoKaresi, dusus = 0) {
     k.robotlar.forEach((r, i) => {
       const m = this.robotlar[i].kok;
+      if (r.poz) {
+        /* 3D fizik motorunun karesi: tam duruş (kaldırılma, devrilme, gerçek düşüş) */
+        m.position.set(r.x / 1000, r.poz.y, -r.y / 1000);
+        m.quaternion.set(...r.poz.q);
+        this.robotlar[i].tekerleriDondur(r.solYol, r.sagYol);
+        this.robotlar[i].bayraklar(k.t / 0.3);
+        return;
+      }
       let y = RING_YUK, egim = 0;
       if (r.dustu) { y = RING_YUK - dusus * 0.12; egim = dusus * 0.9; }
       m.position.set(r.x / 1000, y, -r.y / 1000);
@@ -97,13 +105,14 @@ export class SumoSahnesi {
         o.t = Math.min(son.t, o.t + dt * this.hiz);
         const i = Math.min(o.kareler.length - 1, Math.floor(o.t / KARAR)), a = o.kareler[i], b = o.kareler[Math.min(o.kareler.length - 1, i + 1)];
         const f = Math.max(0, Math.min(1, (o.t - a.t) / KARAR)), ara = (x: number, y: number) => x + (y - x) * f;
-        const k: SumoKaresi = { ...a, robotlar: a.robotlar.map((r, j) => ({ ...r, x: ara(r.x, b.robotlar[j].x), y: ara(r.y, b.robotlar[j].y), yon: ara(r.yon, b.robotlar[j].yon), solYol: ara(r.solYol, b.robotlar[j].solYol), sagYol: ara(r.sagYol, b.robotlar[j].sagYol) })) as SumoKaresi["robotlar"] };
+        const k: SumoKaresi = { ...a, t: o.t, robotlar: a.robotlar.map((r, j) => ({ ...r, x: ara(r.x, b.robotlar[j].x), y: ara(r.y, b.robotlar[j].y), yon: ara(r.yon, b.robotlar[j].yon), solYol: ara(r.solYol, b.robotlar[j].solYol), sagYol: ara(r.sagYol, b.robotlar[j].sagYol), poz: araPoz(r.poz, b.robotlar[j].poz, f) })) as SumoKaresi["robotlar"] };
         this.konumla(k);
         this.kareDinle(a);
         if (a.temas && !this.oncekiTemas) this.kivilcimPatlat(k);
         this.oncekiTemas = a.temas;
       } else {
-        /* raunt bitti: düşen robotun düşüşü */
+        /* raunt bitti: düşen robotun düşüşü (3D fizik karelerinde düşüş zaten kayıtlı) */
+        if (son.robotlar[0].poz) o.dusus = 1;
         o.dusus = Math.min(1, o.dusus + dt * this.hiz / 0.6);
         this.konumla(son, o.dusus);
         if (o.dusus >= 1 || !son.robotlar.some((r) => r.dustu)) { this.oynatma = null; this.kareDinle(son); o.bitir(true); }
@@ -137,4 +146,12 @@ export class SumoSahnesi {
   }
 
   kapat() { this.durdur(); this.studyo.kapat(); }
+}
+
+/** iki 3D duruş arasında ara değer (yükseklik doğrusal, dönme küresel) */
+const qa = new THREE.Quaternion(), qb = new THREE.Quaternion();
+function araPoz(a: SumoKaresi["robotlar"][0]["poz"], b: SumoKaresi["robotlar"][0]["poz"], f: number) {
+  if (!a || !b) return a;
+  qa.set(...a.q).slerp(qb.set(...b.q), f);
+  return { y: a.y + (b.y - a.y) * f, q: [qa.x, qa.y, qa.z, qa.w] as [number, number, number, number] };
 }

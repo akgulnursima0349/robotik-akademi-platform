@@ -7,9 +7,11 @@
     ".": "./src/fizik.ts",
     "./kenshin": "./src/robotlar/kenshin.ts",
     "./kenshin-parametreleri": "./src/robotlar/kenshin-parametreleri.ts",
-    "./sumo": "./src/sumo/ring.ts"
+    "./sumo": "./src/sumo/ring.ts",
+    "./sumo-raunt": "./src/sumo/raunt.ts"
   },
   "dependencies": {
-    "@dimforge/rapier3d-deterministic-compat": "0.21.0"
+    "@dimforge/rapier3d-deterministic-compat": "0.21.0",
+    "@sra/robot-motoru": "*"
   }
 }

@@ -91,6 +91,18 @@ export class SumoRingi {
     return degdi;
   }
 
+  /** iki robot birbirine değiyor mu (gövde, bıçak ya da teker) */
+  temasta(a: KenshinFizik, b: KenshinFizik): boolean {
+    let var_ = false;
+    for (const ga of [a.govde, ...a.tekerler]) for (let i = 0; i < ga.numColliders() && !var_; i++) {
+      const ca = ga.collider(i);
+      for (const gb of [b.govde, ...b.tekerler]) for (let j = 0; j < gb.numColliders() && !var_; j++) {
+        this.d.world.contactPair(ca, gb.collider(j), (m) => { for (let n = 0; n < m.numContacts(); n++) if (m.contactDist(n) <= 0.0005) var_ = true; });
+      }
+    }
+    return var_;
+  }
+
   /** Robotun sensör okumaları; ligdeki SumoGirdi biçiminde */
   okuma(k: KenshinFizik): SumoGirdi {
     const R = this.d.R, w = this.d.world, q = k.donme, p = k.konum, S = SUMO_SENSORLERI;
