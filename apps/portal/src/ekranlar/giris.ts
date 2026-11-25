@@ -1,6 +1,6 @@
 /* Tek giriş: öğrenci (sınıf kodu + takma ad + PIN) ya da öğretmen (e-posta + şifre).
    Öğrenci girişten sonra doğrudan kendi kursuna gider; öğretmen Panellerim'e. */
-import { alan, dugme, el, ikon, LOGO, uyari, type IkonAdi } from "@sra/tasarim";
+import { alan, dugme, el, ikon, LOGO, uyari, type IkonAdi } from "@sra/tasarim/bilesenler";
 import { DENEME_HESAPLARI, hataMetni, TamamlanmamisHesap } from "@sra/bulut";
 import { uygulama } from "../uygulama";
 import { altBilgi, ustKisim } from "../ortak";

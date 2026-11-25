@@ -9,7 +9,7 @@ import kapakRizbot from "../assets/kapak-rizbot.webp";
 import { uygulama } from "../uygulama";
 
 export function ustKisim(...sag: Node[]): HTMLElement {
-  const b = ustBar([...sag, el("a", "sra-dugme sra-dugme--hayalet sra-dugme--kucuk", { href: "../" }, ikon("sag-ok", "l-geri-ok"), el("span", "sra-dugme__yazi", {}, "Platform"))], "../");
+  const b = ustBar([...sag, el("a", "sra-dugme sra-dugme--hayalet sra-dugme--kucuk", { href: "../#atolye/robotik" }, ikon("sag-ok", "l-geri-ok"), el("span", "sra-dugme__yazi", {}, "Platform"))], "../");
   b.querySelector(".sra-marka small")!.textContent = "Robotik Laboratuvarı";
   return b;
 }

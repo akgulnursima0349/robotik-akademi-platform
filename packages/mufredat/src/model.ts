@@ -5,7 +5,8 @@ export type DersTuru =
   | "gorev"     // yıldızlı görev; bir öncekinden en az bir yıldız alınca açılır
   | "rehber"    // bitince işaretlenen etkinlik (kurulum rehberi gibi)
   | "lig"       // robot kaydedilince bitmiş sayılır
-  | "serbest";  // serbest çalışma; ilerlemeye sayılmaz
+  | "serbest"   // serbest çalışma; ilerlemeye sayılmaz
+  | "kurs";     // ayrı bir kursa giriş (kendi ders yapısı kursun içinde); ilerlemeye sayılmaz
 
 export interface Ders {
   kimlik: string;
@@ -20,7 +21,11 @@ export interface Ders {
   anahtar: string;
 }
 export interface Modul { kimlik: string; ad: string; aciklama: string; robot?: string; seviyeler: Seviye[]; dersler: Ders[] }
-export interface Atolye { kimlik: string; ad: string; aciklama: string; moduller: Modul[] }
+export interface Atolye {
+  kimlik: string; ad: string; aciklama: string; moduller: Modul[];
+  /** görev kilidi: her modülde ayrı başlar (varsayılan) ya da bütün atölye boyunca sürer (Blok: dünya 2'nin ilk bölümü dünya 1'in sonunu bekler) */
+  kilit?: "modul" | "atolye";
+}
 
 /** İlerleme kaynağı: yıldızlar, bayraklar ve lig robotu (Lab kaydının biçimi) */
 export interface IlerlemeKaydi { gorevler: Record<string, { yildiz?: number }>; bayrak?: Record<string, boolean>; lig?: { ad: string } | null }
@@ -57,8 +62,8 @@ function bittiMi(k: IlerlemeKaydi, d: Ders): boolean {
 }
 
 /** Bir modülün ilerlemesi. hepsiAcik: öğretmen (kilitler kalkar) */
-export function modulIlerlemesi(m: Modul, k: IlerlemeKaydi, hepsiAcik = false): ModulIlerlemesi {
-  let oncekiGorevBitti = true;
+export function modulIlerlemesi(m: Modul, k: IlerlemeKaydi, hepsiAcik = false, oncekiBitti = true): ModulIlerlemesi {
+  let oncekiGorevBitti = oncekiBitti;
   const dersler = m.dersler.map((d): DersIlerlemesi => {
     const bitti = bittiMi(k, d);
     let durum: DersDurumu = bitti ? "bitti" : "acik";
@@ -68,12 +73,25 @@ export function modulIlerlemesi(m: Modul, k: IlerlemeKaydi, hepsiAcik = false): 
     }
     return { ders: d, durum, yildiz: d.tur === "gorev" ? yildizi(k, d) : 0 };
   });
-  const sayilan = dersler.filter((d) => d.ders.tur !== "serbest");
+  const sayilan = dersler.filter((d) => d.ders.tur !== "serbest" && d.ders.tur !== "kurs");
   return {
     modul: m, dersler,
     biten: sayilan.filter((d) => d.durum === "bitti").length, sayilan: sayilan.length,
     yildiz: dersler.reduce((t, d) => t + d.yildiz, 0), enCokYildiz: m.dersler.reduce((t, d) => t + d.enCokYildiz, 0)
   };
+}
+
+/** Atölyenin bütün modülleri, kilit zinciri atölye boyunca sürüyorsa sırayla */
+export function modulIlerlemeleri(a: Atolye, k: IlerlemeKaydi, hepsiAcik = false): Map<Modul, ModulIlerlemesi> {
+  const r = new Map<Modul, ModulIlerlemesi>();
+  let onceki = true;
+  for (const m of a.moduller) {
+    const mi = modulIlerlemesi(m, k, hepsiAcik, a.kilit === "atolye" ? onceki : true);
+    const gorevler = mi.dersler.filter((d) => d.ders.tur === "gorev");
+    if (gorevler.length) onceki = gorevler[gorevler.length - 1].durum === "bitti";
+    r.set(m, mi);
+  }
+  return r;
 }
 
 /** Seviyeye önerilen modüller önce (kendi sıralarıyla), diğerleri sonra */
@@ -84,14 +102,15 @@ export function seviyeSirasi(a: Atolye, s: Seviye): { onerilen: Modul[]; diger: 
 /** Kaldığın yer: önerilen modüllerden başlayarak ilk açık ve bitmemiş, ilerlemeye sayılan ders. Hepsi bittiyse yok. */
 export function kaldigiYer(a: Atolye, k: IlerlemeKaydi, s: Seviye, hepsiAcik = false): { modul: Modul; ders: Ders } | null {
   const { onerilen, diger } = seviyeSirasi(a, s);
+  const hepsi = modulIlerlemeleri(a, k, hepsiAcik);
   for (const m of [...onerilen, ...diger]) {
-    const d = modulIlerlemesi(m, k, hepsiAcik).dersler.find((x) => x.durum === "acik" && x.ders.tur !== "serbest");
+    const d = hepsi.get(m)!.dersler.find((x) => x.durum === "acik" && x.ders.tur !== "serbest" && x.ders.tur !== "kurs");
     if (d) return { modul: m, ders: d.ders };
   }
   return null;
 }
 
 export function atolyeOzeti(a: Atolye, k: IlerlemeKaydi, hepsiAcik = false) {
-  const m = a.moduller.map((x) => modulIlerlemesi(x, k, hepsiAcik));
+  const m = [...modulIlerlemeleri(a, k, hepsiAcik).values()];
   return { moduller: m, biten: m.reduce((t, x) => t + x.biten, 0), sayilan: m.reduce((t, x) => t + x.sayilan, 0), yildiz: m.reduce((t, x) => t + x.yildiz, 0), enCokYildiz: m.reduce((t, x) => t + x.enCokYildiz, 0) };
 }

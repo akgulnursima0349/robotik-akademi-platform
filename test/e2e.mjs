@@ -51,13 +51,18 @@ for (const [ad, g, y] of BOYUTLAR) {
   await p.waitForFunction(() => [...document.images].every((i) => i.complete && i.naturalWidth > 0));
   await shot("1_karsilama");
 
-  await p.click('a.s2-atolye[data-kurs="junior"]');
+  await p.click('a.s2-atolye[data-kurs="junior"]'); await p.waitForSelector("#at-ozet");
+  ok(await p.evaluate(() => location.hash) === "#atolye/python", "Python kartı Python atölye sayfasını açıyor");
+  ok(await p.getAttribute("#at-onerilen [data-modul]", "data-modul") === "junior", "ilkokulda önerilen kurs Junior");
+  await p.click('a[data-kurs="junior"]');
   await p.waitForURL(/\/junior\/$/);
   await p.waitForFunction(() => document.querySelector("#app")?.children.length > 0);
   ok(true, "Junior kartı /junior/ adresini açtı ve Junior çalıştı");
-  await p.goBack(); await hazir(p);
+  await p.goto(ADRES); await hazir(p);
   await p.click('#as-seviye [data-deger="ortaokul"]');
-  await p.click('a.s2-atolye[data-kurs="ortaokul"]');
+  await p.click('a.s2-atolye[data-kurs="ortaokul"]'); await p.waitForSelector("#at-ozet");
+  ok(await p.getAttribute("#at-onerilen [data-modul]", "data-modul") === "atolye", "ortaokulda önerilen kurs Python Atölyesi");
+  await p.click('a[data-kurs="ortaokul"]');
   await p.waitForURL(/\/ortaokul\/$/);
   await p.waitForFunction(() => document.querySelector("#app, body")?.innerText.length > 20);
   ok(true, "Python Atölyesi kartı /ortaokul/ adresini açtı");
@@ -108,7 +113,7 @@ for (const [ad, g, y] of BOYUTLAR) {
   ok((await p.$$('.p-kursgrup[data-kurs="junior"] .p-sinif[data-kod]')).length === 1 && (await p.$$('.p-kursgrup[data-kurs="ortaokul"] .p-sinif[data-kod]')).length === 1, "sınıflar kurslara göre gruplandı");
   ok(await p.getAttribute('.p-sinif[data-kod="JNR123"] .p-sinif__git a:not([data-rapor])', "href") === "junior/#panel/s1", "Junior sınıfının paneli Junior'ın kendi paneline gidiyor");
   ok(await tasmaYok(p), "Panellerim'de yatay taşma yok");
-  ok(await p.evaluate(() => document.querySelector(".sra-ustbar__ic").getBoundingClientRect().height < 80), "oturum açıkken üst bar tek satır");
+  ok(await p.evaluate(() => document.querySelector(".as-bar").getBoundingClientRect().height < 80), "oturum açıkken üst bar tek satır");
   await shot("4_panellerim");
   await p.selectOption('.p-sinif[data-kod="ORT456"] select', "junior");
   await p.waitForFunction(() => document.querySelectorAll('.p-kursgrup[data-kurs="junior"] .p-sinif[data-kod]').length === 2);
@@ -135,7 +140,7 @@ for (const [ad, g, y] of BOYUTLAR) {
   const y2 = await sayfaAc(g, y, {});
   await y2.p.goto(ADRES); await hazir(y2.p);
   ok(!(await y2.p.isVisible("#p-giris")), "hesapsız modda Giriş yap düğmesi yok");
-  ok((await y2.p.$$("a.s2-atolye[data-kurs]")).length === 3, "hesapsız modda kartlar doğrudan kursa gidiyor");
+  ok((await y2.p.$$("a.s2-atolye[data-kurs]")).length === 3, "hesapsız modda üç atölye açık");
   await y2.p.goto(ADRES + "#giris"); await hazir(y2.p);
   ok(/hesapsız/.test(await y2.p.textContent(".p-giris__kutu")), "hesapsız modda giriş ekranı açıklama gösteriyor");
   ok(y2.hatalar.length === 0, "hesapsız modda konsol hatası yok");
@@ -153,7 +158,7 @@ for (const [ad, g, y] of BOYUTLAR) {
     const k = await p.$$eval("a.s2-atolye[data-kurs]", (a) => a.map((x) => x.dataset.kurs).join(","));
     const kl = await p.$$eval(".s2-atolye--kilitli", (a) => a.map((x) => [x.hasAttribute("href"), x.getAttribute("aria-disabled"), /Yakında/.test(x.textContent)]));
     ok(k === acik && kl.length === kilitli && kl.every(([h, d, y]) => !h && d === "true" && y), `${sev}: açık ${acik}, ${kilitli} kilitli (bağlantısız, "Yakında")`);
-    ok((await p.getAttribute(".sra2", "data-seviye")) === sev, `${sev}: sayfa seviyesi uygulandı`);
+    ok((await p.getAttribute(".as.sra2", "data-seviye")) === sev, `${sev}: sayfa seviyesi uygulandı`);
     ok(await tasmaYok(p), `${sev}: taşma yok`);
     await p.locator("#atolyeler").screenshot({ path: resolve(EKRAN, `ana-${sev}-${ad}.png`) });
   }
@@ -176,8 +181,8 @@ for (const [ad, g, y] of BOYUTLAR) {
     ok(await p.getAttribute('#as-seviye [aria-checked="true"]', "data-deger") === "okul-oncesi", "klavyeyle seviye seçiliyor");
     await p.keyboard.press("Tab");
     ok(await p.evaluate(() => document.activeElement?.dataset.kurs) === "ilkokul", "Tab sonraki odağı ilk açık atölye kartına taşıyor (kilitli kart atlanıyor)");
-    await p.keyboard.press("Enter"); await p.waitForURL(/\/blok\/$/);
-    ok(true, "Enter ile kart açılıyor");
+    await p.keyboard.press("Enter"); await p.waitForSelector("#at-ozet");
+    ok(await p.evaluate(() => location.hash) === "#atolye/kodla-oyna", "Enter ile kart Kodla Oyna atölyesini açıyor");
   }
   ok(hatalar.length === 0, "ana sayfada konsol hatası yok" + (hatalar.length ? ": " + hatalar.slice(0, 2).join(" | ") : ""));
   await ctx.close();
@@ -217,6 +222,43 @@ for (const [ad, g, y] of BOYUTLAR) {
     ok(await p.evaluate(() => location.hash) === "#atolyeler", "geri bağlantısı ana sayfadaki atölyelere dönüyor");
   }
   ok(hatalar.length === 0, "atölye sayfasında konsol hatası yok" + (hatalar.length ? ": " + hatalar.slice(0, 2).join(" | ") : ""));
+  await ctx.close();
+}
+
+/* ---------------- Kodla Oyna ve Python atölyeleri, eski bağlantılar, dönüşler ---------------- */
+for (const [ad, g, y] of BOYUTLAR) {
+  console.log(`\natölyeler ve bağlantılar · ${ad}`);
+  const { ctx, p, hatalar } = await sayfaAc(g, y, { deneme: true });
+  await p.goto(ADRES + "#atolye/kodla-oyna"); await p.waitForSelector("#at-ozet");
+  ok((await p.$$("[data-modul]")).length === 3 && (await p.getAttribute('.at-ders[aria-current="step"]', "data-ders")) === "1-1", "Kodla Oyna: üç dünya, ilk bölüm şimdiki");
+  ok(await tasmaYok(p) && await p.evaluate(() => [...document.querySelectorAll(".at-ust *, .at-govde *")].every((e) => e.getBoundingClientRect().right <= innerWidth + 1)), "Kodla Oyna sayfasında taşma yok");
+  await p.evaluate(() => localStorage.setItem("sra-blok-v1", JSON.stringify({ yildiz: { "1-1": 3, "1-2": 2, "1-3": 1, "1-4": 3 }, deneme: {}, program: {} })));
+  await p.reload(); await p.waitForSelector("#at-ozet");
+  ok(await p.getAttribute('.at-ders[aria-current="step"]', "data-ders") === "2-1" && /4 \/ 12/.test(await p.textContent("#at-ozet")), "Blok kaydından: dünya 1 bitti, kaldığın yer dünya 2'nin ilk bölümü");
+  await p.screenshot({ path: resolve(EKRAN, `atolye-kodla-oyna-${ad}.png`), fullPage: true });
+  await p.click("#at-devam"); await p.waitForURL(/\/blok\/#b\/2-1$/); await hazir(p);
+  ok(true, "devam düğmesi Blok'ta doğru bölümü açtı");
+  await p.goto(ADRES + "blok/"); await hazir(p);
+  await p.click('a[aria-label="Platforma dön"]'); await p.waitForSelector("#at-ozet");
+  ok(await p.evaluate(() => location.hash) === "#atolye/kodla-oyna", "Blok'tan Platform: Kodla Oyna atölyesine dönüyor");
+  await p.goto(ADRES + "lab/"); await hazir(p);
+  await p.click('a[href="../#atolye/robotik"]'); await p.waitForSelector("#at-ozet");
+  ok(await p.evaluate(() => location.hash) === "#atolye/robotik", "Lab'dan Platform: Robotik atölyesine dönüyor");
+  await p.goto(ADRES + "#atolye/python"); await p.waitForSelector("#at-ozet");
+  ok((await p.$$("a[data-kurs=junior]")).length === 1 && (await p.$$("a[data-kurs=ortaokul]")).length === 1, "Python: Junior ve Python Atölyesi kursa götürüyor");
+  await p.screenshot({ path: resolve(EKRAN, `atolye-python-${ad}.png`), fullPage: true });
+  /* eski bağlantılar */
+  await p.goto(ADRES + "#kurslar"); await p.waitForSelector("#atolyeler");
+  ok(await p.evaluate(() => document.getElementById("atolyeler").getBoundingClientRect().top < innerHeight), "#kurslar ana sayfadaki atölyelere götürüyor");
+  await p.goto(ADRES + "#atolye/olmayan"); await p.waitForSelector("#atolyeler");
+  ok(true, "bilinmeyen atölye ana sayfaya düşüyor");
+  await p.goto(ADRES + "#yakinda/ortaokul"); await hazir(p);
+  ok(await tasmaYok(p), "#yakinda sayfası açılıyor");
+  await p.goto(ADRES + "#giris"); await hazir(p);
+  await p.screenshot({ path: resolve(EKRAN, `giris-v2-${ad}.png`), fullPage: true });
+  ok(await p.evaluate(() => getComputedStyle(document.querySelector(".p-giris__kutu")).fontFamily.includes("Nunito")), "giriş ekranı yeni yazı tipinde");
+  ok(!(await p.evaluate(() => [...document.styleSheets].some((ss) => { try { return [...ss.cssRules].some((r) => r.cssText.includes("Lexend")); } catch { return false; } }))), "portal eski stil dosyasını (Lexend) yüklemiyor");
+  ok(hatalar.length === 0, "konsol hatası yok" + (hatalar.length ? ": " + hatalar.slice(0, 2).join(" | ") : ""));
   await ctx.close();
 }
 
@@ -418,7 +460,7 @@ for (const [ad, g, y] of BOYUTLAR) {
   ok(once >= 44, `düğme dokunma hedefi en az 44 px (${once})`);
   await p.click('#tv-seviye [data-deger="okul-oncesi"]');
   const sonra = await yukseklik();
-  ok(sonra >= 64 && (await p.getAttribute(".sra2", "data-seviye")) === "okul-oncesi", `okul öncesinde düğmeler büyüyor (${once} → ${sonra} px)`);
+  ok(sonra >= 64 && (await p.getAttribute(".tv.sra2", "data-seviye")) === "okul-oncesi", `okul öncesinde düğmeler büyüyor (${once} → ${sonra} px)`);
   if (ad === "masaustu") {
     /* klavye: seçici grubunda ok tuşları, odak halkası görünür */
     await p.focus('#tv-seviye [aria-checked="true"]');
@@ -604,7 +646,7 @@ for (const [ad, g, y] of BOYUTLAR) {
   const { ctx, p, hatalar } = await sayfaAc(g, y, { deneme: true }, true);
   const shot = (n) => p.screenshot({ path: `${EKRAN}/blok_${ad}_${n}.png`, fullPage: true });
   await p.goto(ADRES); await hazir(p);
-  await p.click('a.s2-atolye[data-kurs="ilkokul"]'); await p.waitForURL(/\/blok\/$/); await hazir(p);
+  await p.goto(ADRES + "blok/"); await hazir(p);
   ok((await p.$$(".bk-dunya")).length === 3 && (await p.$$("a.bk-durak")).length === 1, "Blok: 3 dünya, ilk bölüm açık");
   ok(await tasmaYok(p), "Blok haritasında taşma yok");
   await shot("1_harita");

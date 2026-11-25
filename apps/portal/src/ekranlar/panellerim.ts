@@ -1,6 +1,6 @@
 /* Öğretmenin sınıfları, kurslara göre. Her sınıfın kursu buradan ayarlanır; panel bağlantısı o kursun kendi paneline gider.
    Birleşik panel ve öğrenme analitiği P4'te. */
-import { el, ikon, rozet, uyari } from "@sra/tasarim";
+import { el, ikon, rozet, uyari } from "@sra/tasarim/bilesenler";
 import { hataMetni, KURS_KIMLIKLERI, KURSLAR, Ogretmen, panelYolu, type KursKimligi, type Sinif } from "@sra/bulut";
 import { uygulama } from "../uygulama";
 import { altBilgi, ustKisim } from "../ortak";

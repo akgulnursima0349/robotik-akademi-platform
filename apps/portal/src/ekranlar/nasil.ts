@@ -1,5 +1,5 @@
 /* "Nasıl kuruldu?": platformun mühendislik tarafı. Sunumun son dakikası için. */
-import { el, ikon, type IkonAdi } from "@sra/tasarim";
+import { el, ikon, type IkonAdi } from "@sra/tasarim/bilesenler";
 import { altBilgi, ustKisim } from "../ortak";
 
 const sema = () => {
@@ -46,14 +46,14 @@ const ILKELER = [
   "Öğrencinin yazdığı kod sunucuda çalıştırılmaz; yalnızca metin olarak saklanır.",
   "Reklam, izleme ya da üçüncü taraf analitik servisi yok.",
   "Gizli anahtar hiçbir zaman sitede ya da depoda bulunmaz; derleme betiği yanlış ayarı reddeder.",
-  "Demo, gerçek öğrencilerin bulunduğu veritabanından ayrı bir projede çalışır."
+  "Deneme modu tarayıcı içindeki sahte sunucuyla çalışır; gerçek veritabanına hiç dokunmaz."
 ];
 
 export function nasil(root: HTMLElement) {
   const ana = el("main", "n-sayfa sra-sarmal", { id: "ana" },
     el("a", "l-geri", { href: "#" }, "← Ana sayfa"),
     el("div", "n-bas sra-belir", {}, el("p", "p-kahraman__ust", {}, "Mühendislik"), el("h1", "", {}, "Nasıl kuruldu?"),
-      el("p", "", {}, "Platform, ilkokuldan ortaokula üç kursu, bir robot laboratuvarını ve öğretmen panelini tek adreste toplar. Her parçası test edilir; çocuk verisi en aza indirilir; internet olmadan da çalışır.")),
+      el("p", "", {}, "Platform, okul öncesinden liseye atölyeleri, bir robot laboratuvarını ve öğretmen panelini tek adreste toplar. Her parçası test edilir; çocuk verisi en aza indirilir; internet olmadan da çalışır.")),
     el("section", "n-kart sra-kart", { "aria-labelledby": "n-yapi" }, el("h2", "", { id: "n-yapi" }, "Yapı"), el("p", "n-kaydir", {}, "Şemayı yana kaydırabilirsin →"), el("div", "n-sema-kap", { tabindex: "0", "aria-label": "Yapı şeması (yana kaydırılabilir)" }, sema())),
     el("section", "n-izgara", { "aria-label": "Teknik özellikler" }, ...KARTLAR.map(([i, b, a]) => el("article", "n-ozellik sra-kart", {}, ikon(i, "n-ozellik__ikon"), el("h3", "", {}, b), el("p", "", {}, a)))),
     el("div", "n-iki", {},

@@ -1,6 +1,6 @@
 /* Sınıf raporu: özet, kursun etkisi, kazanım grafiği, kazanım ısı haritası, en zor bölümler, destek listesi.
    Bütün hesaplar @sra/analitik'te (testli); bu dosya yalnızca gösterir. */
-import { dugme, el, ikon, uyari } from "@sra/tasarim";
+import { dugme, el, ikon, uyari } from "@sra/tasarim/bilesenler";
 import { hataMetni, KURSLAR, Ogretmen, type RaporSatiri } from "@sra/bulut";
 import { csv, destekGerekenler, DURUM_ACIKLAMA, enZorBolumler, isiHaritasi, KAZANIMLAR, kazanimOzeti, kursEtkisi, type HucreDurumu, type RaporOgrenci } from "@sra/analitik";
 import { uygulama } from "../uygulama";

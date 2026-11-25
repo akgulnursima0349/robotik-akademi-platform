@@ -11,9 +11,10 @@ export type AtolyeKimligi = "bilgisayar" | "blok" | "python" | "cpp" | "arduino"
 export type Hedef = { kurs: KursKimligi | "lab"; yol: string } | null;
 export interface Atolye { kimlik: AtolyeKimligi; ad: string; aciklama: string; hedef: Hedef }
 
-const BLOK: Hedef = { kurs: "ilkokul", yol: "blok/" };
-const JUNIOR: Hedef = { kurs: "junior", yol: "junior/" };
-const PYTHON: Hedef = { kurs: "ortaokul", yol: "ortaokul/" };
+/* kartlar atölye sayfalarına gider; dersler ve kurslar oradan açılır */
+const BLOK: Hedef = { kurs: "ilkokul", yol: "#atolye/kodla-oyna" };
+const JUNIOR: Hedef = { kurs: "junior", yol: "#atolye/python" };
+const PYTHON: Hedef = { kurs: "ortaokul", yol: "#atolye/python" };
 /** Robotik atölyesinin kendi sayfası (modüller, dersler, ilerleme); görevler Lab'da açılır */
 const LAB: Hedef = { kurs: "lab", yol: "#atolye/robotik" };
 

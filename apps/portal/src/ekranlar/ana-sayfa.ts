@@ -9,6 +9,7 @@ import { acilisSeviyesi, SEVIYE_ADLARI, SEVIYE_ATOLYELERI, seviyeYaz, type Seviy
 const STIL = `
 .as{min-height:100vh;display:flex;flex-direction:column}
 .as-ust{background:var(--sra2-lavanta);border-radius:0 0 40px 40px;padding:18px clamp(16px,4vw,48px) 44px;position:relative;overflow:hidden}
+.as-ust.as-ust--kisa{padding-bottom:18px;border-radius:0 0 32px 32px}
 .as-ust__sus{position:absolute;inset:0;pointer-events:none}
 .as-bar{position:relative;display:flex;align-items:center;gap:12px;max-width:1184px;margin:0 auto}
 .as-marka{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;font:800 20px/1 var(--sra2-yazi-baslik)}

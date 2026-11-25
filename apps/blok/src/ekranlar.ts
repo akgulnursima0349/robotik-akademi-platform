@@ -11,7 +11,7 @@ import { ses } from "./ses";
 import { uygulama } from "./uygulama";
 
 const ustKisim = (...sag: Node[]) => {
-  const b = ustBar([...sag, el("a", "sra-dugme sra-dugme--hayalet sra-dugme--kucuk", { href: "../", "aria-label": "Platforma dön" }, ikon("panel"), el("span", "sra-dugme__yazi", {}, "Platform"))], "../");
+  const b = ustBar([...sag, el("a", "sra-dugme sra-dugme--hayalet sra-dugme--kucuk", { href: "../#atolye/kodla-oyna", "aria-label": "Platforma dön" }, ikon("panel"), el("span", "sra-dugme__yazi", {}, "Platform"))], "../");
   b.querySelector(".sra-marka small")!.textContent = "Blok Atölyesi";
   return b;
 };

@@ -1,0 +1,106 @@
+/* v1 bileşenlerini (dugme, alan, uyari, rozet, kart) ve v1 belirteçlerine (--sra-*) dayanan sayfa stillerini v2 görünümüne taşır.
+   v1 stil.css yerine yüklenir; yalnız .sra2 kökünün içinde geçerlidir. Portal'ın giriş, Panellerim, rapor ve "Nasıl kuruldu"
+   ekranları bununla yeni görünümde çalışır; ekranların yapısı ve davranışı değişmez. */
+
+/* sayfa temeli (v1'in genel kuralları) */
+html { -webkit-text-size-adjust: 100% }
+body { margin: 0; background: var(--sra2-krem, #FFF8EC) }
+[hidden] { display: none !important }
+
+.sra2 {
+  --sra-zemin: var(--sra2-krem);
+  --sra-yuzey: var(--sra2-beyaz);
+  --sra-yuzey-2: #FFFCF5;
+  --sra-murekkep: var(--sra2-murekkep);
+  --sra-murekkep-2: var(--sra2-murekkep-2);
+  --sra-murekkep-3: #605B78;
+  --sra-cizgi: #EFE6D6;
+  --sra-cizgi-2: var(--sra2-kart-taban);
+  --sra-vurgu: var(--sra2-kirmizi);
+  --sra-vurgu-2: var(--sra2-kirmizi-taban);
+  --sra-vurgu-acik: var(--sra2-hata-acik);
+  --sra-basari: var(--sra2-yesil);
+  --sra-basari-acik: var(--sra2-yesil-acik);
+  --sra-hata: var(--sra2-hata);
+  --sra-hata-acik: var(--sra2-hata-acik);
+  --sra-bilgi: var(--sra2-bilgi);
+  --sra-bilgi-acik: var(--sra2-bilgi-acik);
+  --sra-kurs-ilkokul: #F5A300;
+  --sra-kurs-junior: var(--sra2-yesil);
+  --sra-kurs-ortaokul: var(--sra2-kirmizi);
+  --sra-kurs-lab: var(--sra2-mor);
+  --sra-yazi: var(--sra2-yazi);
+  --sra-yazi-kod: var(--sra2-yazi-kod);
+  --sra-yazi-xs: 13px;
+  --sra-yazi-s: 15px;
+  --sra-yazi-m: 17px;
+  --sra-yazi-l: 20px;
+  --sra-yazi-xl: clamp(28px, 3.6vw, 36px);
+  --sra-yazi-xxl: clamp(34px, 5.4vw, 56px);
+  --sra-bosluk-1: 4px; --sra-bosluk-2: 8px; --sra-bosluk-3: 12px; --sra-bosluk-4: 16px;
+  --sra-bosluk-5: 24px; --sra-bosluk-6: 32px; --sra-bosluk-7: 48px; --sra-bosluk-8: 64px;
+  --sra-kose: 18px;
+  --sra-kose-s: 12px;
+  --sra-kose-l: 24px;
+  --sra-golge: 0 6px 0 var(--sra2-kart-taban);
+  --sra-golge-ust: 0 8px 0 var(--sra2-lavanta-taban);
+  --sra-gecis: var(--sra2-orta) var(--sra2-yumusak);
+  --sra-genislik: 1184px;
+  min-height: 100vh;
+}
+/* temel kurallar düşük özgüllükle (:where): bileşenlerin kendi renk ve yazısı her zaman kazanır */
+:where(.sra2) :where(a) { color: inherit }
+:where(.sra2) :where(button, input, select) { font: inherit; color: inherit }
+:where(.sra2) :where(h1, h2, h3) { font-family: var(--sra2-yazi-baslik); font-weight: 800; letter-spacing: 0 }
+:where(.sra2) .sra-sarmal { width: 100%; max-width: var(--sra-genislik); margin: 0 auto; padding-inline: clamp(16px, 4vw, 48px) }
+:where(.sra2) .sra-gizli { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap }
+:where(.sra2) .sra-belir { animation: s2-belir var(--sra2-yavas) var(--sra2-yumusak) both }
+@keyframes s2-belir { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: none } }
+
+/* ikon */
+:where(.sra2 .sra-ikon) { width: 1.25em; height: 1.25em; flex: none; display: inline-block; vertical-align: -.25em }
+:where(.sra2 .sra-ikon svg) { width: 100%; height: 100%; display: block }
+
+/* düğme → v2 basılabilir düğme */
+:where(.sra2) .sra-dugme {
+  --zemin: var(--sra2-beyaz); --yazi: var(--sra2-murekkep); --taban: var(--sra2-kart-taban);
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: var(--sra2-hedef-buyuk); padding: 0 22px;
+  border: 0; border-radius: var(--sra2-kose-2); background: var(--zemin); color: var(--yazi); font: 800 var(--sra2-boy-3)/1 var(--sra2-yazi);
+  text-decoration: none; cursor: pointer; white-space: nowrap; box-shadow: 0 var(--sra2-taban-1) 0 var(--taban);
+  transition: transform var(--sra2-hizli) var(--sra2-yumusak), box-shadow var(--sra2-hizli);
+}
+:where(.sra2) .sra-dugme:active { transform: translateY(var(--sra2-taban-1)); box-shadow: none }
+:where(.sra2) .sra-dugme:focus-visible { outline: none; box-shadow: 0 var(--sra2-taban-1) 0 var(--taban), var(--sra2-odak) }
+:where(.sra2) .sra-dugme--ana { --zemin: var(--sra2-kirmizi); --yazi: #fff; --taban: var(--sra2-kirmizi-taban) }
+:where(.sra2) .sra-dugme--hayalet { --zemin: transparent; --taban: transparent; box-shadow: none; color: var(--sra2-mor-taban) }
+:where(.sra2) .sra-dugme--hayalet:hover { background: var(--sra2-mor-acik) }
+:where(.sra2) .sra-dugme--kucuk { min-height: var(--sra2-hedef); padding: 0 16px; font-size: var(--sra2-boy-2); border-radius: var(--sra2-kose-1) }
+:where(.sra2) .sra-dugme--blok { width: 100% }
+:where(.sra2) .sra-dugme:disabled, :where(.sra2) .sra-dugme[aria-disabled="true"] { --zemin: #EFEAE0; --yazi: #605B78; --taban: #DCD3C2; cursor: not-allowed; transform: none }
+
+/* rozet → hap */
+:where(.sra2) .sra-rozet { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 999px; font-size: var(--sra2-boy-1); font-weight: 800; line-height: 1.5; background: var(--sra2-sari-acik); color: var(--sra2-murekkep); border: 0 }
+:where(.sra2) .sra-rozet--renkli { background: color-mix(in srgb, var(--renk) 14%, #fff); color: color-mix(in srgb, var(--renk) 70%, #000) }
+:where(.sra2) .sra-rozet--koyu { background: var(--sra2-gece); color: #fff }
+
+/* kart */
+:where(.sra2) .sra-kart { background: var(--sra2-beyaz); border: 0; border-radius: var(--sra2-kose-3); box-shadow: 0 var(--sra2-taban-2) 0 var(--sra2-kart-taban) }
+:where(.sra2) .sra-kurs__etiket { font-size: var(--sra2-boy-1); font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: color-mix(in srgb, var(--renk) 75%, #000) }
+
+/* form */
+:where(.sra2) .sra-alan { display: flex; flex-direction: column; gap: 6px; font-weight: 800; font-size: var(--sra2-boy-2) }
+:where(.sra2) .sra-alan input, .sra2 select {
+  min-height: 52px; padding: 0 16px; border-radius: var(--sra2-kose-1); border: 2px solid var(--sra2-kart-taban); background: var(--sra2-beyaz);
+  font-size: 17px; font-weight: 700; transition: border-color var(--sra2-hizli), box-shadow var(--sra2-hizli)
+}
+:where(.sra2) .sra-alan input:hover { border-color: var(--sra2-lavanta-taban) }
+:where(.sra2) .sra-alan input:focus, .sra2 select:focus { outline: none; border-color: var(--sra2-mor); box-shadow: 0 0 0 4px var(--sra2-mor-acik) }
+:where(.sra2) .sra-alan__ipucu { font-weight: 600; color: var(--sra2-murekkep-2); font-size: var(--sra2-boy-1) }
+:where(.sra2) .sra-alan--kod input { font-family: var(--sra2-yazi-kod); letter-spacing: .12em; text-transform: uppercase }
+:where(.sra2) .sra-alan--pin input { font-family: var(--sra2-yazi-kod); letter-spacing: .4em; max-width: 200px }
+
+/* uyarı → bildirim şeridi */
+:where(.sra2) .sra-uyari { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border-radius: var(--sra2-kose-2); font-size: var(--sra2-boy-2); font-weight: 700; line-height: 1.5; border: 0; background: var(--sra2-bilgi-acik); color: var(--sra2-murekkep) }
+:where(.sra2) .sra-uyari .sra-ikon { margin-top: 2px; color: var(--sra2-bilgi) }
+:where(.sra2) .sra-uyari--hata { background: var(--sra2-hata-acik) } .sra2 .sra-uyari--hata .sra-ikon { color: var(--sra2-hata) }
+:where(.sra2) .sra-uyari--basari { background: var(--sra2-yesil-acik) } .sra2 .sra-uyari--basari .sra-ikon { color: var(--sra2-yesil) }

@@ -1,5 +1,7 @@
 /* Portal girişi: hash yönlendirme. #giris, #panellerim, #yakinda/<kurs>, geri kalan her şey karşılama. */
-import "@sra/tasarim";
+/* yeni görünüm: v2 belirteçleri ve bileşenleri; v1 bileşenleri uyum katmanıyla aynı görünümde (v1 stil.css yüklenmez) */
+import "@sra/tasarim/v2";
+import "@sra/tasarim/v2/uyum.css";
 import "./portal.css";
 import { uygulama } from "./uygulama";
 import { anaSayfa } from "./ekranlar/ana-sayfa";

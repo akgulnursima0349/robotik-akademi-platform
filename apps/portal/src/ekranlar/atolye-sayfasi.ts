@@ -3,14 +3,22 @@
    modüller önce. İlerleme atölyenin bugünkü kaydından okunur (Robotik: Lab'ın kaydı); dersler bugünkü ekranlarda açılır. */
 import { dugme, el, hap, ikon, kok, parcaliIlerleme, yildizlar } from "@sra/tasarim/v2";
 import { Ogrenci, Ogretmen } from "@sra/bulut";
-import { atolyeOzeti, kaldigiYer, kayitOku, LAB_KAYIT_ANAHTARI, modulIlerlemesi, ROBOTIK, seviyeSirasi, type Atolye, type IlerlemeKaydi, type Modul } from "@sra/mufredat";
+import { atolyeOzeti, BLOK_KAYIT_ANAHTARI, blokKaydiOku, kaldigiYer, kayitOku, KODLA_OYNA, LAB_KAYIT_ANAHTARI, modulIlerlemeleri, PYTHON, ROBOTIK, seviyeSirasi, type Atolye, type IlerlemeKaydi, type Modul } from "@sra/mufredat";
 import { uygulama } from "../uygulama";
 import { acilisSeviyesi, SEVIYE_ADLARI } from "../atolyeler";
 import { stilEkle, ustCubuk } from "./ana-sayfa";
 
+const oku = (anahtar: string) => { try { return localStorage.getItem(anahtar); } catch { return null; } };
 const ATOLYELER: Record<string, { atolye: Atolye; kayit: () => IlerlemeKaydi }> = {
-  robotik: { atolye: ROBOTIK, kayit: () => { try { return kayitOku(localStorage.getItem(LAB_KAYIT_ANAHTARI)); } catch { return kayitOku(null); } } }
+  robotik: { atolye: ROBOTIK, kayit: () => kayitOku(oku(LAB_KAYIT_ANAHTARI)) },
+  "kodla-oyna": { atolye: KODLA_OYNA, kayit: () => blokKaydiOku(oku(BLOK_KAYIT_ANAHTARI)) },
+  python: { atolye: PYTHON, kayit: () => kayitOku(null) }
 };
+function kursDugmesi(ad: string, ek: string, kendi: boolean, href: string, kurs: string) {
+  const d = dugme({ metin: ad, ek, tur: kendi ? "ana" : "ikincil", ikon: "ileri", ikonSonda: true, href });
+  d.dataset.kurs = kurs;
+  return d;
+}
 export const atolyeVarMi = (k: string) => k in ATOLYELER;
 
 const STIL = `
@@ -73,7 +81,13 @@ export function atolyeSayfasi(root: HTMLElement, kimlik: string): void {
   const seviyeAdi = SEVIYE_ADLARI.find(([s]) => s === seviye)![1];
 
   const sayfa = kok(el("div", "as"), seviye);
-  const devam = yer
+  const tumu = modulIlerlemeleri(atolye, veri, hepsiAcik);
+  const kursluAtolye = ozet.sayilan === 0;
+  const kendiKursu = k instanceof Ogrenci ? atolye.moduller.find((m) => m.dersler.some((d) => d.tur === "kurs" && d.kimlik === k.kurs)) : undefined;
+  const onerilenKurs = kendiKursu ?? seviyeSirasi(atolye, seviye).onerilen[0] ?? atolye.moduller[0];
+  const devam = kursluAtolye
+    ? dugme({ metin: kendiKursu ? "Kursuna devam et" : "Önerilen kursa gir", ek: onerilenKurs.ad, tur: "ana", ikon: "oynat", ikonSonda: true, href: onerilenKurs.dersler[0].adres, id: "at-devam" })
+    : yer
     ? dugme({ metin: ozet.biten ? "Kaldığın yerden devam et" : "Başla", ek: yer.ders.ad, tur: "ana", ikon: "oynat", ikonSonda: true, href: yer.ders.adres, id: "at-devam" })
     : hap("Bütün dersler bitti", "yesil", "tamam");
   const ust = el("header", "at-ust", {}, ustCubuk(),
@@ -83,13 +97,23 @@ export function atolyeSayfasi(root: HTMLElement, kimlik: string): void {
         el("h1", "s2-baslik", { id: "at-baslik" }, atolye.ad),
         el("p", "", {}, atolye.aciklama)),
       el("div", "s2-kart s2-kart--lavanta at-ozet", { id: "at-ozet" },
-        el("div", "at-ozet__sayi", {}, el("b", "", {}, `${ozet.biten} / ${ozet.sayilan}`), el("span", "", {}, "ders bitti"),
-          el("span", "", { style: "margin-left:auto" }, `${ozet.yildiz} / ${ozet.enCokYildiz} yıldız`)),
-        parcaliIlerleme(ozet.sayilan, ozet.biten, !!yer, `${atolye.ad} atölyesi`),
+        ...(kursluAtolye
+          ? [el("div", "at-ozet__sayi", {}, el("b", "", {}, String(atolye.moduller.length)), el("span", "", {}, "kurs · ilerleme her kursun içinde"))]
+          : [el("div", "at-ozet__sayi", {}, el("b", "", {}, `${ozet.biten} / ${ozet.sayilan}`), el("span", "", {}, "ders bitti"),
+              el("span", "", { style: "margin-left:auto" }, `${ozet.yildiz} / ${ozet.enCokYildiz} yıldız`)),
+            parcaliIlerleme(ozet.sayilan, ozet.biten, !!yer, `${atolye.ad} atölyesi`)]),
         devam)));
 
   const modulKarti = (m: Modul) => {
-    const mi = modulIlerlemesi(m, veri, hepsiAcik);
+    const mi = tumu.get(m)!;
+    if (mi.sayilan === 0 && m.dersler.every((d) => d.tur === "kurs")) {
+      const d = m.dersler[0];
+      return el("article", "s2-kart at-modul", { "data-modul": m.kimlik, "aria-labelledby": `at-m-${m.kimlik}`, ...(kendiKursu === m ? { "data-kendi": "" } : {}) },
+        el("div", "at-modul__ust", {}, m.robot ? hap(m.robot, "mor", "robot") : null, kendiKursu === m ? hap("Senin kursun", "yesil", "tamam") : null),
+        el("h3", "s2-baslik", { id: `at-m-${m.kimlik}` }, m.ad),
+        el("p", "", {}, m.aciklama),
+        el("div", "", {}, kursDugmesi(d.ad, d.ogretir, kendiKursu === m, d.adres, d.kimlik)));
+    }
     const liste = el("ol", "at-dersler");
     for (const d of mi.dersler) {
       const simdi = yer?.ders === d.ders;

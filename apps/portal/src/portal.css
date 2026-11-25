@@ -1,4 +1,4 @@
-/* Portal yerleşimi. Renk, yazı ve boşluk değerleri yalnızca tasarım sisteminin --sra-* değişkenlerinden gelir. */
+/* Portal alt sayfalarının yerleşimi. Değerler --sra-* değişkenlerinden gelir; v2 uyum katmanı (tasarim/v2/uyum.css) bunları yeni görünümün değerlerine bağlar. */
 body { display: flex; flex-direction: column; min-height: 100vh }
 #app { display: flex; flex-direction: column; min-height: 100vh }
 .p-ana, .p-giris, .p-panel { flex: 1 }
@@ -15,10 +15,6 @@ body { display: flex; flex-direction: column; min-height: 100vh }
 @media (max-width: 620px) { .p-kurs-izgara { grid-template-columns: 1fr; gap: var(--sra-bosluk-4) } }
 
 
-/* ---------- alt bilgi ---------- */
-.p-alt { border-top: 1px solid var(--sra-cizgi); background: rgba(255, 255, 255, .6) }
-.p-alt__ic { display: flex; justify-content: space-between; gap: var(--sra-bosluk-4); flex-wrap: wrap; padding-block: var(--sra-bosluk-5); font-size: var(--sra-yazi-s); color: var(--sra-murekkep-2) }
-.p-alt__mod { font-family: var(--sra-yazi-kod); font-size: var(--sra-yazi-xs) }
 
 /* ---------- giriş ---------- */
 .p-giris { display: flex; flex-direction: column; align-items: center; padding-block: var(--sra-bosluk-7) var(--sra-bosluk-8); gap: var(--sra-bosluk-5) }
@@ -161,7 +157,7 @@ body { display: flex; flex-direction: column; min-height: 100vh }
 @media print {
   @page { size: A4; margin: 14mm }
   body { background: #fff !important }
-  .sra-ustbar, .p-alt, .no-print, .r-tablo-gor summary { display: none !important }
+  .sra-ustbar, .as-ust, .p-alt, .no-print, .r-tablo-gor summary { display: none !important }
   .r-tablo-gor:not([open]) > *:not(summary) { display: block }
   .r-iki { grid-template-columns: 1fr } .r-ozet { grid-template-columns: repeat(4, 1fr) }
   .sra-kart { box-shadow: none; break-inside: avoid }
