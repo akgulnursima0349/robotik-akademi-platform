@@ -12,7 +12,8 @@ import { uygulama } from "../uygulama";
 import { acilisSeviyesi } from "../atolyeler";
 import { stilEkle, ustCubuk } from "./ana-sayfa";
 import { cizimGorseli, sahneGorseli } from "../gorsel";
-import { DENEYLER } from "../deney";
+import { DENEYLER, stilEkle as deneyStiliEkle } from "../deney";
+import { cizgiSimulasyonu } from "../deney/cizgi-simulasyonu";
 
 /** Deney bileşenleri (deney/): ayar ve "bu değer denendi" bildirimiyle bir öğe kurar */
 export type DeneyBileseni = (ayar: Record<string, unknown>, denendi: (deger: string | number) => void) => HTMLElement;
@@ -117,6 +118,8 @@ export function dersSayfasi(root: HTMLElement, kimlik: string): boolean {
   let bolum: DersBolumu = ilkBolum(durum(), { ogretmen, deneyVar });
   let adim = Math.min(dp.kayit(d.kimlik).anlat?.adim ?? 0, d.anlat.length - 1);
   let aktifGorsel: GorselOynatici | null = null;
+  /* deney ve ayar görevi bir kez kurulur: sayfa yeniden çizilince (ders bitince bitiş paneli gibi) koşu ve ayarlar kaybolmasın */
+  let deneOnbellek: HTMLElement | null = null, gorevOnbellek: HTMLElement | null = null;
   if (durum().anlat && bolum === "anlat") adim = 0;
   let soruCozuldu = new Set<number>();
   const oncekiBitti = durum().bitti;
@@ -212,6 +215,7 @@ export function dersSayfasi(root: HTMLElement, kimlik: string): boolean {
 
   /* ---------- Dene ---------- */
   const deneme = () => {
+    if (deneOnbellek) return deneOnbellek;
     const kap = el("section", "s2-kart dr-kart", { "aria-label": "Dene" }, el("h2", "s2-baslik", {}, "Dene"), konusmaBalonu({ metin: d.dene.yonerge, hal: "ipucu", ses }));
     const bilesen = DENEY_BILESENLERI[d.dene.bilesen];
     if (!bilesen) {
@@ -245,6 +249,7 @@ export function dersSayfasi(root: HTMLElement, kimlik: string): boolean {
       }
     }));
     if (durum().dene) sonBlok();
+    deneOnbellek = kap;
     return kap;
   };
 
@@ -258,6 +263,28 @@ export function dersSayfasi(root: HTMLElement, kimlik: string): boolean {
         el("div", "dr-son", {}, yildizlar(3, y), el("span", "", { style: "font-weight:800", id: "dr-gorev-yildiz" }, y ? `${y} / 3 yıldız` : "Henüz yıldız yok"),
           dugme({ metin: y ? "Lab'da tekrar dene" : "Lab'da aç", tur: "ana", ikon: "oynat", ikonSonda: true, href: `lab/#${g.modul}/${g.gorev}`, id: "dr-lab" })));
       if (y && !durum().dene) kap.append(bildirim("ipucu", "Görev tamam.", " Dersi bitirmek için Dene bölümü de bitmeli."));
+    } else if (g.tur === "ayar") {
+      /* ayar görevi: kaydırıcılarla kitin değerleri; en iyi yıldız ders kaydına yazılır */
+      const enIyi = () => dp.kayit(d.kimlik).gorev?.yildiz ?? 0;
+      const rekor = el("span", "", { style: "font-weight:800", id: "dr-gorev-yildiz" }, "");
+      const rekorYaz = () => { rekor.textContent = enIyi() ? `En iyi: ${enIyi()} / 3 yıldız` : "Henüz yıldız yok"; };
+      rekorYaz();
+      deneyStiliEkle();
+      if (gorevOnbellek) return gorevOnbellek;
+      kap.append(konusmaBalonu({ metin: g.yonerge, hal: "anlatiyor", ses }), el("div", "dr-son", {}, rekor),
+        cizgiSimulasyonu({ pist: g.pist, acik: g.acik, sabit: g.sabit }, {
+          degerlendirme: g.degerlendirme,
+          yildiz: (n) => {
+            if (n <= enIyi()) return;
+            const once = durum();
+            ilerle({ gorev: { yildiz: n } });
+            rekorYaz();
+            /* koşu ekranı yeniden kurulmaz; ders bittiyse bitiş paneli için bütün sayfa */
+            if (durum().bitti && !once.bitti) ciz(); else ustBolum();
+          }
+        }));
+      if (enIyi() && !durum().dene) kap.append(bildirim("ipucu", "Görev tamam.", " Dersi bitirmek için Dene bölümü de bitmeli."));
+      gorevOnbellek = kap;
     } else kap.append(bildirim("bilgi", "Bu görev hazırlanıyor.", ""));
     return kap;
   };

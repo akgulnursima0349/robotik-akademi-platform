@@ -8,7 +8,8 @@ export interface SahneAni {
   aci: SahneAcisi;
   /** vurgulanan parça grubu (robot modelinin parça adı) ve sahnedeki etiketi */
   vurgu?: { parca: string; etiket: string };
-  zemin: "duz" | "bant" | "ring";
+  /** bant: beyaz kâğıtta siyah bant; beyaz-bant: siyah zeminde beyaz bant (sınıf pisti) */
+  zemin: "duz" | "bant" | "beyaz-bant" | "ring";
   /** küçük hareket: robot bandın üstünde yavaşça sağa sola kayar / sensörler nabız gibi parlar */
   hareket?: "salinim" | "nabiz";
   /** WebGL yokken ve ekran okuyucu için kısa açıklama */
@@ -24,6 +25,11 @@ export const SAHNE_ANLARI: Record<string, SahneAni> = {
     robot: "SiroLine", aci: "onden", zemin: "bant", hareket: "salinim",
     vurgu: { parca: "sensor", etiket: "Sensörler bandın üstünde" },
     aciklama: "SiroLine beyaz kâğıttaki siyah bandın üstünde yavaşça sağa sola kayıyor; sensörler bandı tarıyor."
+  },
+  "siroline-siyah-zemin": {
+    robot: "SiroLine", aci: "onden", zemin: "beyaz-bant", hareket: "salinim",
+    vurgu: { parca: "sensor", etiket: "Siyah zemin, beyaz bant" },
+    aciklama: "SiroLine sınıf pistindeki gibi siyah zeminde, beyaz bandın üstünde; sensör şeridi vurgulu."
   }
 };
 
@@ -82,6 +88,154 @@ export const CIZIMLER: Record<string, Cizim> = {
     ]
   }
 };
+
+
+/* ---------- Çizgi İzleyen Robot modülünün çizimleri (2–6. dersler) ---------- */
+const sensorX = (i: number) => 41 + i * 46;
+Object.assign(CIZIMLER, {
+  /* "Her sensörün bir sırası var… Sonuç sıfır ile yedi bin arasında bir konumdur." */
+  "agirlikli-ortalama": {
+    aciklama: "Sekiz sensör yan yana, altlarında sıra numaraları 0'dan 7'ye. Bant s[2]'nin altında: s[2] çok, s[1] ile s[3] az görüyor. Altta 0'dan 7000'e bir ölçek ve konum işareti yaklaşık 2200'de.",
+    katmanlar: [
+      { sekil: { tur: "kutu", x: 134, y: 112, g: 18, y2: 42, dolgu: "siyah", kose: 2 }, renk: "murekkep", kelime: 0 },
+      { sekil: { tur: "etiket", x: 380, y: 90, metin: "sensörün değeri", hiza: "sag" }, renk: "kirmizi", kelime: 16 },
+      ...[0, 1, 2, 3, 4, 5, 6, 7].map((i) => ({ sekil: { tur: "kutu" as const, x: sensorX(i) - 17, y: 120, g: 34, y2: 26, dolgu: "gri" as const, kose: 5 }, renk: "murekkep" as const, kelime: 1 })),
+      ...[0, 1, 2, 3, 4, 5, 6, 7].map((i) => ({ sekil: { tur: "etiket" as const, x: sensorX(i), y: 168, metin: String(i), hiza: "orta" as const }, renk: "mor" as const, kelime: i < 4 ? 6 : 9 })),
+      { sekil: { tur: "kutu", x: sensorX(1) - 10, y: 108, g: 20, y2: 10, dolgu: "kirmizi", kose: 3 }, renk: "kirmizi", kelime: 24 },
+      { sekil: { tur: "kutu", x: sensorX(2) - 10, y: 58, g: 20, y2: 60, dolgu: "kirmizi", kose: 3 }, renk: "kirmizi", kelime: 18 },
+      { sekil: { tur: "kutu", x: sensorX(3) - 10, y: 92, g: 20, y2: 26, dolgu: "kirmizi", kose: 3 }, renk: "kirmizi", kelime: 24 },
+      { sekil: { tur: "cizgi", noktalar: [[41, 205], [363, 205]] }, renk: "murekkep", kelime: 28 },
+      { sekil: { tur: "etiket", x: 41, y: 232, metin: "0", hiza: "orta" }, renk: "murekkep", kelime: 29 },
+      { sekil: { tur: "etiket", x: 363, y: 232, metin: "7000", hiza: "orta" }, renk: "murekkep", kelime: 31 },
+      { sekil: { tur: "ok", noktalar: [[143, 178], [143, 198]] }, renk: "mor", kelime: 33 },
+      { sekil: { tur: "daire", x: 143, y: 205, r: 7, dolgu: "mor" }, renk: "mor", kelime: 34 },
+      { sekil: { tur: "etiket", x: 143, y: 250, metin: "konum ≈ 2200", hiza: "orta" }, renk: "mor", kelime: 35 }
+    ]
+  },
+  /* "Hiçbir iki sensör birebir aynı değildir… Böylece bütün sensörler aynı ölçekle konuşur." */
+  kalibrasyon: {
+    aciklama: "İki sensörün ham okumaları farklı aralıklarda: s[0] 80 ile 880, s[1] 140 ile 960 arasında. Kalibrasyondan sonra ikisi de 0 ile 1000 arasında.",
+    katmanlar: [
+      { sekil: { tur: "etiket", x: 150, y: 28, metin: "ham okuma", hiza: "orta" }, renk: "murekkep", kelime: 0 },
+      { sekil: { tur: "etiket", x: 20, y: 96, metin: "s[0]", hiza: "sol" }, renk: "mor", kelime: 1 },
+      { sekil: { tur: "cizgi", noktalar: [[90, 90], [200, 90]] }, renk: "gri", kelime: 2 },
+      { sekil: { tur: "etiket", x: 20, y: 186, metin: "s[1]", hiza: "sol" }, renk: "mor", kelime: 2 },
+      { sekil: { tur: "cizgi", noktalar: [[110, 180], [235, 180]] }, renk: "gri", kelime: 3 },
+      { sekil: { tur: "daire", x: 90, y: 90, r: 9, dolgu: "beyaz" }, renk: "murekkep", kelime: 19 },
+      { sekil: { tur: "daire", x: 110, y: 180, r: 9, dolgu: "beyaz" }, renk: "murekkep", kelime: 19 },
+      { sekil: { tur: "etiket", x: 90, y: 122, metin: "80", hiza: "orta" }, renk: "murekkep", kelime: 19 },
+      { sekil: { tur: "etiket", x: 110, y: 212, metin: "140", hiza: "orta" }, renk: "murekkep", kelime: 19 },
+      { sekil: { tur: "daire", x: 200, y: 90, r: 9, dolgu: "siyah" }, renk: "murekkep", kelime: 22 },
+      { sekil: { tur: "daire", x: 235, y: 180, r: 9, dolgu: "siyah" }, renk: "murekkep", kelime: 22 },
+      { sekil: { tur: "etiket", x: 200, y: 122, metin: "880", hiza: "orta" }, renk: "murekkep", kelime: 22 },
+      { sekil: { tur: "etiket", x: 235, y: 212, metin: "960", hiza: "orta" }, renk: "murekkep", kelime: 22 },
+      { sekil: { tur: "ok", noktalar: [[255, 135], [285, 135]] }, renk: "mor", kelime: 25 },
+      { sekil: { tur: "etiket", x: 340, y: 28, metin: "ayarlı", hiza: "orta" }, renk: "yesil", kelime: 26 },
+      { sekil: { tur: "cizgi", noktalar: [[300, 90], [380, 90]] }, renk: "yesil", kelime: 27 },
+      { sekil: { tur: "cizgi", noktalar: [[300, 180], [380, 180]] }, renk: "yesil", kelime: 27 },
+      { sekil: { tur: "etiket", x: 300, y: 122, metin: "0", hiza: "orta" }, renk: "murekkep", kelime: 27 },
+      { sekil: { tur: "etiket", x: 380, y: 122, metin: "1000", hiza: "orta" }, renk: "murekkep", kelime: 29 },
+      { sekil: { tur: "etiket", x: 300, y: 212, metin: "0", hiza: "orta" }, renk: "murekkep", kelime: 27 },
+      { sekil: { tur: "etiket", x: 380, y: 212, metin: "1000", hiza: "orta" }, renk: "murekkep", kelime: 29 },
+      { sekil: { tur: "etiket", x: 340, y: 250, metin: "aynı ölçek", hiza: "orta" }, renk: "yesil", kelime: 35 }
+    ]
+  },
+  /* "Robotun hedefi konumu 3500'de tutmak… Çizgi soldaysa hata eksi, sağdaysa artı çıkar." */
+  "hata-duzeltme": {
+    aciklama: "Üstte 0'dan 7000'e bir ölçek: hedef 3500 ortada, konum 2300'de; aradaki ok hata. Altta iki robot: çizgi solda olunca hata eksi, sağda olunca artı.",
+    katmanlar: [
+      { sekil: { tur: "cizgi", noktalar: [[40, 70], [360, 70]] }, renk: "murekkep", kelime: 2 },
+      { sekil: { tur: "daire", x: 200, y: 70, r: 7, dolgu: "yesil" }, renk: "yesil", kelime: 6 },
+      { sekil: { tur: "etiket", x: 200, y: 44, metin: "hedef 3500", hiza: "orta" }, renk: "yesil", kelime: 6 },
+      { sekil: { tur: "daire", x: 145, y: 70, r: 7, dolgu: "mor" }, renk: "mor", kelime: 8 },
+      { sekil: { tur: "etiket", x: 120, y: 44, metin: "konum", hiza: "sag" }, renk: "mor", kelime: 8 },
+      { sekil: { tur: "ok", noktalar: [[192, 92], [153, 92]] }, renk: "kirmizi", kelime: 16 },
+      { sekil: { tur: "etiket", x: 200, y: 122, metin: "hata = konum − 3500", hiza: "orta" }, renk: "kirmizi", kelime: 18 },
+      { sekil: { tur: "kutu", x: 40, y: 168, g: 130, y2: 18, dolgu: "gri", kose: 5 }, renk: "murekkep", kelime: 26 },
+      { sekil: { tur: "kutu", x: 52, y: 150, g: 14, y2: 54, dolgu: "siyah", kose: 2 }, renk: "murekkep", kelime: 27 },
+      { sekil: { tur: "etiket", x: 105, y: 236, metin: "solda: hata −", hiza: "orta" }, renk: "kirmizi", kelime: 29 },
+      { sekil: { tur: "kutu", x: 230, y: 168, g: 130, y2: 18, dolgu: "gri", kose: 5 }, renk: "murekkep", kelime: 30 },
+      { sekil: { tur: "kutu", x: 334, y: 150, g: 14, y2: 54, dolgu: "siyah", kose: 2 }, renk: "murekkep", kelime: 30 },
+      { sekil: { tur: "etiket", x: 295, y: 236, metin: "sağda: hata +", hiza: "orta" }, renk: "kirmizi", kelime: 31 }
+    ]
+  },
+  /* "Kp çok küçükse robot virajda yeterince dönemez ve pistten çıkar. Kp çok büyükse … sağa sola sallanır." */
+  "kp-izleri": {
+    aciklama: "Üç pist parçası ve robotun izi. Kp küçükken iz virajda düz devam edip pistten çıkıyor; Kp büyükken iz çizginin iki yanında zikzak çiziyor; uygun Kp'de iz çizgiyi izliyor.",
+    katmanlar: [
+      { sekil: { tur: "etiket", x: 70, y: 24, metin: "Kp küçük", hiza: "orta" }, renk: "murekkep", kelime: 0 },
+      { sekil: { tur: "cizgi", noktalar: [[60, 245], [60, 150], [66, 110], [84, 80], [112, 62], [128, 58]] }, renk: "siyah", kelime: 0 },
+      { sekil: { tur: "ok", noktalar: [[64, 245], [64, 150], [70, 112], [76, 60]] }, renk: "mor", kelime: 5 },
+      { sekil: { tur: "etiket", x: 52, y: 84, metin: "çıkar!", hiza: "sag" }, renk: "kirmizi", kelime: 9 },
+      { sekil: { tur: "etiket", x: 200, y: 24, metin: "Kp büyük", hiza: "orta" }, renk: "murekkep", kelime: 11 },
+      { sekil: { tur: "cizgi", noktalar: [[200, 245], [200, 50]] }, renk: "siyah", kelime: 11 },
+      { sekil: { tur: "ok", noktalar: [[200, 245], [222, 215], [178, 180], [222, 145], [178, 110], [222, 75], [200, 52]] }, renk: "mor", kelime: 18 },
+      { sekil: { tur: "etiket", x: 234, y: 160, metin: "sallanır", hiza: "sol" }, renk: "kirmizi", kelime: 23 },
+      { sekil: { tur: "etiket", x: 330, y: 24, metin: "uygun Kp", hiza: "orta" }, renk: "yesil", kelime: 23 },
+      { sekil: { tur: "cizgi", noktalar: [[320, 245], [320, 150], [326, 110], [344, 80], [372, 62], [388, 58]] }, renk: "siyah", kelime: 23 },
+      { sekil: { tur: "ok", noktalar: [[324, 245], [323, 150], [329, 112], [346, 84], [372, 66], [384, 63]] }, renk: "yesil", kelime: 23 }
+    ]
+  },
+  /* "Kp büyük olunca robot çizgiye hızla döner ama çizginin üstünden geçip öbür tarafa taşar…" */
+  "sallanan-iz": {
+    aciklama: "Düz bir çizgi ve robotun izi: iz çizgiye döner, üstünden geçip öbür yana taşar, geri döner ve yine taşar; dalga gibi sallanıyor.",
+    katmanlar: [
+      { sekil: { tur: "etiket", x: 24, y: 34, metin: "Kd = 0", hiza: "sol" }, renk: "murekkep", kelime: 0 },
+      { sekil: { tur: "cizgi", noktalar: [[20, 140], [380, 140]] }, renk: "siyah", kelime: 0 },
+      { sekil: { tur: "ok", noktalar: [[20, 200], [70, 160], [110, 100], [150, 90], [185, 130]] }, renk: "mor", kelime: 5 },
+      { sekil: { tur: "etiket", x: 130, y: 76, metin: "taşar", hiza: "orta" }, renk: "kirmizi", kelime: 14 },
+      { sekil: { tur: "ok", noktalar: [[185, 130], [225, 185], [265, 192], [300, 150], [335, 100], [375, 95]] }, renk: "mor", kelime: 16 },
+      { sekil: { tur: "etiket", x: 262, y: 222, metin: "yine taşar", hiza: "orta" }, renk: "kirmizi", kelime: 19 },
+      { sekil: { tur: "etiket", x: 376, y: 34, metin: "sallanma", hiza: "sag" }, renk: "kirmizi", kelime: 20 }
+    ]
+  },
+  /* "Kd hatanın ne kadar hızlı değiştiğine bakar… Kd çarpı değişim dönüşü erkenden azaltır, tıpkı bir fren gibi." */
+  "hata-grafigi": {
+    aciklama: "Hatanın zamanla değişimi. Kd sıfırken hata sıfırın iki yanında uzun süre dalgalanıyor; Kd ile hata sıfıra yumuşakça iniyor ve orada kalıyor.",
+    katmanlar: [
+      { sekil: { tur: "ok", noktalar: [[40, 245], [40, 18]] }, renk: "murekkep", kelime: 0 },
+      { sekil: { tur: "etiket", x: 50, y: 30, metin: "hata", hiza: "sol" }, renk: "murekkep", kelime: 2 },
+      { sekil: { tur: "ok", noktalar: [[40, 150], [385, 150]] }, renk: "murekkep", kelime: 2 },
+      { sekil: { tur: "etiket", x: 385, y: 176, metin: "zaman", hiza: "sag" }, renk: "murekkep", kelime: 5 },
+      { sekil: { tur: "cizgi", noktalar: [[40, 50], [80, 150], [105, 225], [135, 150], [160, 85], [190, 150], [215, 205], [245, 150], [270, 105], [300, 150], [325, 190], [355, 150], [380, 120]] }, renk: "kirmizi", kelime: 8 },
+      { sekil: { tur: "etiket", x: 380, y: 56, metin: "Kd = 0", hiza: "sag" }, renk: "kirmizi", kelime: 10 },
+      { sekil: { tur: "cizgi", noktalar: [[40, 50], [70, 100], [100, 132], [135, 146], [180, 150], [380, 150]] }, renk: "yesil", kelime: 22 },
+      { sekil: { tur: "etiket", x: 380, y: 30, metin: "Kd ile", hiza: "sag" }, renk: "yesil", kelime: 23 },
+      { sekil: { tur: "etiket", x: 118, y: 108, metin: "fren", hiza: "orta" }, renk: "yesil", kelime: 29 }
+    ]
+  },
+  /* "Yarışta hızlı olmak isteriz. Ama taban hız artınca robot aynı sürede daha uzun yol gider…" */
+  "hiz-viraj": {
+    aciklama: "Bir viraj ve iki robot izi. Yavaş robotun izi virajı çizgiye yakın dönüyor; hızlı robotun izi viraja geç giriyor, dışarı taşıyor ve çizgiye uzaktan dönüyor.",
+    katmanlar: [
+      { sekil: { tur: "cizgi", noktalar: [[50, 250], [50, 130], [58, 92], [80, 60], [112, 40], [150, 32], [385, 32]] }, renk: "siyah", kelime: 0 },
+      { sekil: { tur: "ok", noktalar: [[54, 250], [54, 130], [62, 95], [83, 64], [114, 45], [150, 37], [270, 37]] }, renk: "yesil", kelime: 1 },
+      { sekil: { tur: "etiket", x: 118, y: 100, metin: "yavaş", hiza: "orta" }, renk: "yesil", kelime: 3 },
+      { sekil: { tur: "ok", noktalar: [[46, 250], [46, 130], [44, 70], [40, 22], [60, 8], [120, 12], [200, 22], [300, 30], [380, 31]] }, renk: "kirmizi", kelime: 5 },
+      { sekil: { tur: "etiket", x: 66, y: 172, metin: "hızlı", hiza: "sol" }, renk: "kirmizi", kelime: 7 },
+      { sekil: { tur: "etiket", x: 260, y: 72, metin: "geç fark eder, dışarı taşar", hiza: "orta" }, renk: "kirmizi", kelime: 15 }
+    ]
+  },
+  /* "Usta yarışçılar adım adım ilerler: hızı biraz artır, dene. Virajdan kaçıyorsa Kp'yi, sallanıyorsa Kd'yi düzelt. Her denemeyi ayar defterine yaz." */
+  "ayar-dongusu": {
+    aciklama: "Dört adımlı bir döngü: hızı artır, dene; robot virajdan kaçıyorsa Kp'yi, sallanıyorsa Kd'yi artır; sonucu ayar defterine yaz ve baştan başla.",
+    katmanlar: [
+      { sekil: { tur: "kutu", x: 130, y: 14, g: 140, y2: 38, dolgu: "beyaz", kose: 12 }, renk: "mor", kelime: 2 },
+      { sekil: { tur: "etiket", x: 200, y: 39, metin: "Hızı artır", hiza: "orta" }, renk: "murekkep", kelime: 5 },
+      { sekil: { tur: "ok", noktalar: [[272, 42], [312, 100]] }, renk: "mor", kelime: 7 },
+      { sekil: { tur: "kutu", x: 262, y: 104, g: 120, y2: 38, dolgu: "beyaz", kose: 12 }, renk: "mor", kelime: 8 },
+      { sekil: { tur: "etiket", x: 322, y: 129, metin: "Dene", hiza: "orta" }, renk: "murekkep", kelime: 8 },
+      { sekil: { tur: "ok", noktalar: [[312, 146], [274, 188]] }, renk: "mor", kelime: 9 },
+      { sekil: { tur: "kutu", x: 100, y: 190, g: 200, y2: 62, dolgu: "beyaz", kose: 12 }, renk: "mor", kelime: 9 },
+      { sekil: { tur: "etiket", x: 200, y: 214, metin: "Kaçıyorsa: Kp ↑", hiza: "orta" }, renk: "kirmizi", kelime: 10 },
+      { sekil: { tur: "etiket", x: 200, y: 240, metin: "Sallanıyorsa: Kd ↑", hiza: "orta" }, renk: "kirmizi", kelime: 13 },
+      { sekil: { tur: "ok", noktalar: [[126, 188], [88, 146]] }, renk: "mor", kelime: 16 },
+      { sekil: { tur: "kutu", x: 18, y: 104, g: 128, y2: 38, dolgu: "beyaz", kose: 12 }, renk: "mor", kelime: 17 },
+      { sekil: { tur: "etiket", x: 82, y: 129, metin: "Deftere yaz", hiza: "orta" }, renk: "murekkep", kelime: 19 },
+      { sekil: { tur: "ok", noktalar: [[88, 100], [128, 42]] }, renk: "mor", kelime: 20 }
+    ]
+  }
+} satisfies Record<string, Cizim>);
 
 export const gorselVarMi = (tur: "sahne" | "cizim", ad: string) => (tur === "sahne" ? ad in SAHNE_ANLARI : ad in CIZIMLER);
 

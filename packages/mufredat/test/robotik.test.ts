@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { CIZGI_GOREVLERI, GOREVLER, LABIRENT_GOREVLERI } from "@sra/robot-motoru";
-import { atolyeOzeti, BOS_KAYIT, kaldigiYer, kayitOku, modulIlerlemesi, ROBOTIK, seviyeSirasi, type IlerlemeKaydi } from "../src";
+import { atolyeOzeti, BOS_KAYIT, CIZGI_DERSLERI, kaldigiYer, kayitOku, modulIlerlemesi, ROBOTIK, seviyeSirasi, type IlerlemeKaydi } from "../src";
+
+/** Çizgi modülünün bütün derslerinde anlat ve dene bitmiş; ayar görevli derslerde görev yıldızı da var (Lab görevinin yıldızı Lab kaydında) */
+const tumDersler = { dersler: Object.fromEntries(CIZGI_DERSLERI.map((d) => [d.kimlik, { anlat: { adim: d.anlat.length - 1, bitti: true }, dene: { degerler: d.dene.enAzFarkliDeger, bitti: true }, ...(d.gorev.tur === "ayar" ? { gorev: { yildiz: 2 } } : {}) }])) };
 
 const modul = (k: string) => ROBOTIK.moduller.find((m) => m.kimlik === k)!;
 const kayit = (gorevler: Record<string, number>, ek: Partial<IlerlemeKaydi> = {}): IlerlemeKaydi => ({ gorevler: Object.fromEntries(Object.entries(gorevler).map(([k, y]) => [k, { yildiz: y }])), bayrak: {}, lig: null, ...ek });
@@ -38,7 +41,7 @@ describe("ilerleme", () => {
   it("rehber bayrakla, lig kayıtlı robotla biter; serbest çalışma sayılmaz", () => {
     const c = modulIlerlemesi(modul("cizgi"), kayit({}, { bayrak: { "siro-kurulum": true } }));
     expect(c.dersler.find((d) => d.ders.tur === "rehber")!.durum).toBe("bitti");
-    expect(c.sayilan).toBe(CIZGI_GOREVLERI.length + 2); // görevler + kurulum rehberi + ders
+    expect(c.sayilan).toBe(CIZGI_GOREVLERI.length + 1 + CIZGI_DERSLERI.length); // görevler + kurulum rehberi + dersler
     expect(modulIlerlemesi(modul("sumo"), kayit({}, { lig: { ad: "Ok" } })).biten).toBe(1);
   });
   it("kaldığın yer: seviyenin önerdiği modüllerde ilk açık ve bitmemiş ders", () => {
@@ -48,13 +51,14 @@ describe("ilerleme", () => {
     const hepsi = Object.fromEntries(CIZGI_GOREVLERI.map((g) => ["cizgi-" + g.kimlik, 2]));
     expect(kaldigiYer(ROBOTIK, kayit({}, dersBitti), "lise")!.ders.anahtar).toBe("siroline-sensor"); // görevi (İlk tur) bitmeden ders bitmez
     expect(kaldigiYer(ROBOTIK, kayit(hepsi), "lise")!.ders.kimlik).toBe("siroline-sensor");
-    expect(kaldigiYer(ROBOTIK, kayit(hepsi, dersBitti), "lise")!.ders.kimlik).toBe("kurulum");
-    expect(kaldigiYer(ROBOTIK, kayit(hepsi, { ...dersBitti, bayrak: { "siro-kurulum": true } }), "lise")!.ders.anahtar).toBe(LABIRENT_GOREVLERI[0].kimlik);
+    expect(kaldigiYer(ROBOTIK, kayit(hepsi, dersBitti), "lise")!.ders.kimlik).toBe("cizgi-konumu"); // sıradaki ders
+    expect(kaldigiYer(ROBOTIK, kayit(hepsi, tumDersler), "lise")!.ders.kimlik).toBe("kurulum");
+    expect(kaldigiYer(ROBOTIK, kayit(hepsi, { ...tumDersler, bayrak: { "siro-kurulum": true } }), "lise")!.ders.anahtar).toBe(LABIRENT_GOREVLERI[0].kimlik);
   });
   it("her şey bittiyse kaldığın yer yok; özet toplamları doğru", () => {
     const gorevler: Record<string, number> = {};
     for (const m of ROBOTIK.moduller) for (const d of m.dersler) if (d.tur === "gorev") gorevler[d.anahtar] = 3;
-    const k = kayit(gorevler, { bayrak: { "siro-kurulum": true }, lig: { ad: "x" }, dersler: { "siroline-sensor": { anlat: { adim: 4, bitti: true }, dene: { degerler: 3, bitti: true } } } });
+    const k = kayit(gorevler, { bayrak: { "siro-kurulum": true }, lig: { ad: "x" }, ...tumDersler });
     expect(kaldigiYer(ROBOTIK, k, "ortaokul")).toBeNull();
     const o = atolyeOzeti(ROBOTIK, k);
     expect(o.biten).toBe(o.sayilan);

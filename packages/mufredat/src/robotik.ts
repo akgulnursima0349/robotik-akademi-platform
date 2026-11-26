@@ -3,8 +3,7 @@
    İlerleme Lab'ın kaydından (sra-lab-v1) okunur. */
 import { CIZGI_GOREVLERI, GOREVLER, LABIRENT_GOREVLERI } from "@sra/robot-motoru";
 import type { Atolye } from "./model";
-import { dersOgesi } from "./dersler";
-import { SIROLINE_SENSOR } from "./dersler/siroline-sensor";
+import { CIZGI_DERSLERI, dersOgesi } from "./dersler";
 
 export const LAB_KAYIT_ANAHTARI = "sra-lab-v1";
 
@@ -22,7 +21,7 @@ export const ROBOTIK: Atolye = {
       kimlik: "cizgi", ad: "Çizgi İzleyen Robot", robot: "SiroLine", seviyeler: ["ortaokul", "lise"],
       aciklama: "Sekiz sensörü oku, iki motoru yönet: koşuldan oransal dönüşe, oradan PID'ye.",
       dersler: [
-        dersOgesi(SIROLINE_SENSOR),
+        ...CIZGI_DERSLERI.map(dersOgesi),
         ...CIZGI_GOREVLERI.map((g) => ({ kimlik: g.kimlik, ad: g.ad, ogretir: g.ogretir, tur: "gorev" as const, adres: `lab/#cizgi/${g.kimlik}`, enCokYildiz: 3, anahtar: "cizgi-" + g.kimlik })),
         { kimlik: "kurulum", ad: "3D kurulum rehberi", ogretir: "SiroLine'ı parça parça kur", tur: "rehber", adres: "lab/#cizgi/kurulum", enCokYildiz: 0, anahtar: "siro-kurulum" },
         { kimlik: "ayar", ad: "Ayar atölyesi", ogretir: "Kp, Kd ve hızla serbest deney", tur: "serbest", adres: "lab/#cizgi/ayar", enCokYildiz: 0, anahtar: "" }

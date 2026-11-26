@@ -9,6 +9,8 @@ export interface KaydiriciAyari {
   adim?: number;
   birim?: string;
   baslangic?: number;
+  /** değerin yazılışı (ör. ondalık virgül); verilmezse olduğu gibi */
+  bicim?: (d: number) => string;
   /** sürüklerken her değer */
   degisince?: (d: number) => void;
   /** bırakınca (ya da klavyeyle değiştirince) son değer: "denendi" */
@@ -28,10 +30,10 @@ export function kaydirici(a: KaydiriciAyari): HTMLElement {
   const kap = el("div", "s2-kaydirici", {},
     el("div", "s2-kaydirici__ust", {}, el("label", "s2-kaydirici__etiket", { for: kimlik }, a.etiket), deger),
     girdi,
-    el("div", "s2-kaydirici__sinirlar", { "aria-hidden": "true" }, el("span", "", {}, `${a.en}${a.birim ? " " + a.birim : ""}`), el("span", "", {}, `${a.ust}${a.birim ? " " + a.birim : ""}`)));
+    el("div", "s2-kaydirici__sinirlar", { "aria-hidden": "true" }, el("span", "", {}, `${a.bicim ? a.bicim(a.en) : a.en}${a.birim ? " " + a.birim : ""}`), el("span", "", {}, `${a.bicim ? a.bicim(a.ust) : a.ust}${a.birim ? " " + a.birim : ""}`)));
   const yaz = () => {
     const d = Number(girdi.value), oran = (d - a.en) / (a.ust - a.en);
-    deger.textContent = `${d}${a.birim ? " " + a.birim : ""}`;
+    deger.textContent = `${a.bicim ? a.bicim(d) : d}${a.birim ? " " + a.birim : ""}`;
     girdi.setAttribute("aria-valuetext", deger.textContent);
     kap.style.setProperty("--doluluk", `${oran * 100}%`);
     return d;

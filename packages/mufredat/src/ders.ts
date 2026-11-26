@@ -6,7 +6,7 @@
    İlerleme kaydı ders başına bölüm durumlarını tutar; iki cihazdaki kayıt "ileri olan kalır" kuralıyla birleşir.
    Öğretmen onayı bu kayıtta tutulmaz: öğrencinin yazdığı kayda güvenilemez. Onay öğretmenin kendi kaydından gelir (E5) ve
    durum hesabına ayrıca verilir. */
-import { CIZGI_GOREVLERI, GOREVLER, LABIRENT_GOREVLERI } from "@sra/robot-motoru";
+import { AYAR_ARALIKLARI, AYAR_PISTLERI, CIZGI_GOREVLERI, GOREVLER, LABIRENT_GOREVLERI, type AyarAdi, type AyarDegerlendirme } from "@sra/robot-motoru";
 import type { Seviye } from "./model";
 import { gorselVarMi } from "./gorseller";
 
@@ -25,7 +25,7 @@ export interface AnlatimAdimi {
   soru?: Soru;
 }
 /** Ders sayfasının tanıdığı deney bileşenleri (portaldaki kayıt defteri bu adlarla kurulur) */
-export const DENEY_BILESEN_ADLARI = ["sensor-gostergesi", "kaydirici"] as const;
+export const DENEY_BILESEN_ADLARI = ["sensor-gostergesi", "kaydirici", "cizgi-simulasyonu"] as const;
 export interface Deney {
   /** deney bileşeni: DENEY_BILESEN_ADLARI'ndan biri */
   bilesen: string;
@@ -36,7 +36,9 @@ export interface Deney {
 }
 export type Gorev =
   | { tur: "lab"; modul: "kar" | "cizgi" | "labirent"; gorev: string; yonerge: string }
-  | { tur: "yerlesik"; robot: Robot; yonerge: string; baslangicKodu: string; olcut: string; yildizEsikleri: [number, number, number] };
+  | { tur: "yerlesik"; robot: Robot; yonerge: string; baslangicKodu: string; olcut: string; yildizEsikleri: [number, number, number] }
+  /** ayar görevi: kod yok; kitin SiroLine bloğundaki değerler (Taban Hız, Kp, Kd) kaydırıcılarla, ders sayfasında koşulur */
+  | { tur: "ayar"; pist: string; acik: AyarAdi[]; sabit: Partial<Record<AyarAdi, number>>; degerlendirme: AyarDegerlendirme; yonerge: string };
 export interface GercekRobotta { malzeme: { parca: string; adet: number }[]; adimlar: string[]; guvenlik?: string; ogretmenNotu?: string }
 
 export interface DersTanimi {
@@ -96,9 +98,15 @@ export function dersiDogrula(d: DersTanimi): string[] {
     if (!d.dene.yonerge?.trim()) y("Dene: yönerge boş");
     if (!(d.dene.enAzFarkliDeger >= 1)) y("Dene: en az bir değer denenmeli");
   }
+  if (d.dene?.bilesen === "cizgi-simulasyonu") ayarBiciminiDenetle(d.dene.ayar as { pist?: string; acik?: AyarAdi[]; sabit?: Record<string, number> }, (m) => y("Dene: " + m));
   if (!d.gorev) y("Görev bölümü eksik");
   else if (d.gorev.tur === "lab") {
     if (!LAB_GOREVLERI[d.gorev.modul]?.has(d.gorev.gorev)) y(`Görev: Lab'da böyle bir görev yok (${d.gorev.modul}/${d.gorev.gorev})`);
+    if (!d.gorev.yonerge?.trim()) y("Görev: yönerge boş");
+  } else if (d.gorev.tur === "ayar") {
+    ayarBiciminiDenetle(d.gorev, (m) => y("Görev: " + m));
+    const [a, b, c] = d.gorev.degerlendirme.esikler;
+    if (!(a >= b && b >= c && c > 0)) y("Görev: yıldız eşikleri büyükten küçüğe olmalı (1, 2, 3 yıldız)");
     if (!d.gorev.yonerge?.trim()) y("Görev: yönerge boş");
   } else {
     const [a, b, c] = d.gorev.yildizEsikleri;
@@ -111,6 +119,17 @@ export function dersiDogrula(d: DersTanimi): string[] {
     for (const m of d.gercek.malzeme) if (m.parca.trim() && !(m.parca in PARCALAR)) y(`Gerçek robotta: parça listede yok (${m.parca})`);
   }
   return h;
+}
+/** Çizgi simülasyonu ve ayar görevinin ortak alanları: pist var, açık ayarlar tanınıyor, her ayarın bir değeri var */
+function ayarBiciminiDenetle(a: { pist?: string; acik?: AyarAdi[]; sabit?: Partial<Record<string, number>> }, y: (m: string) => void) {
+  if (!a.pist || !(a.pist in AYAR_PISTLERI)) y(`pist tanınmıyor (${a.pist})`);
+  if (!a.acik?.length) y("en az bir ayar açık olmalı");
+  for (const k of a.acik ?? []) if (!(k in AYAR_ARALIKLARI)) y(`ayar tanınmıyor (${k})`);
+  for (const [k, v] of Object.entries(a.sabit ?? {})) {
+    const r = AYAR_ARALIKLARI[k as AyarAdi];
+    if (!r) y(`sabit ayar tanınmıyor (${k})`);
+    else if (!(typeof v === "number" && v >= r.en && v <= r.ust)) y(`${r.ad} ${r.en}–${r.ust} arasında olmalı`);
+  }
 }
 /** Bir ders listesinde yinelenen kimlikler */
 export function yinelenenKimlikler(dersler: DersTanimi[]): string[] {
@@ -217,5 +236,6 @@ export const PARCALAR: Record<string, string> = {
   "siyah-elektrik-bandi": "Siyah elektrik bandı",
   "beyaz-a4-kagit": "Beyaz A4 kâğıt",
   "cizgi-pisti": "Sınıfın çizgi pisti (siyah zemin, beyaz bant)",
-  "kamerali-telefon": "Kameralı bir telefon ya da tablet"
+  "kamerali-telefon": "Kameralı bir telefon ya da tablet",
+  "kronometre": "Kronometre (telefonunki de olur)"
 };

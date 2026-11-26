@@ -75,6 +75,8 @@ export function sensorGostergesi(ayar: Record<string, unknown>, denendi: (d: num
   const konumYazi = el("span", "sg-konum__yazi", {}, "");
   const grafik = canliGrafik({ baslik: "Konum, son 10 saniye", en: 0, ust: 7000 });
   const durumMetni = el("p", "s2-gizli", { "aria-live": "polite" }, "");
+  /* hesap görünümü: konumun ağırlıklı ortalamayla nasıl bulunduğu, o anki sayılarla */
+  const hesap = ayar.hesap ? el("div", "sg-hesap", { "aria-label": "Konumun hesabı" }) : null;
   /* zemin seçimi: Lab'daki gibi beyaz zemin ya da sınıftaki pist gibi siyah zemin; sayılar tersine döner */
   const zeminSecici = ayar.zeminSecilir
     ? secici("Pist", [["beyaz", "Beyaz zemin, siyah bant"], ["siyah", "Siyah zemin, beyaz bant"]], zemin, (z) => {
@@ -88,6 +90,7 @@ export function sensorGostergesi(ayar: Record<string, unknown>, denendi: (d: num
     el("div", "sg-alt", {},
       el("p", "sg-konum", {}, el("span", "", {}, "Konum "), konumSayi, el("span", "sg-konum__aralik", {}, " / 7000 · "), konumYazi),
       grafik.kap),
+    ...(hesap ? [hesap] : []),
     durumMetni);
 
   let oynadi = false, sonBildirilen: number | null = null;
@@ -106,6 +109,20 @@ export function sensorGostergesi(ayar: Record<string, unknown>, denendi: (d: num
     konumSayi.textContent = String(konum);
     konumYazi.textContent = konumYazisi(konum);
     kap.dataset.konum = String(konum);
+    if (hesap) {
+      const pay = zemin === "beyaz" ? ok : ok.map((v) => 1000 - v);
+      const terimler = pay.map((v, i) => ({ v, i })).filter((t) => t.v > 50);
+      const ust = terimler.reduce((t, x) => t + x.v * x.i * 1000, 0), alt = terimler.reduce((t, x) => t + x.v, 0);
+      hesap.replaceChildren(
+        el("p", "sg-hesap__baslik", {}, "Konum = (her sensörün değeri × sırası × 1000) toplamı ÷ değerlerin toplamı"),
+        terimler.length
+          ? el("p", "sg-hesap__satir", {},
+              el("span", "", {}, "Üst: ", terimler.map((t) => `${t.v} × ${t.i * 1000}`).join(" + "), ` = ${ust}`), el("br"),
+              el("span", "", {}, "Alt: ", terimler.map((t) => String(t.v)).join(" + "), ` = ${alt}`), el("br"),
+              el("b", "", {}, `Konum = ${ust} ÷ ${alt} ≈ ${Math.round(ust / alt)}`))
+          : el("p", "sg-hesap__satir", {}, "Hiçbir sensör çizgiyi görmüyor: robot çizginin en son görüldüğü tarafı kullanır (", el("b", "", {}, String(konum)), ")."),
+        el("p", "sg-hesap__not", {}, zemin === "siyah" ? "Siyah zeminde değerler önce ters çevrilir (1000 − okuma): çizgiyi gören sensör büyük sayı olsun diye. 50'den küçük değerler hesaba katılmaz." : "50'den küçük değerler hesaba katılmaz: beyaz zeminin küçük okumaları konumu bozmasın diye."));
+    }
     const en = enCokGorenSensor(ok, zemin);
     const metin = en === null ? `Çizgi hiçbir sensörün altında değil, konum ${konum}` : `Çizgi s[${en}] altında, konum ${konum}, ${konumYazisi(konum)}`;
     svg.setAttribute("aria-valuenow", String(Math.round(kayma)));
@@ -170,6 +187,12 @@ export const SENSOR_GOSTERGESI_STILI = `
 .sg-konum{margin:0;font-weight:700;color:var(--sra2-murekkep-2)}
 .sg-konum__sayi{font:800 var(--sra2-boy-6) var(--sra2-yazi-baslik);color:var(--sra2-murekkep);font-variant-numeric:tabular-nums;display:block;line-height:1.1}
 .sg-konum__yazi{color:var(--sra2-murekkep);font-weight:800}
+.sg-hesap{padding:12px 16px;border-radius:14px;background:var(--sra2-lavanta);color:var(--sra2-murekkep);display:grid;gap:6px}
+.sg-hesap p{margin:0}
+.sg-hesap__baslik{font-weight:800}
+.sg-hesap__satir{font:600 var(--sra2-boy-1)/1.7 var(--sra2-yazi-kod);overflow-wrap:anywhere}
+.sg-hesap__satir b{font-size:var(--sra2-boy-2)}
+.sg-hesap__not{font-size:var(--sra2-boy-1);color:var(--sra2-murekkep-2)}
 @media (max-width:600px){.sg-alt{grid-template-columns:1fr}.sg-cubuklar{gap:3px}.sg-cubuk__sayi{font-size:11px}.sg-cubuk__ad{font-size:10px}}
 @media (prefers-reduced-motion: reduce){.sg-isik,.sg-cubuk__dolgu{transition:none}}
 `;

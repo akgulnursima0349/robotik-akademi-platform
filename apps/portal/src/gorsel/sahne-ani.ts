@@ -39,10 +39,11 @@ export function sahneAniKur(ad: string, an: SahneAni): SahneOynatici {
   s.kontrol.minDistance = 0.08;
 
   /* zemin */
-  if (an.zemin === "bant") {
-    const kagit = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.001, 0.3), new THREE.MeshStandardMaterial({ color: 0xf7f7f4, roughness: 0.9 }));
+  if (an.zemin === "bant" || an.zemin === "beyaz-bant") {
+    const siyahZemin = an.zemin === "beyaz-bant";
+    const kagit = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.001, 0.3), new THREE.MeshStandardMaterial({ color: siyahZemin ? 0x1d1b19 : 0xf7f7f4, roughness: 0.9 }));
     kagit.position.set(0.05, 0.0005, 0); kagit.receiveShadow = true;
-    const bant = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.0012, 0.019), new THREE.MeshStandardMaterial({ color: 0x141414, roughness: 0.5 }));
+    const bant = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.0012, 0.019), new THREE.MeshStandardMaterial({ color: siyahZemin ? 0xf4f4f0 : 0x141414, roughness: 0.5 }));
     bant.position.set(0.05, 0.0011, 0); bant.receiveShadow = true;
     s.sahne.add(kagit, bant);
   }

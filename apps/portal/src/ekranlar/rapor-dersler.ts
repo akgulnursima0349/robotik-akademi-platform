@@ -62,7 +62,7 @@ export function derslerKarti(satirlar: RaporSatiri[], dersler: DersTanimi[], ona
         : h.ozet.onayli ? "öğretmen onayladı" : h.ozet.gercek ? "sınıfta yaptım dedi" : "işaretlenmedi";
       return el("li", "", {}, el("span", "", {}, ad), el("b", "", {}, deger));
     };
-    const ayrinti = el("details", "rd-hucre", { "data-durum": h.durum },
+    const ayrinti = el("details", "rd-hucre", { "data-durum": h.durum, "data-ders": d.kimlik },
       el("summary", "rd-ozet-dugme", { "aria-label": `${s.takma_ad}, ${d.ad}: ${bilgi.ad}` },
         el("span", `rd-d rd-d--${h.durum}`, { "aria-hidden": "true" }, bilgi.simge), el("span", "rd-durum", {}, bilgi.ad.split(",")[0]), isaretler),
       el("div", "rd-ayrinti", {},
