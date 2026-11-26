@@ -8,6 +8,7 @@
     "./siroline": "./src/siroline.ts",
     "./kenshin": "./src/kenshin.ts",
     "./rizbot": "./src/rizbot.ts",
+    "./mbot": "./src/mbot.ts",
     "./an": "./src/an.ts"
   },
   "dependencies": { "three": "^0.187.0", "@sra/robot-motoru": "*" },

@@ -2,11 +2,12 @@
    @sra/sahne paketinde. Derslerin anlatım adımları bu adlara başvurur; doğrulayıcı olmayan adı hata sayar. */
 
 import { LABIRENT_CIZIMLERI } from "./gorseller-labirent";
+import { MBOT_CIZIMLERI } from "./gorseller-mbot";
 
 /* ---------- 3D sahne anı ---------- */
 export type SahneAcisi = "onden" | "yandan" | "ustten" | "alttan" | "yakin";
 export interface SahneAni {
-  robot: "SiroLine" | "Kenshin" | "RizBot";
+  robot: "SiroLine" | "Kenshin" | "RizBot" | "mBot";
   aci: SahneAcisi;
   /** vurgulanan parça grubu (robot modelinin parça adı) ve sahnedeki etiketi */
   vurgu?: { parca: string; etiket: string };
@@ -48,6 +49,26 @@ export const SAHNE_ANLARI: Record<string, SahneAni> = {
     vurgu: { parca: "baslatma", etiket: "Start modülü" },
     aciklama: "Kenshin yakından: üstündeki küçük kart, hakemin kumandasından gelen başla sinyalini alan start modülü."
   },
+  "mbot-onden": {
+    robot: "mBot", aci: "onden", zemin: "duz", hareket: "nabiz",
+    vurgu: { parca: "ultrasonik", etiket: "Mesafe sensörü" },
+    aciklama: "mBot önden: mavi alüminyum gövde, üstte şeffaf kapaklı kart, önde iki gümüş gözlü ultrasonik mesafe sensörü."
+  },
+  "mbot-tekerler": {
+    robot: "mBot", aci: "yandan", zemin: "duz",
+    vurgu: { parca: "tekerler", etiket: "İki motor, iki teker" },
+    aciklama: "mBot yandan: arkada iki büyük teker; her tekeri ayrı bir motor çevirir. Önde küçük bir bilye teker."
+  },
+  "mbot-cizgi-sensoru": {
+    robot: "mBot", aci: "alttan", zemin: "duz", hareket: "nabiz",
+    vurgu: { parca: "cizgiSensoru", etiket: "Çizgi sensörü: iki göz" },
+    aciklama: "mBot ters çevrilmiş, altı görünüyor: önde çizgi sensörü ve yere bakan iki gözü; arkada iki teker."
+  },
+  "mbot-kart": {
+    robot: "mBot", aci: "ustten", zemin: "duz", hareket: "nabiz",
+    vurgu: { parca: "isikSensoru", etiket: "Işık sensörü ve iki ışık (LED)" },
+    aciklama: "mBot üstten: şeffaf kapağın altında mCore kartı (robotun beyni); önünde iki renkli ışık ve ortada ışık sensörü."
+  },
   "rizbot-labirentte": {
     robot: "RizBot", aci: "onden", zemin: "labirent", hareket: "nabiz",
     vurgu: { parca: "sensorler", etiket: "Kızılötesi duvar sensörleri" },
@@ -77,7 +98,7 @@ export const SAHNE_ANLARI: Record<string, SahneAni> = {
 
 /* ---------- adım adım çizim ---------- */
 /** Çizim alanı 400 × 260 birim. Renkler v2 paletinden ad olarak. */
-export type CizimRengi = "murekkep" | "kirmizi" | "mor" | "yesil" | "sari" | "gri" | "beyaz" | "siyah" | "kahve";
+export type CizimRengi = "murekkep" | "kirmizi" | "mor" | "yesil" | "sari" | "gri" | "beyaz" | "siyah" | "kahve" | "mavi";
 export type Sekil =
   | { tur: "kutu"; x: number; y: number; g: number; y2: number; dolgu?: CizimRengi; kose?: number }
   | { tur: "daire"; x: number; y: number; r: number; dolgu?: CizimRengi }
@@ -404,8 +425,8 @@ export const gorselVarMi = (tur: "sahne" | "cizim", ad: string) => (tur === "sah
 
 /** Hangi katmanlar görünür. Ses okurken kelimeye göre (kelime: okunan kelimenin sırası), yoksa saniyeye göre (her katman
     sırası gelince, saniyede bir). Hareketi azalt açıksa ya da okuma bittiyse hepsi. Sonuç: görünen katmanların sıraları. */
-/* labirent modülünün çizimleri ayrı dosyada (metinleriyle birlikte) */
-Object.assign(CIZIMLER, LABIRENT_CIZIMLERI);
+/* labirent ve ilkokul (mBot) modüllerinin çizimleri ayrı dosyalarda (metinleriyle birlikte) */
+Object.assign(CIZIMLER, LABIRENT_CIZIMLERI, MBOT_CIZIMLERI);
 
 export function gorunenKatmanlar(c: Cizim, o: { kelime?: number; saniye?: number; bitti?: boolean; azHareket?: boolean }): number[] {
   const hepsi = c.katmanlar.map((_, i) => i);

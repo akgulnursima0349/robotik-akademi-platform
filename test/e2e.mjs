@@ -196,9 +196,10 @@ for (const [ad, g, y] of BOYUTLAR) {
   await p.click('a.s2-atolye[data-kurs="lab"]');
   await p.waitForSelector("#at-ozet");
   ok(await p.evaluate(() => location.hash) === "#atolye/robotik", "ana sayfadaki Robotik kartı atölye sayfasını açıyor");
-  ok((await p.$$eval("#at-onerilen [data-modul]", (m) => m.map((x) => x.dataset.modul).join(","))) === "kar", "ilkokulda önerilen modül Kar Küreme; diğerleri ayrı başlıkta");
+  ok((await p.$$eval("#at-onerilen [data-modul]", (m) => m.map((x) => x.dataset.modul).join(","))) === "mbot,kar", "ilkokulda önerilen modüller Robot Görevleri ve Kar Küreme; diğerleri ayrı başlıkta");
   ok((await p.$$("#at-diger [data-modul]")).length === 3, "diğer üç modül: Çizgi, Labirent, Sumo");
-  ok(await p.getAttribute('.at-ders[aria-current="step"]', "data-ders") === "ilk-sokak" && (await p.getAttribute("#at-devam", "href")) === "lab/#kar/ilk-sokak", "boş ilerlemede ilk görev şimdiki, 'Başla' onu açıyor");
+  ok(await p.getAttribute('.at-ders[aria-current="step"]', "data-ders") === "motor-ve-teker" && (await p.getAttribute("#at-devam", "href")) === "#ders/motor-ve-teker", "boş ilerlemede ilk ders şimdiki, 'Başla' onu açıyor");
+  ok(await p.$eval('[data-modul="kar"] .at-ders[data-ders="ilk-sokak"]', (e) => !e.classList.contains("kilitli")) && await p.$eval('[data-modul="kar"] .at-ders[data-ders="kose"]', (e) => e.classList.contains("kilitli")), "Kar Küreme'de ilk görev açık, ikincisi kilitli");
   ok((await p.$$('#at-onerilen .at-ders.kilitli[aria-disabled="true"]')).length >= 4 && (await p.$$("#at-onerilen div.at-ders a, #at-onerilen .at-ders.kilitli[href]")).length === 0, "sıradaki görevler kilitli, bağlantısız");
   ok(await tasmaYok(p) && await p.evaluate(() => [...document.querySelectorAll(".at-ust *, .at-govde *")].every((e) => e.getBoundingClientRect().right <= innerWidth + 1)), "atölye sayfasında hiçbir öğe ekrandan taşmıyor");
   await p.screenshot({ path: resolve(EKRAN, `atolye-robotik-bos-${ad}.png`), fullPage: true });
@@ -206,8 +207,8 @@ for (const [ad, g, y] of BOYUTLAR) {
   await p.evaluate(() => localStorage.setItem("sra-lab-v1", JSON.stringify({ gorevler: { "ilk-sokak": { yildiz: 3 }, kose: { yildiz: 2 }, "cizgi-oval": { yildiz: 1 } }, lig: null, bayrak: { "siro-kurulum": true } })));
   await p.reload(); await p.waitForSelector("#at-ozet");
   const ozet = await p.textContent("#at-ozet");
-  ok(/4 \/ 35\s*ders bitti/.test(ozet) && /6 \/ 45 yıldız/.test(ozet), "Lab kaydından: 35 dersin 4'ü bitti (iki Kar, bir Çizgi, kurulum rehberi), 6 yıldız (" + ozet.replace(/\s+/g, " ").slice(0, 60) + ")");
-  ok(await p.getAttribute('.at-ders[aria-current="step"]', "data-ders") === "uzun-cadde" && /devam/i.test(await p.textContent("#at-devam")), "kaldığın yer üçüncü görev; düğme 'Kaldığın yerden devam et'");
+  ok(/4 \/ 43\s*ders bitti/.test(ozet) && /6 \/ 45 yıldız/.test(ozet), "Lab kaydından: 43 dersin 4'ü bitti (iki Kar, bir Çizgi, kurulum rehberi), 6 yıldız (" + ozet.replace(/\s+/g, " ").slice(0, 60) + ")");
+  ok(await p.$eval('[data-modul="kar"] .at-ders[data-ders="uzun-cadde"]', (e) => !e.classList.contains("kilitli")) && await p.$eval('[data-modul="kar"] .at-ders[data-ders="okul-yolu"]', (e) => e.classList.contains("kilitli")) && /devam/i.test(await p.textContent("#at-devam")), "Kar Küreme'de üçüncü görev açıldı; düğme 'Kaldığın yerden devam et'");
   ok((await p.$$('[data-modul="kar"] .at-ders.bitti')).length === 2 && (await p.$$('[data-modul="cizgi"] .at-ders.bitti')).length === 2, "biten dersler yeşil (rehber dahil)");
   await p.screenshot({ path: resolve(EKRAN, `atolye-robotik-${ad}.png`), fullPage: true });
   if (ad === "masaustu") {
@@ -215,8 +216,8 @@ for (const [ad, g, y] of BOYUTLAR) {
     await p.focus('[data-modul="labirent"] summary');
     await p.keyboard.press("Enter");
     ok(await p.$eval('[data-modul="labirent"] details', (d) => d.open), "ders listesi klavyeyle açılıyor");
-    await p.click("#at-devam"); await p.waitForURL(/\/lab\/#kar\/uzun-cadde$/); await hazir(p);
-    ok(true, "devam düğmesi Lab'da doğru görevi açtı");
+    await p.$eval('[data-modul="kar"] details', (d) => { d.open = true; }); await p.click('[data-modul="kar"] .at-ders[data-ders="uzun-cadde"]'); await p.waitForURL(/\/lab\/#kar\/uzun-cadde$/); await hazir(p);
+    ok(true, "sıradaki görev Lab'da doğru görevi açtı");
     await p.goBack(); await p.waitForSelector("#at-ozet");
     await p.click(".at-geri"); await p.waitForSelector("#atolyeler");
     ok(await p.evaluate(() => location.hash) === "#atolyeler", "geri bağlantısı ana sayfadaki atölyelere dönüyor");
@@ -564,6 +565,166 @@ for (const [ad, g, y] of BOYUTLAR) {
     ok(adimlar >= 3, `${k}: anlatım ${adimlar} adım, hepsi görselli`);
   }
   ok(hatalar.length === 0, "Mini Sumo derslerinde konsol hatası yok" + (hatalar.length ? ": " + hatalar.slice(0, 2).join(" | ") : ""));
+  await ctx.close();
+}
+
+/* İlkokul · Robot görevleri (mBot): sekiz ders; deneyler, kart programı (dokunarak), bilmece, çizgi tablosu, harita tasarımı */
+for (const [ad, g, y] of BOYUTLAR) {
+  console.log(`\nmBot dersleri · ${ad}`);
+  const { ctx, p, hatalar } = await sayfaAc(g, y, {}, ad !== "masaustu");
+  const tasmasiz = async () => (await tasmaYok(p)) && p.evaluate(() => [...document.querySelectorAll(".dr-govde *")].filter((e) => !e.closest("svg") && !e.closest("pre")).every((e) => e.getBoundingClientRect().right <= innerWidth + 1));
+  const dersler = ["motor-ve-teker", "donmek", "sensor-ne-gorur", "eger-degilse", "dongu-ve-sensor", "enerji", "cizgiyi-izle", "mini-proje"];
+  await p.goto(ADRES + "#atolye/robotik"); await p.waitForSelector("#at-ozet");
+  ok((await Promise.all(dersler.map((k) => p.$(`[data-ders="${k}"]`)))).every(Boolean), "atölye sayfasında Robot Görevleri'nin sekiz dersi");
+  const kayit = (k) => p.evaluate((k) => { localStorage.clear(); localStorage.setItem("sra-ders-v1", JSON.stringify({ dersler: k })); }, k);
+  const ac = async (ders, bolum, secici) => { await p.goto(ADRES + "#ders/" + ders); await p.reload(); await p.waitForSelector(".dr-govde"); await p.click(`[data-bolum="${bolum}"]`); await p.waitForSelector(secici); };
+  const denendi = () => p.textContent(".dr-denendi");
+  const anlatBitti = (k) => ({ [k]: { anlat: { adim: 3, bitti: true } } });
+  const kaydir = (sec, i, v) => p.evaluate(([sec, i, v]) => { const gi = document.querySelectorAll(`${sec} input[type=range]`)[i]; gi.value = String(v); gi.dispatchEvent(new Event("input")); gi.dispatchEvent(new Event("change")); }, [sec, i, v]);
+  const kart = (t) => p.click(`.kp-palet [data-kart="${t}"]`);
+  const yuva = (ad, n = 0) => p.locator(`.kp-yuva[data-yuva="${ad}"]`).nth(n).click();
+  const calistirBekle = async () => { await p.click("#kp-calistir"); await p.waitForFunction(() => !document.querySelector("#kp-calistir").disabled && document.querySelector(".kp-durum").dataset.sonuc, null, { timeout: 60000 }); };
+  const yildiz = (sec) => p.getAttribute(sec, "data-yildiz");
+  /* 1 · teker deneyi ve düz sokak (yalnız ileri) */
+  await kayit(anlatBitti("motor-ve-teker"));
+  await ac("motor-ve-teker", "dene", '[data-deney="teker"]');
+  await kaydir('[data-deney="teker"]', 1, 1);
+  const yol1 = await p.getAttribute('[data-deney="teker"]', "data-yol");
+  await kaydir('[data-deney="teker"]', 0, 10); await kaydir('[data-deney="teker"]', 1, 3);
+  ok(yol1 === "20,1" && /3 \/ 3 denendi/.test(await denendi()), `teker: 1 turda ${yol1} cm, üç ayar denendi`);
+  ok(await tasmasiz(), "teker deneyinde taşma yok");
+  await p.screenshot({ path: resolve(EKRAN, `mbot-teker-${ad}.png`), fullPage: true });
+  await p.click("#dr-goreve"); await p.waitForSelector('[data-gorev="kart"]');
+  for (let i = 0; i < 7; i++) await kart("ileri");
+  await calistirBekle();
+  ok((await p.getAttribute(".kp-durum", "data-sonuc")) === "carpma" && !(await yildiz('[data-gorev="kart"]')) === false, "yedi ileri: robot binaya çarpıyor, hata yazıyor");
+  await p.locator(".kp-sil").last().click();
+  ok(/6 kart/.test(await p.textContent(".kp-sayac")), "kart silinebiliyor");
+  await calistirBekle();
+  await p.waitForSelector("#dr-bitti");
+  ok((await yildiz('[data-gorev="kart"]')) === "3", "düz sokak: altı ileri kartı, üç yıldız, ders bitti");
+  ok(await tasmasiz(), "kart görevinde taşma yok");
+  await p.screenshot({ path: resolve(EKRAN, `mbot-kart-${ad}.png`), fullPage: true });
+  /* 2 · iki teker ve köşeler */
+  await kayit(anlatBitti("donmek"));
+  await ac("donmek", "dene", '[data-deney="iki-teker"]');
+  const hareket = () => p.getAttribute('[data-deney="iki-teker"]', "data-hareket");
+  await kaydir('[data-deney="iki-teker"]', 1, 5); const h1 = await hareket();
+  await kaydir('[data-deney="iki-teker"]', 1, -20); const h2 = await hareket();
+  await kaydir('[data-deney="iki-teker"]', 0, 0); await kaydir('[data-deney="iki-teker"]', 1, 20); const h3 = await hareket();
+  ok([h1, h2, h3].join() === "saga,yerinde,sola" && /3 \/ 3 denendi/.test(await denendi()), `iki teker: ${h1}, ${h2}, ${h3}`);
+  await p.click("#dr-goreve"); await p.waitForSelector('[data-gorev="kart"]');
+  for (const t of ["ileri", "ileri", "sag", "ileri", "ileri", "sol", "ileri", "ileri", "ileri"]) await kart(t);
+  await calistirBekle(); await p.waitForSelector("#dr-bitti");
+  ok((await yildiz('[data-gorev="kart"]')) === "3", "köşeler: dokuz kart, üç yıldız");
+  /* 3 · sensör gezdirme (klavye) ve bilmece */
+  await kayit(anlatBitti("sensor-ne-gorur"));
+  await ac("sensor-ne-gorur", "dene", '[data-deney="sensor-gezdirme"]');
+  await p.focus('[data-deney="sensor-gezdirme"] svg');
+  const durumlar = new Set();
+  for (let i = 0; i < 20; i++) { await p.keyboard.press("ArrowRight"); durumlar.add(await p.getAttribute('[data-deney="sensor-gezdirme"]', "data-durum")); }
+  ok(durumlar.has("siyah-karanlik-uzak") && durumlar.has("beyaz-aydinlik-yakin") && /4 \/ 4 denendi/.test(await denendi()), `sensörler: bant, lamba ve duvar okunuyor (${[...durumlar].join(" ")})`);
+  ok(/cm/.test(await p.textContent('[data-sensor="mesafe"]')), "mesafe sensörü santimetre gösteriyor");
+  ok(await tasmasiz(), "sensör deneyinde taşma yok");
+  await p.screenshot({ path: resolve(EKRAN, `mbot-sensor-${ad}.png`), fullPage: true });
+  await p.click("#dr-goreve"); await p.waitForSelector('[data-gorev="bilmece"]');
+  await p.click('[data-gorev="bilmece"] [data-secenek="0"]');
+  ok(/bir daha/.test(await p.textContent('[data-gorev="bilmece"] .lb-karar')), "bilmece: yanlış cevapta ipucu");
+  for (const [i, c] of [1, 1, 0, 1, 2].entries()) { await p.click(`[data-gorev="bilmece"] [data-secenek="${c}"]`); await p.click("#mb-bilmece-ileri"); void i; }
+  await p.waitForSelector("#dr-bitti");
+  ok((await yildiz('[data-gorev="bilmece"]')) === "2", "bilmece: biri ikinci denemede, iki yıldız; ders bitti");
+  /* 4 · karar deneyi ve eğer görevi (iç içe kartlar) */
+  await kayit(anlatBitti("eger-degilse"));
+  await ac("eger-degilse", "dene", '[data-deney="karar"]');
+  await p.click("#mb-engel"); const k1 = await p.getAttribute('[data-deney="karar"]', "data-kol");
+  await p.click("#mb-engel"); const k2 = await p.getAttribute('[data-deney="karar"]', "data-kol");
+  ok(k1 === "eger" && k2 === "degilse" && /2 \/ 2 denendi/.test(await denendi()), "karar: bina varken eğer, yokken değilse kolu");
+  await p.click("#dr-goreve"); await p.waitForSelector('[data-gorev="kart"]');
+  await kart("tekrarla");
+  for (let i = 0; i < 4; i++) await p.click('.kp-kart[data-kart="tekrarla"] [aria-label="Bir artır"]');
+  await yuva("Tekrarla kartının içi"); await kart("eger");
+  await yuva("Eğer kartının içi"); await kart("sag");
+  await yuva("Değilse kolu"); await kart("ileri");
+  ok(/7 kez/.test(await p.textContent(".kp-kez")) && /4 kart/.test(await p.textContent(".kp-sayac")), "iç içe kartlar: tekrarla 7 kez içinde eğer–değilse");
+  await calistirBekle(); await p.waitForSelector("#dr-bitti");
+  ok((await yildiz('[data-gorev="kart"]')) === "3", "eğer görevi: iki sokakta aynı program, üç yıldız");
+  ok(await tasmasiz(), "iç içe kartlarda taşma yok");
+  await p.screenshot({ path: resolve(EKRAN, `mbot-eger-${ad}.png`), fullPage: true });
+  /* 5 · sokak deneyi ve sürece görevi */
+  await kayit(anlatBitti("dongu-ve-sensor"));
+  await ac("dongu-ve-sensor", "dene", '[data-deney="sokak"]');
+  for (const v of [6, 8, 3]) await kaydir('[data-deney="sokak"]', 0, v);
+  await p.waitForFunction(() => document.querySelector('[data-deney="sokak"]').dataset.adim === "3", null, { timeout: 20000 });
+  ok(/3 \/ 3 denendi/.test(await denendi()) && /3 kez ileri gitti/.test(await p.textContent('[data-deney="sokak"] .lb-karar')), "sürece: robot her sokağın sonunda duruyor");
+  await p.click("#dr-goreve"); await p.waitForSelector('[data-gorev="kart"]');
+  await kart("surece"); await yuva("Sürece kartının içi"); await kart("ileri");
+  await yuva("Program"); await kart("sag"); await kart("surece"); await yuva("Sürece kartının içi", 1); await kart("ileri");
+  await calistirBekle(); await p.waitForSelector("#dr-bitti");
+  ok((await yildiz('[data-gorev="kart"]')) === "3", "sürece görevi: farklı uzunlukta iki sokak, beş kart, üç yıldız");
+  /* 6 · batarya deneyi ve şarj görevi */
+  await kayit(anlatBitti("enerji"));
+  await ac("enerji", "dene", '[data-deney="batarya"]');
+  await p.click("#mb-pil-calistir"); const b1 = await p.getAttribute('[data-deney="batarya"]', "data-sonuc");
+  for (const i of [2, 3, 4, 5]) await p.click(`[data-deney="batarya"] .kp-h[data-x="${i}"][data-y="1"]`);
+  await p.click("#mb-pil-calistir"); const b2 = await p.getAttribute('[data-deney="batarya"]', "data-sonuc");
+  await p.click(`[data-deney="batarya"] .kp-h[data-x="6"][data-y="1"]`); await p.click(`[data-deney="batarya"] .kp-h[data-x="6"][data-y="1"]`);
+  await p.click("#mb-pil-calistir");
+  ok(b1 === "batarya" && b2 === "vardi" && /3 \/ 3 denendi/.test(await denendi()), "batarya: karlı sokakta bitiyor, temiz karelerle yetiyor");
+  await p.click("#dr-goreve"); await p.waitForSelector('[data-gorev="kart"]');
+  await kart("tekrarla"); await p.click('.kp-kart[data-kart="tekrarla"] [aria-label="Bir artır"]'); await yuva("Tekrarla kartının içi"); await kart("ileri");
+  await yuva("Program"); await kart("sag"); await kart("ileri");
+  await kart("tekrarla"); await p.locator('.kp-kart[data-kart="tekrarla"]').nth(1).locator('[aria-label="Bir azalt"]').click(); await yuva("Tekrarla kartının içi", 1); await kart("sol");
+  await yuva("Program"); await kart("ileri"); await kart("sag");
+  await kart("tekrarla"); for (let i = 0; i < 2; i++) await p.locator('.kp-kart[data-kart="tekrarla"]').nth(2).locator('[aria-label="Bir artır"]').click(); await yuva("Tekrarla kartının içi", 2); await kart("ileri");
+  await calistirBekle(); await p.waitForSelector("#dr-bitti");
+  ok((await yildiz('[data-gorev="kart"]')) === "3", "şarj görevi: istasyona uğrayarak, on kart, üç yıldız");
+  /* 7 · iki göz deneyi ve çizgi tablosu */
+  await kayit(anlatBitti("cizgiyi-izle"));
+  await ac("cizgiyi-izle", "dene", '[data-deney="iki-goz"]');
+  const gd = [];
+  for (const v of [1, -1, 3, 0]) { await kaydir('[data-deney="iki-goz"]', 0, v); gd.push(await p.getAttribute('[data-deney="iki-goz"]', "data-durum")); }
+  ok(gd.join() === "sag-beyaz,sol-beyaz,ikisi-beyaz,ikisi-siyah" && /4 \/ 4 denendi/.test(await denendi()), "iki göz: dört durum");
+  await p.click("#dr-goreve"); await p.waitForSelector('[data-gorev="cizgi"]');
+  const tablo = async (t) => { for (const [d, h] of Object.entries(t)) await p.selectOption(`[data-gorev="cizgi"] select[data-durum="${d}"]`, h); };
+  await tablo({ "ikisi-siyah": "ileri", "sol-beyaz": "sola", "sag-beyaz": "saga", "ikisi-beyaz": "geri" });
+  await p.click("#mb-cizgi-calistir"); await p.waitForFunction(() => !document.querySelector("#mb-cizgi-calistir").disabled, null, { timeout: 60000 });
+  ok((await yildiz('[data-gorev="cizgi"]')) === "0" && /bitmedi|çıktı/.test(await p.textContent('[data-gorev="cizgi"] .rs-sonuc')), "ters tablo: mBot turu bitiremiyor");
+  await tablo({ "sol-beyaz": "saga", "sag-beyaz": "sola" });
+  await p.click("#mb-cizgi-calistir"); await p.waitForSelector("#dr-bitti", { timeout: 60000 });
+  ok((await yildiz('[data-gorev="cizgi"]')) === "3", "doğru tablo: bir tur, üç yıldız");
+  ok(await tasmasiz(), "çizgi görevinde taşma yok");
+  await p.screenshot({ path: resolve(EKRAN, `mbot-cizgi-${ad}.png`), fullPage: true });
+  /* 8 · harita tasarımı ve kendi haritanı çöz */
+  await kayit(anlatBitti("mini-proje"));
+  await ac("mini-proje", "dene", '[data-deney="harita-tasarimcisi"]');
+  for (const [x, yy] of [[2, 1], [3, 1], [4, 1], [5, 1], [6, 1], [7, 1], [7, 2], [7, 3]]) await p.click(`.kp-tasarim .kp-h[data-x="${x}"][data-y="${yy}"]`);
+  const kod = await p.textContent(".kp-kod");
+  ok(/8 karlı kare/.test(await p.textContent('[data-deney="harita-tasarimcisi"] .kp-sayac')) && /5 \/ 5 denendi/.test(await denendi()) && /^1-11-/.test(kod), `harita tasarımı: sekiz karlı kare, kod ${kod}`);
+  await p.fill(".kp-kod-gir", "bozuk"); await p.click("#kp-kod-yukle");
+  ok(/benzemiyor/.test(await p.textContent('[data-deney="harita-tasarimcisi"] .kp-bilgi')), "bozuk harita kodu reddediliyor");
+  ok(await tasmasiz(), "harita tasarımcısında taşma yok");
+  await p.screenshot({ path: resolve(EKRAN, `mbot-tasarim-${ad}.png`), fullPage: true });
+  await p.click("#dr-goreve"); await p.waitForSelector('[data-gorev="tasarim"]');
+  await kart("surece"); await yuva("Sürece kartının içi"); await kart("ileri");
+  await yuva("Program"); await kart("sag"); await kart("surece"); await yuva("Sürece kartının içi", 1); await kart("ileri");
+  await calistirBekle(); await p.waitForSelector("#dr-bitti");
+  ok((await yildiz('[data-gorev="tasarim"]')) === "3", "kendi haritasını sürece kartlarıyla temizliyor: üç yıldız");
+  /* anlatımlar görselli */
+  for (const k of dersler) {
+    await kayit({});
+    await p.goto(ADRES + "#ders/" + k); await p.reload(); await p.waitForSelector(".dr-anlat");
+    let adimlar = 0;
+    for (;;) {
+      await p.waitForSelector(".dr-gorsel--dolu");
+      adimlar++;
+      if (!(await p.isEnabled("#dr-ileri"))) for (const b of await p.$$("#dr-soru .dr-secenekler button")) { await b.click(); if (await p.isEnabled("#dr-ileri")) break; }
+      const son = /bitir/.test(await p.textContent("#dr-ileri"));
+      await p.click("#dr-ileri");
+      if (son) break;
+    }
+    ok(adimlar >= 3, `${k}: anlatım ${adimlar} adım, hepsi görselli`);
+  }
+  ok(hatalar.length === 0, "mBot derslerinde konsol hatası yok" + (hatalar.length ? ": " + hatalar.slice(0, 2).join(" | ") : ""));
   await ctx.close();
 }
 
@@ -1219,7 +1380,7 @@ for (const [ad, g, y] of BOYUTLAR) {
     await p.goto(ADRES + "#giris"); await hazir(p);
     await p.click("#g-ogretmen"); await p.fill("#g-eposta", "ogretmen@deneme.com"); await p.fill("#g-sifre", "deneme123"); await p.click("button[type=submit]");
     await p.waitForSelector('[data-rapor="s1"]'); await p.click('[data-rapor="s1"]'); await p.waitForSelector("#r-dersler");
-    await p.locator('#r-dersler tr[data-ogrenci="o1"] summary').click(); await p.click('#r-dersler tr[data-ogrenci="o1"] .rd-geri');
+    await p.locator('#r-dersler tr[data-ogrenci="o1"] .rd-hucre[data-ders="siroline-sensor"] summary').click(); await p.click('#r-dersler tr[data-ogrenci="o1"] .rd-hucre[data-ders="siroline-sensor"] .rd-geri');
     await p.waitForFunction(() => document.querySelector('#r-dersler tr[data-ogrenci="o1"] .rd-hucre[data-ders="siroline-sensor"]')?.dataset.durum === "onay-bekliyor");
     ok(true, "öğretmen onayı geri aldı");
     await cikis(); await ogrenciGiris();

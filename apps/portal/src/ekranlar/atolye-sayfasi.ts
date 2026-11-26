@@ -61,7 +61,7 @@ a.at-ders:hover{background:var(--sra2-mor-acik)}
 .at-ders__son{margin-left:auto;flex:none;font-weight:800;font-size:var(--sra2-boy-1)}
 .at-ders .s2-yildizlar .s2-ikon{width:20px;height:20px}
 .at-ders[aria-current="step"] .s2-yildizlar .s2-ikon:not(.dolu){color:rgba(255,255,255,.45)}
-@media (max-width:900px){.at-bas{grid-template-columns:1fr;gap:20px}}
+@media (max-width:900px){.at-bas{grid-template-columns:minmax(0,1fr);gap:20px}}
 .at-ozet .s2-dugme{white-space:normal;text-align:left;min-height:var(--sra2-hedef-buyuk);padding-block:8px;flex-wrap:wrap;row-gap:2px}
 @media (max-width:560px){.at-ozet .s2-dugme__ek{display:none}}
 `;
@@ -119,7 +119,7 @@ export function atolyeSayfasi(root: HTMLElement, kimlik: string): void {
       const sinif = "at-ders " + (d.durum === "bitti" ? "bitti" : d.durum === "kilitli" ? "kilitli" : "");
       const son = d.ders.tur === "gorev"
         ? (d.durum === "kilitli" ? el("span", "at-ders__son", {}, "Önceki görevi bitir") : yildizlar(3, d.yildiz))
-        : el("span", "at-ders__son", {}, d.ders.tur === "serbest" ? "Serbest çalışma" : d.durum === "bitti" ? (d.ders.tur === "lig" ? "Robotun kayıtlı" : "Bitti") : d.ders.tur === "lig" ? "Robotunu yaz" : "Rehber");
+        : el("span", "at-ders__son", {}, d.ders.tur === "serbest" ? "Serbest çalışma" : d.durum === "bitti" ? (d.ders.tur === "lig" ? "Robotun kayıtlı" : "Bitti") : d.ders.tur === "lig" ? "Robotunu yaz" : d.ders.tur === "ders" ? (d.durum === "kilitli" ? "Önceki dersi bitir" : "Ders") : "Rehber");
       const durumIkon = el("span", "at-ders__durum", { "aria-hidden": "true" }, ikon(d.durum === "bitti" ? "tamam" : d.durum === "kilitli" ? "kilit" : "oynat"));
       const metin = el("span", "at-ders__metin", {}, el("b", "", {}, d.ders.ad), el("small", "", {}, d.ders.ogretir),
         el("span", "s2-gizli", {}, d.durum === "bitti" ? " (bitti)" : d.durum === "kilitli" ? " (kilitli)" : ""));

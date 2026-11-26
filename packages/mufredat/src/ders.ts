@@ -6,13 +6,13 @@
    İlerleme kaydı ders başına bölüm durumlarını tutar; iki cihazdaki kayıt "ileri olan kalır" kuralıyla birleşir.
    Öğretmen onayı bu kayıtta tutulmaz: öğrencinin yazdığı kayda güvenilemez. Onay öğretmenin kendi kaydından gelir (E5) ve
    durum hesabına ayrıca verilir. */
-import { AYAR_ARALIKLARI, AYAR_PISTLERI, CIZGI_GOREVLERI, DERS_LABIRENTLERI, DURUMLAR, ROTA_GOREVLERI, SIS_GOREVLERI, GOREVLER, HAMLELER, HAZIR_RAKIPLER, LABIRENT_GOREVLERI, type AyarAdi, type AyarDegerlendirme, type Durum, type StratejiDegerlendirme, type StratejiKartlari } from "@sra/robot-motoru";
+import { AYAR_ARALIKLARI, AYAR_PISTLERI, CIZGI_GOREVLERI, DERS_LABIRENTLERI, DURUMLAR, KART_GOREVLERI, ROTA_GOREVLERI, SIS_GOREVLERI, GOREVLER, HAMLELER, HAZIR_RAKIPLER, LABIRENT_GOREVLERI, type AyarAdi, type AyarDegerlendirme, type Durum, type StratejiDegerlendirme, type StratejiKartlari } from "@sra/robot-motoru";
 import type { Seviye } from "./model";
 import { gorselVarMi } from "./gorseller";
 
 export type BitHali = "anlatiyor" | "dusunuyor" | "ipucu" | "seviniyor" | "sasiriyor" | "bekliyor";
 export const BIT_HALLERI: readonly BitHali[] = ["anlatiyor", "dusunuyor", "ipucu", "seviniyor", "sasiriyor", "bekliyor"];
-export type Robot = "SiroLine" | "Kenshin" | "RizBot";
+export type Robot = "SiroLine" | "Kenshin" | "RizBot" | "mBot";
 
 export interface Soru { soru: string; secenekler: { metin: string; dogru?: boolean }[]; aciklama: string }
 export interface AnlatimAdimi {
@@ -26,7 +26,8 @@ export interface AnlatimAdimi {
 }
 /** Ders sayfasının tanıdığı deney bileşenleri (portaldaki kayıt defteri bu adlarla kurulur) */
 export const DENEY_BILESEN_ADLARI = ["sensor-gostergesi", "kaydirici", "cizgi-simulasyonu", "ring-simulasyonu", "sensor-gorusu", "itme-deneyi", "kart-kodu",
-  "duvar-sensoru", "kural-adim", "sisli-labirent", "ada-deneyi", "hiz-profili", "puan-hesaplayici"] as const;
+  "duvar-sensoru", "kural-adim", "sisli-labirent", "ada-deneyi", "hiz-profili", "puan-hesaplayici",
+  "teker", "iki-teker", "sensor-gezdirme", "karar", "sokak", "batarya", "iki-goz", "harita-tasarimcisi"] as const;
 export interface Deney {
   /** deney bileşeni: DENEY_BILESEN_ADLARI'ndan biri */
   bilesen: string;
@@ -46,7 +47,16 @@ export type Gorev =
   /** sisli labirent görevi: kod yok; RizBot yön tuşlarıyla sürülür, yalnız geçilen hücreler görünür (robot-motoru: SIS_GOREVLERI) */
   | { tur: "sis"; gorev: string; yonerge: string }
   /** rota görevi: kod yok; hücrelere tıklayarak yol çizilir, süre RizBot'un hız profilinden (robot-motoru: ROTA_GOREVLERI) */
-  | { tur: "rota"; gorev: string; yonerge: string };
+  | { tur: "rota"; gorev: string; yonerge: string }
+  /** ilkokul kart programı: kartlara dokunarak program, Kar Küreme şehrinde (robot-motoru: KART_GOREVLERI) */
+  | { tur: "kart"; gorev: string; yonerge: string }
+  /** ilkokul bilmece: art arda çoktan seçmeli sorular; ilk denemede doğru sayısına göre yıldız */
+  | { tur: "bilmece"; sorular: Bilmece[]; yonerge: string }
+  /** mBot çizgi görevi: iki gözün dört durumuna hamle seçilir (durum tablosu) */
+  | { tur: "cizgi-tablo"; yonerge: string }
+  /** çocuğun kendi tasarladığı haritayı kart programıyla temizlemesi */
+  | { tur: "tasarim"; yonerge: string };
+export interface Bilmece { soru: string; secenekler: string[]; dogru: number; aciklama: string }
 export interface GercekRobotta { malzeme: { parca: string; adet: number }[]; adimlar: string[]; guvenlik?: string; ogretmenNotu?: string }
 
 export interface DersTanimi {
@@ -115,7 +125,15 @@ export function dersiDogrula(d: DersTanimi): string[] {
     if (d.dene.bilesen === "kural-adim" && !["sag-el", "sol-el"].includes(String(a.kural))) y(`Dene: kural tanınmıyor (${a.kural})`);
   }
   if (!d.gorev) y("Görev bölümü eksik");
-  else if (d.gorev.tur === "sis" || d.gorev.tur === "rota") {
+  else if (d.gorev.tur === "kart") {
+    if (!KART_GOREVLERI[d.gorev.gorev]) y(`Görev: böyle bir kart görevi yok (${d.gorev.gorev})`);
+    if (!d.gorev.yonerge?.trim()) y("Görev: yönerge boş");
+  } else if (d.gorev.tur === "bilmece") {
+    if (d.gorev.sorular.length < 3) y("Görev: bilmece en az üç soru olmalı");
+    d.gorev.sorular.forEach((q, i) => { if (q.dogru < 0 || q.dogru >= q.secenekler.length || q.secenekler.length < 2 || !q.aciklama?.trim()) y(`Görev: ${i + 1}. bilmece eksik`); });
+  } else if (d.gorev.tur === "cizgi-tablo" || d.gorev.tur === "tasarim") {
+    if (!d.gorev.yonerge?.trim()) y("Görev: yönerge boş");
+  } else if (d.gorev.tur === "sis" || d.gorev.tur === "rota") {
     if (!((d.gorev.tur === "sis" ? SIS_GOREVLERI : ROTA_GOREVLERI) as Record<string, unknown>)[d.gorev.gorev]) y(`Görev: böyle bir ${d.gorev.tur === "sis" ? "sisli labirent" : "rota"} görevi yok (${d.gorev.gorev})`);
     if (!d.gorev.yonerge?.trim()) y("Görev: yönerge boş");
   }
@@ -282,5 +300,7 @@ export const PARCALAR: Record<string, string> = {
   "siyah-karton": "Siyah karton",
   "yapiskan-not": "Yapışkan not kâğıdı (bir deste)",
   "renkli-kalem": "Kurşun kalem ve renkli kalem",
-  "kagit-labirent": "Yazdırılmış ya da çizilmiş kâğıt labirent"
+  "kagit-labirent": "Yazdırılmış ya da çizilmiş kâğıt labirent",
+  mbot: "mBot (Makeblock)",
+  "mblock-cihaz": "mBlock kurulu bilgisayar ya da tablet"
 };

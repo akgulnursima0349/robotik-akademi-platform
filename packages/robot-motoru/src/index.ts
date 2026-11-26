@@ -10,3 +10,5 @@ export * from "./labirent";
 export * from "./labirent-gorevler";
 export * from "./labirent-ders";
 export * from "./sumo-strateji";
+export * from "./kart-programi";
+export * from "./mbot";

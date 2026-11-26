@@ -3,7 +3,7 @@
    İlerleme Lab'ın kaydından (sra-lab-v1) okunur. */
 import { CIZGI_GOREVLERI, GOREVLER, LABIRENT_GOREVLERI } from "@sra/robot-motoru";
 import type { Atolye } from "./model";
-import { CIZGI_DERSLERI, dersOgesi, LABIRENT_DERSLERI, SUMO_DERSLERI } from "./dersler";
+import { CIZGI_DERSLERI, dersOgesi, LABIRENT_DERSLERI, MBOT_DERSLERI, SUMO_DERSLERI } from "./dersler";
 
 export const LAB_KAYIT_ANAHTARI = "sra-lab-v1";
 
@@ -12,6 +12,11 @@ export const ROBOTIK: Atolye = {
   ad: "Robotik",
   aciklama: "Akademinin robotları 3D: gerçek ölçüler, gerçek fizik. Python'la sür, sensörleri oku, yarış.",
   moduller: [
+    {
+      kimlik: "mbot", ad: "Robot Görevleri", robot: "mBot", seviyeler: ["ilkokul"],
+      aciklama: "Motor, teker ve sensörler; kartlarla eğer, döngü ve enerji; sonunda kendi görev haritan.",
+      dersler: MBOT_DERSLERI.map(dersOgesi)
+    },
     {
       kimlik: "kar", ad: "Kar Küreme", robot: "Kar küreme robotu", seviyeler: ["ilkokul", "ortaokul"],
       aciklama: "Bataryası sınırlı robotla karlı sokakları aç: sıralı komutlar, döngüler, sensörler, enerji.",

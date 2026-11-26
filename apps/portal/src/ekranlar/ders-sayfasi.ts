@@ -16,6 +16,8 @@ import { DENEYLER, stilEkle as deneyStiliEkle } from "../deney";
 import { cizgiSimulasyonu } from "../deney/cizgi-simulasyonu";
 import { stratejiGorevi } from "../deney/sumo";
 import { rotaGorevi, sisGorevi } from "../deney/labirent";
+import { kartGorevi, tasarimGorevi } from "../deney/kart-programi";
+import { bilmeceGorevi, cizgiGorevi } from "../deney/mbot";
 
 /** Deney bileşenleri (deney/): ayar ve "bu değer denendi" bildirimiyle bir öğe kurar */
 export type DeneyBileseni = (ayar: Record<string, unknown>, denendi: (deger: string | number) => void) => HTMLElement;
@@ -97,6 +99,7 @@ const STIL = `
 .dr-ogretmen{border:2px dashed var(--sra2-lavanta-taban);border-radius:var(--sra2-kose-2);padding:12px 14px;font-weight:600}
 .dr-son{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
 .dr-bitti{display:flex;flex-direction:column;gap:16px;background:var(--sra2-lavanta) !important}
+.dr-bitti .s2-dugme{max-width:100%;white-space:normal;text-align:left;height:auto}
 @media (max-width:900px){.dr-anlat{grid-template-columns:1fr}.dr-gorsel{aspect-ratio:16/9}.dr-gorsel--dolu[data-tur=cizim]{aspect-ratio:auto}}
 @media print{
   .as-ust,.as-alt,.dr-bolumler,.dr-yazdirma,.dr-bitti,.no-print{display:none !important}
@@ -312,8 +315,8 @@ export function dersSayfasi(root: HTMLElement, kimlik: string): boolean {
         }));
       if (enIyi() && !durum().dene) kap.append(bildirim("ipucu", "Görev tamam.", " Dersi bitirmek için Dene bölümü de bitmeli."));
       gorevOnbellek = kap;
-    } else if (g.tur === "sis" || g.tur === "rota") {
-      /* labirentin kodsuz görevleri: sisli labirent ve rota çizme; en iyi yıldız ders kaydına */
+    } else if (g.tur === "sis" || g.tur === "rota" || g.tur === "kart" || g.tur === "bilmece" || g.tur === "cizgi-tablo" || g.tur === "tasarim") {
+      /* ders sayfasındaki kodsuz görevler (labirent: sis, rota; ilkokul: kart, bilmece, çizgi tablosu, tasarım); en iyi yıldız ders kaydına */
       deneyStiliEkle();
       if (gorevOnbellek) return gorevOnbellek;
       const enIyi = () => dp.kayit(d.kimlik).gorev?.yildiz ?? 0;
@@ -327,7 +330,8 @@ export function dersSayfasi(root: HTMLElement, kimlik: string): boolean {
         rekorYaz();
         if (durum().bitti && !once.bitti) ciz(); else ustBolum();
       };
-      kap.append(konusmaBalonu({ metin: g.yonerge, hal: "anlatiyor", ses }), el("div", "dr-son", {}, rekor), g.tur === "sis" ? sisGorevi(g.gorev, yildiz) : rotaGorevi(g.gorev, yildiz));
+      kap.append(konusmaBalonu({ metin: g.yonerge, hal: "anlatiyor", ses }), el("div", "dr-son", {}, rekor), g.tur === "sis" ? sisGorevi(g.gorev, yildiz) : g.tur === "rota" ? rotaGorevi(g.gorev, yildiz) : g.tur === "kart" ? kartGorevi(g.gorev, yildiz)
+        : g.tur === "bilmece" ? bilmeceGorevi(g.sorular, yildiz) : g.tur === "cizgi-tablo" ? cizgiGorevi(yildiz) : tasarimGorevi(yildiz));
       if (enIyi() && !durum().dene) kap.append(bildirim("ipucu", "Görev tamam.", " Dersi bitirmek için Dene bölümü de bitmeli."));
       gorevOnbellek = kap;
     } else kap.append(bildirim("bilgi", "Bu görev hazırlanıyor.", ""));
