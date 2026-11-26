@@ -14,7 +14,12 @@ interface BenCevabi {
 interface SinifCevabi { id: string; ad: string; kod: string; kurs: string; ogrenci_sayisi: number; benim: boolean; sahip_ad: string }
 
 export type Uygulama = "lab" | "blok" | "dersler";
-export interface RaporSatiri { id: string; takma_ad: string; son_giris: string | null; junior: Record<string, unknown>; ortaokul: Record<string, unknown>; lab: Record<string, unknown>; blok: Record<string, unknown> }
+export interface RaporSatiri {
+  id: string; takma_ad: string; son_giris: string | null;
+  junior: Record<string, unknown>; ortaokul: Record<string, unknown>; lab: Record<string, unknown>; blok: Record<string, unknown>;
+  /** ders motorunun ilerleme kaydı ve öğretmen onayları (ders kimliği → zaman); eski kurulumda gelmeyebilir */
+  dersler?: Record<string, unknown>; onaylar?: Record<string, string>;
+}
 export interface SinifRobotu { sahip: string; ad: string; kod: string; guncelleme: string }
 
 /** Öğretmen hesabı açılmış ama ad ve kurum kodu girilmemiş (ya da erişimi kapatılmış). */
@@ -117,6 +122,14 @@ export class Oturum {
     return (await this.b.rpc<RaporSatiri[]>("platform_sinif_raporu", { p_sinif: sinifId })) ?? [];
   }
 
+  /** Öğretmen: öğrencinin gerçek robot etkinliğini onaylar (true) ya da onayı geri alır (false) */
+  async dersOnayla(ogrenciId: string, ders: string, onay: boolean): Promise<void> {
+    await this.b.rpc("platform_ders_onayla", { p_ogrenci: ogrenciId, p_ders: ders, p_onay: onay });
+  }
+  /** Öğrenci: kendi onayları (ders kimliği → zaman) */
+  async dersOnaylarim(): Promise<Record<string, string>> {
+    return (await this.b.rpc<Record<string, string> | null>("platform_ders_onaylarim")) ?? {};
+  }
   async cikis(): Promise<void> {
     try { await this.b.rpc("ogrenci_cikis"); } catch { /* öğretmen oturumunda anlamsız, sessizce geç */ }
     await this.b.cikis();

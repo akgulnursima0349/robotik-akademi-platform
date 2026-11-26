@@ -6,7 +6,7 @@ import { bildirim, dugme, el, hap, ikon, kok, konusmaBalonu, maskot, parcaliIler
 import { IlerlemeEsitleyici, Ogrenci, Ogretmen } from "@sra/bulut";
 import {
   bolumAcik, DERS_BOLUMLERI, DersDeposu, dersBul, dersDurumu, DERSLER, dersXp, ilkBolum, kayitOku, LAB_KAYIT_ANAHTARI, labAnahtari, PARCALAR, ROBOTIK,
-  seviyeHesapla, type DersBolumu, type DersTanimi
+  seviyeHesapla, XP, type DersBolumu, type DersTanimi
 } from "@sra/mufredat";
 import { uygulama } from "../uygulama";
 import { acilisSeviyesi } from "../atolyeler";
@@ -37,8 +37,21 @@ export function dersDeposu(): DersDeposu {
 }
 const labKaydi = () => { try { return kayitOku(localStorage.getItem(LAB_KAYIT_ANAHTARI)); } catch { return kayitOku(null); } };
 const labYildizi = (d: DersTanimi) => (d.gorev.tur === "lab" ? labKaydi().gorevler[labAnahtari(d.gorev)]?.yildiz ?? 0 : 0);
-/** Bütün derslerden toplanan XP */
-export function toplamXp(): number { const dp = dersDeposu(); return DERSLER.reduce((t, d) => t + dersXp(dersDurumu(d, dp.kayit(d.kimlik), labYildizi(d))), 0); }
+/* öğretmen onayları: yalnız giriş yapmış öğrencide sunucudan okunur, bellekte tutulur (misafirde ve çevrimdışıyken yok) */
+let onaylar: Record<string, string> = {};
+let onayOkundu: Promise<boolean> | null = null;
+/** Onayları bir kez okur; değiştiyse true */
+function onaylariOku(): Promise<boolean> {
+  if (!(uygulama.oturum && uygulama.kullanici instanceof Ogrenci)) return Promise.resolve(false);
+  return (onayOkundu ??= uygulama.oturum.dersOnaylarim().then((o) => {
+    const degisti = JSON.stringify(o) !== JSON.stringify(onaylar);
+    onaylar = o;
+    return degisti;
+  }).catch(() => false).finally(() => { setTimeout(() => { onayOkundu = null; }, 0); }));
+}
+const onayli = (d: DersTanimi) => d.kimlik in onaylar;
+/** Bütün derslerden toplanan XP (öğretmen onayı dahil) */
+export function toplamXp(): number { const dp = dersDeposu(); return DERSLER.reduce((t, d) => t + dersXp(dersDurumu(d, dp.kayit(d.kimlik), labYildizi(d), onayli(d))), 0); }
 
 const STIL = `
 .dr-ust{padding-bottom:28px}
@@ -56,6 +69,7 @@ const STIL = `
 .dr-anlat{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:24px;align-items:start}
 .dr-gorsel{aspect-ratio:4/3;border-radius:var(--sra2-kose-3);background:var(--sra2-gece);color:var(--sra2-murekkep-acik);display:grid;place-items:center;text-align:center;padding:20px;box-shadow:0 var(--sra2-taban-2) 0 var(--sra2-gece-taban);overflow:hidden}
 .dr-adimsay.dr-denendi{align-self:flex-start;display:inline-flex;margin:4px 0 0;padding:6px 14px;border-radius:999px;background:var(--sra2-lavanta);color:var(--sra2-mor-taban);font-weight:800;font-size:var(--sra2-boy-2)}
+.dr-onay{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
 .dr-gorsel--dolu{padding:0;display:block;position:relative}
 .dr-gorsel--dolu[data-tur=cizim]{aspect-ratio:auto;align-self:start;background:#FFF8EC;box-shadow:0 var(--sra2-taban-2) 0 var(--sra2-kart-taban)}
 .dr-yukleniyor{position:absolute;inset:0;display:grid;place-items:center;font-weight:800}
@@ -99,7 +113,7 @@ export function dersSayfasi(root: HTMLElement, kimlik: string): boolean {
   const dp = dersDeposu();
   const ses = sesServisi();
   const deneyVar = !!DENEY_BILESENLERI[d.dene.bilesen];
-  const durum = () => dersDurumu(d, dp.kayit(d.kimlik), labYildizi(d));
+  const durum = () => dersDurumu(d, dp.kayit(d.kimlik), labYildizi(d), onayli(d));
   let bolum: DersBolumu = ilkBolum(durum(), { ogretmen, deneyVar });
   let adim = Math.min(dp.kayit(d.kimlik).anlat?.adim ?? 0, d.anlat.length - 1);
   let aktifGorsel: GorselOynatici | null = null;
@@ -253,7 +267,7 @@ export function dersSayfasi(root: HTMLElement, kimlik: string): boolean {
     const kap = el("section", "s2-kart dr-kart dr-etkinlik", { "aria-label": "Gerçek robotta" }, el("h2", "s2-baslik", {}, `Gerçek robotta · ${d.ad}`));
     const gr = d.gercek;
     if (!gr) { kap.append(el("p", "", {}, "Bu dersin sınıf etkinliği yok.")); return kap; }
-    const yapti = !!dp.kayit(d.kimlik).gercek?.ogrenci;
+    const yapti = !!dp.kayit(d.kimlik).gercek?.ogrenci || onayli(d);
     kap.append(
       el("div", "", {}, el("h3", "s2-baslik", { style: "margin:0 0 6px" }, "Malzeme"), el("ul", "", {}, ...gr.malzeme.map((m) => el("li", "", {}, `${m.adet} × ${PARCALAR[m.parca] ?? m.parca}`)))),
       el("div", "", {}, el("h3", "s2-baslik", { style: "margin:0 0 6px" }, "Adımlar"),
@@ -266,6 +280,7 @@ export function dersSayfasi(root: HTMLElement, kimlik: string): boolean {
     const yazdir = dugme({ metin: "Yazdır", ikon: "panel", id: "dr-yazdir" });
     yazdir.addEventListener("click", () => print());
     kap.append(el("div", "dr-son dr-yazdirma", {}, yaptim, yazdir, yapti ? hap("+20 XP", "sari", "yildiz") : null));
+    if (onayli(d)) kap.append(el("div", "dr-onay", { id: "dr-onay" }, bildirim("basari", "Öğretmenin onayladı.", " Bu etkinliği sınıfta yaptığını öğretmenin gördü."), hap(`+${XP.onay} XP`, "yesil", "yildiz")));
     return kap;
   };
 
@@ -291,7 +306,13 @@ export function dersSayfasi(root: HTMLElement, kimlik: string): boolean {
   addEventListener("keydown", klavye);
   /* Lab'dan dönünce (sekme ya da geri) yıldızları yeniden oku */
   addEventListener("pageshow", () => { if (document.body.contains(icerik)) ciz(); });
-  document.addEventListener("visibilitychange", () => { if (!document.hidden && document.body.contains(icerik)) ciz(); });
+  /* öğretmen onayı sunucudan gelince: deney sürüyorsa içerik bozulmasın diye yalnız üst kısım yenilenir */
+  const onayYenile = () => void onaylariOku().then((degisti) => {
+    if (!degisti || !document.body.contains(icerik)) return;
+    if (bolum === "dene") ustBolum(); else ciz();
+  });
+  document.addEventListener("visibilitychange", () => { if (!document.hidden && document.body.contains(icerik)) { ciz(); onayYenile(); } });
   ciz();
+  onayYenile();
   return true;
 }

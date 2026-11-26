@@ -17,6 +17,8 @@ interface Durum {
   ilerleme: Record<string, Record<string, unknown>>; // "ogrenciId|uygulama" → veri
   junior: Record<string, Record<string, unknown>>;
   sonGiris: Record<string, string>;
+  /** öğretmen onayları: öğrenci → ders → zaman */
+  onaylar?: Record<string, Record<string, string>>;
   /** açık oturum: öğretmen kimliği ya da anonim öğrenci oturumu */
   oturum: { uid: string; anonim: boolean; ogrenciId?: string } | null;
   hatali: Record<string, number>;
@@ -71,10 +73,25 @@ function ornekSinif() {
     ilerleme[`${id}|blok`] = { yildiz, deneme };
     const lab: Record<string, { yildiz: number; deneme: number }> = {};
     ["ilk-sokak", "kose", "uzun-cadde", "okul-yolu", "sokak-sonu"].slice(0, 2 + Math.floor(yetenek * 4)).forEach((g) => { lab[g] = { yildiz: 1 + Math.floor(r() * 3), deneme: 1 + Math.floor(r() * (g === "okul-yolu" ? 7 : 3)) }; });
+    /* örnek ders (Robotik · SiroLine'ın gözleri): öğrenciler dersin farklı yerlerinde */
+    if (i < 7) lab["cizgi-oval"] = { yildiz: 1 + (i % 3), deneme: 2 + i };
     ilerleme[`${id}|lab`] = { gorevler: lab };
+    const dersKaydi: Record<string, unknown> = [
+      { anlat: { adim: 3, bitti: true }, dene: { degerler: 3, bitti: true }, gercek: { ogrenci: true } },
+      { anlat: { adim: 3, bitti: true }, dene: { degerler: 3, bitti: true }, gercek: { ogrenci: true } },
+      { anlat: { adim: 3, bitti: true }, dene: { degerler: 3, bitti: true } },
+      { anlat: { adim: 3, bitti: true }, dene: { degerler: 3, bitti: true }, gercek: { ogrenci: true } },
+      { anlat: { adim: 3, bitti: true }, dene: { degerler: 2, bitti: false } },
+      { anlat: { adim: 2, bitti: false } },
+      { anlat: { adim: 3, bitti: true }, dene: { degerler: 3, bitti: true } },
+      null, null
+    ][i] ?? {};
+    if (Object.keys(dersKaydi).length) ilerleme[`${id}|dersler`] = { dersler: { "siroline-sensor": { ...dersKaydi, son: new Date(Date.UTC(2026, 10, 24 + (i % 2), 10 + i)).toISOString() } } };
     sonGiris[id] = new Date(Date.UTC(2026, 10, 18 - (i === 6 ? 12 : Math.floor(r() * 4)), 9 + i)).toISOString();
   });
-  return { ornekOgrenciler: ogrenciler, junior, ilerleme, sonGiris };
+  /* ilk örnek öğrencinin gerçek robot etkinliği öğretmen tarafından onaylanmış */
+  const onaylar: Record<string, Record<string, string>> = { d1: { "siroline-sensor": "2026-11-25T11:00:00.000Z" } };
+  return { ornekOgrenciler: ogrenciler, junior, ilerleme, sonGiris, onaylar };
 }
 
 export const DENEME_HESAPLARI = {
@@ -111,6 +128,7 @@ function tohum(): Durum {
     junior: ornek.junior,
     ilerleme: ornek.ilerleme,
     sonGiris: ornek.sonGiris,
+    onaylar: ornek.onaylar,
     labRobotlar: {
       o4: { ad: "Kaplan", kod: ORNEK_SINIF_ROBOTU_1, guncelleme: "2026-11-18T10:00:00Z" },
       o5: { ad: "Şimşek", kod: ORNEK_SINIF_ROBOTU_2, guncelleme: "2026-11-18T10:05:00Z" }
@@ -277,8 +295,25 @@ export class SahteBaglanti implements SunucuBaglantisi {
         return this.d.ogrenciler.filter((x) => x.sinifId === s.id).sort((a, b) => a.takmaAd.localeCompare(b.takmaAd, "tr")).map((x) => ({
           id: x.id, takma_ad: x.takmaAd, son_giris: this.d.sonGiris?.[x.id] ?? null,
           junior: this.d.junior?.[x.id] ?? {}, ortaokul: {},
-          lab: this.d.ilerleme?.[`${x.id}|lab`] ?? {}, blok: this.d.ilerleme?.[`${x.id}|blok`] ?? {}
+          lab: this.d.ilerleme?.[`${x.id}|lab`] ?? {}, blok: this.d.ilerleme?.[`${x.id}|blok`] ?? {},
+          dersler: this.d.ilerleme?.[`${x.id}|dersler`] ?? {}, onaylar: { ...(this.d.onaylar?.[x.id] ?? {}) }
         }));
+      }
+      case "platform_ders_onayla": {
+        const t = this.aktifOgretmen();
+        const og = this.d.ogrenciler.find((x) => x.id === p.p_ogrenci);
+        const s = og && this.d.siniflar.find((x) => x.id === og.sinifId);
+        if (!og || !s || !(t.mudur || s.ogretmenId === t.id)) throw new BulutHatasi("yetki_yok");
+        const ders = String(p.p_ders ?? "");
+        if (!/^[a-z0-9-]{1,64}$/.test(ders)) throw new BulutHatasi("veri_gecersiz");
+        const o2 = ((this.d.onaylar ??= {})[og.id] ??= {});
+        if (p.p_onay === true) return (o2[ders] ??= new Date().toISOString());
+        delete o2[ders];
+        return null;
+      }
+      case "platform_ders_onaylarim": {
+        if (!o.ogrenciId) throw new BulutHatasi("oturum_yok");
+        return { ...(this.d.onaylar?.[o.ogrenciId] ?? {}) };
       }
       default:
         throw new BulutHatasi("bilinmeyen_islev:" + ad);

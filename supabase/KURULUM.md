@@ -14,6 +14,7 @@ Bütün SQL dosyaları **eklemelidir ve tekrar çalıştırılabilir**: mevcut t
 4. `supabase/lab.sql`: Robotik Laboratuvarı lig robotları.
 5. `supabase/analitik.sql`: platform ilerlemesi ve öğretmen analitiği.
 6. `supabase/dersler.sql`: ders motorunun ilerleme kaydı (var olan kuruluma `dersler` uygulamasını ekler).
+7. `supabase/ders-onay.sql`: derslerde öğretmen onayı ve sınıf raporunda ders ilerlemesi. `analitik.sql` yeniden çalıştırılırsa bu dosya da ardından yeniden çalıştırılır (sınıf raporu fonksiyonunun son hâli buradadır).
 
 İlk iki dosya projede zaten kuruluysa yeniden çalıştırmak zararsızdır ve son sürüme günceller.
 

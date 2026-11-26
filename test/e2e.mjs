@@ -344,6 +344,9 @@ for (const [ad, g, y] of BOYUTLAR) {
   ok((await konum()) < 3500 && /solda/.test(await p.textContent(".sg-konum__yazi")), "robotu sağa sürükleyince çizgi solda");
   ok((await denendi()) === "3 / 3 denendi" && !(await p.isDisabled('[data-bolum="gorev"]')) && await p.isVisible("#dr-goreve") && await p.isVisible('[data-deney="sensor-gostergesi"]'), "üç sensör denendi: Görev açıldı, gösterge yerinde kaldı");
   ok((await p.getAttribute(".s2-grafik__cizgi", "points")).split(" ").length > 3, "konum grafiği çiziliyor");
+  const onceIsik = await isiklar();
+  await p.click('.sg-zemin [data-deger="siyah"]');
+  ok((await p.getAttribute(".sg", "data-zemin")) === "siyah" && (await isiklar()) === onceIsik && Number(await p.textContent(`.sg-cubuk[data-sira="${onceIsik.split(",")[0]}"] .sg-cubuk__sayi`)) < 500, "sınıftaki pist seçilince (siyah zemin) bandı gören sensörün sayısı küçülüyor, ışıklar aynı");
   ok(await tasmasiz(), "deneme bölümünde taşma yok");
   await p.screenshot({ path: resolve(EKRAN, `ders-dene-${ad}.png`), fullPage: true });
   await p.reload(); await p.waitForSelector(".dr-govde"); await p.click('[data-bolum="dene"]'); await p.waitForSelector('[data-deney="sensor-gostergesi"]');
@@ -890,6 +893,17 @@ for (const [ad, g, y] of BOYUTLAR) {
   await p.evaluate(() => localStorage.removeItem("sra-blok-v1"));
   await p.goto(ADRES + "blok/?yeni"); await p.waitForSelector(".bk-dunya");
   ok(await p.isVisible('a.bk-durak[data-bolum="1-2"]'), "başka cihazda ilerleme sunucudan geri geldi (ikinci bölüm açık)");
+  /* öğrenci: derste "Sınıfta yaptım" → sunucuya yazılsın, öğretmen onayı beklesin */
+  await p.goto(ADRES + "#ders/siroline-sensor"); await p.waitForSelector(".dr-govde");
+  await p.click('[data-bolum="gercek"]'); await p.click("#dr-yaptim");
+  await p.waitForFunction(() => { try { return JSON.parse(localStorage.getItem("sra-sahte-sunucu")).ilerleme?.["o1|dersler"]?.dersler?.["siroline-sensor"]?.gercek?.ogrenci === true; } catch { return false; } }, null, { timeout: 8000 });
+  ok(!(await p.$("#dr-onay")) && /20 XP/.test(await p.textContent("#dr-xp")), "Sınıfta yaptım sunucuya yazıldı; onay henüz yok (20 XP)");
+  const ogrenciGiris = async () => {
+    await p.goto(ADRES + "#giris"); await hazir(p);
+    await p.click("#g-ogrenci"); await p.fill("#g-kod", "JNR123"); await p.fill("#g-ad", "Ece"); await p.fill("#g-pin", "1234"); await p.click("button[type=submit]");
+    await p.waitForURL(/\/junior\/$/);
+  };
+  const cikis = async () => { await p.goto(ADRES); await hazir(p); await p.click("#p-cikis"); await p.waitForSelector("#p-giris"); };
   await p.goto(ADRES); await hazir(p); await p.click("#p-cikis"); await p.waitForSelector("#p-giris");
   /* öğretmen raporu */
   await p.goto(ADRES + "#giris"); await hazir(p);
@@ -906,8 +920,37 @@ for (const [ad, g, y] of BOYUTLAR) {
   ok(/rapor\.csv$/.test(dosya.suggestedFilename()), "CSV indirildi: " + dosya.suggestedFilename());
   await p.hover(".r-cb.son"); await p.waitForSelector(".r-ipucu:not([hidden])");
   ok(true, "grafikte ipucu görünüyor");
+  /* Dersler kartı: örnek öğrenciler farklı yerlerde; Ece onay bekliyor */
+  const dHucre = (og) => p.locator(`#r-dersler tr:has(th:text-is("${og}")) .rd-hucre`);
+  ok(await p.isVisible("#r-dersler") && (await p.$$("#r-dersler tbody tr")).length === 12, "Dersler kartı: 12 öğrenci");
+  ok((await dHucre("Ece").getAttribute("data-durum")) === "onay-bekliyor" && (await dHucre("Bora").getAttribute("data-durum")) === "onaylandi" && (await dHucre("Arda").getAttribute("data-durum")) === "baslamadi", "hücre durumları: onay bekliyor, onaylandı, başlamadı");
+  ok(/onay bekliyor/.test(await p.textContent(".rd-ozet")), "kartın özetinde onay bekleyen sayısı");
+  await dHucre("Defne").locator("summary").click();
+  ok(await dHucre("Defne").locator(".rd-ayrinti").isVisible() && /yıldız/.test(await dHucre("Defne").locator(".rd-ayrinti").textContent()), "hücreye dokununca ayrıntı açılıyor (Lab yıldızı)");
+  await dHucre("Defne").locator("summary").click();
   ok(await tasmaYok(p), "rapor ekranında yatay taşma yok");
   await p.screenshot({ path: `${EKRAN}/rapor_${ad}.png`, fullPage: true });
+  await p.click(`#r-dersler tr:has(th:text-is("Ece")) .rd-onayla--hizli`);
+  await p.waitForFunction(() => document.querySelector('#r-dersler tr[data-ogrenci="o1"] .rd-hucre')?.dataset.durum === "onaylandi");
+  ok(await p.evaluate(() => !!JSON.parse(localStorage.getItem("sra-sahte-sunucu")).onaylar?.o1?.["siroline-sensor"]), "öğretmen Ece'yi onayladı (sunucuda öğretmenin kaydı)");
+  if (ad === "masaustu") {
+    await cikis(); await ogrenciGiris();
+    await p.goto(ADRES + "#ders/siroline-sensor"); await p.waitForSelector(".dr-govde"); await p.click('[data-bolum="gercek"]');
+    await p.waitForSelector("#dr-onay");
+    ok(/30 XP/.test(await p.textContent("#dr-xp")), "öğrenci onayı görüyor: rozet ve +10 XP (30 XP)");
+    await p.screenshot({ path: `${EKRAN}/ders-onay-${ad}.png`, fullPage: true });
+    await cikis();
+    await p.goto(ADRES + "#giris"); await hazir(p);
+    await p.click("#g-ogretmen"); await p.fill("#g-eposta", "ogretmen@deneme.com"); await p.fill("#g-sifre", "deneme123"); await p.click("button[type=submit]");
+    await p.waitForSelector('[data-rapor="s1"]'); await p.click('[data-rapor="s1"]'); await p.waitForSelector("#r-dersler");
+    await p.locator('#r-dersler tr[data-ogrenci="o1"] summary').click(); await p.click('#r-dersler tr[data-ogrenci="o1"] .rd-geri');
+    await p.waitForFunction(() => document.querySelector('#r-dersler tr[data-ogrenci="o1"] .rd-hucre')?.dataset.durum === "onay-bekliyor");
+    ok(true, "öğretmen onayı geri aldı");
+    await cikis(); await ogrenciGiris();
+    await p.goto(ADRES + "#ders/siroline-sensor"); await p.waitForSelector(".dr-govde"); await p.click('[data-bolum="gercek"]');
+    await p.waitForTimeout(400);
+    ok(!(await p.$("#dr-onay")) && /20 XP/.test(await p.textContent("#dr-xp")), "geri alınan onay öğrenciden de kalktı (20 XP)");
+  }
   if (ad === "masaustu") { await p.emulateMedia({ media: "print" }); await p.screenshot({ path: `${EKRAN}/rapor_yazdir.png`, fullPage: true }); await p.emulateMedia({ media: "screen" }); }
   ok(hatalar.length === 0, "analitik konsol hatası yok" + (hatalar.length ? ": " + hatalar.slice(0, 2).join(" | ") : ""));
   await ctx.close();

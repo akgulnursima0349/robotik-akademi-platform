@@ -5,6 +5,8 @@ import { hataMetni, KURSLAR, Ogretmen, type RaporSatiri } from "@sra/bulut";
 import { csv, destekGerekenler, DURUM_ACIKLAMA, enZorBolumler, isiHaritasi, KAZANIMLAR, kazanimOzeti, kursEtkisi, type HucreDurumu, type RaporOgrenci } from "@sra/analitik";
 import { uygulama } from "../uygulama";
 import { altBilgi, ustKisim } from "../ortak";
+import { kursSeviyesi } from "../atolyeler";
+import { derslerKarti, RAPOR_DERSLER_STILI, raporDersleri } from "./rapor-dersler";
 
 const RENK_ON = "#4a78d6", RENK_SON = "#d7262e";
 const yuzde = (x: number | null) => (x === null ? "—" : Math.round(x * 100) + "%");
@@ -58,12 +60,13 @@ export async function rapor(root: HTMLElement, sinifId: string) {
     el("div", "p-panel__bas", {}, el("div", "r-bas", {}, el("div", "", {}, ust, baslik), eylem)), govde);
   root.replaceChildren(ustKisim(), ana, altBilgi());
 
-  let satirlar: RaporSatiri[], sinifAd = "";
+  let satirlar: RaporSatiri[], sinifAd = "", sinifKursu: Parameters<typeof kursSeviyesi>[0] | null = null;
   try {
     const [r, s] = await Promise.all([uygulama.oturum.sinifRaporu(sinifId), uygulama.oturum.siniflarim()]);
     satirlar = r;
     const sinif = s.find((x) => x.id === sinifId);
     sinifAd = sinif ? `${sinif.ad} (${sinif.kod}) · ${KURSLAR[sinif.kurs].ad}` : "";
+    sinifKursu = sinif?.kurs ?? null;
   } catch (e) { govde.replaceChildren(uyari(hataMetni(e), "hata")); return; }
   baslik.textContent = sinifAd ? `${sinifAd.split(" (")[0]} · Sınıf raporu` : "Sınıf raporu";
   ust.textContent = sinifAd || "Öğrenme analitiği";
@@ -151,6 +154,11 @@ export async function rapor(root: HTMLElement, sinifId: string) {
     destek.length ? el("ul", "r-destek", {}, ...destek.map((d) => el("li", "", {}, ikon("bilgi"), el("div", "", {}, el("b", "", {}, d.ogrenci.takmaAd), el("small", "", {}, d.gerekceler.join(" · "))))))
       : el("p", "r-bos", {}, "Herkes yolunda görünüyor."));
 
-  govde.replaceChildren(ozet, el("div", "r-iki", {}, etkiKart, destekKart), kazanimKart, isiKart, zorKart);
+  /* dersler (ders motoru): sınıfın seviyesindeki ya da başlanmış dersler */
+  const dersler = raporDersleri(satirlar, sinifKursu ? kursSeviyesi(sinifKursu) : null);
+  if (!document.getElementById("rd-stil")) { const st = document.createElement("style"); st.id = "rd-stil"; st.textContent = RAPOR_DERSLER_STILI; document.head.append(st); }
+  const oturum = uygulama.oturum;
+  const derslerKart = dersler.length ? derslerKarti(satirlar, dersler, (og, ders, onay) => oturum.dersOnayla(og, ders, onay)) : null;
+  govde.replaceChildren(ozet, el("div", "r-iki", {}, etkiKart, destekKart), ...(derslerKart ? [derslerKart] : []), kazanimKart, isiKart, zorKart);
   document.body.dataset.hazir = "1";
 }

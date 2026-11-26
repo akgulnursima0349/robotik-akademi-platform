@@ -176,7 +176,8 @@ export function dersDurumu(d: DersTanimi, k: DersKaydi | undefined, labYildizi =
   const anlat = !!k?.anlat?.bitti, dene = !!k?.dene?.bitti;
   const gorevYildiz = d.gorev.tur === "lab" ? labYildizi : k?.gorev?.yildiz ?? 0;
   const gorev = gorevYildiz > 0;
-  return { anlat, dene, gorevYildiz, gorev, gercek: !!k?.gercek?.ogrenci, onayli: onayli && !!k?.gercek?.ogrenci, bitti: anlat && dene && gorev, adim: k?.anlat?.adim ?? 0 };
+  /* öğretmen, öğrenci "Sınıfta yaptım" demeden de onaylayabilir (işaretlemeyi unutmuş olabilir): onay gerçek robot etkinliğini de bitirir */
+  return { anlat, dene, gorevYildiz, gorev, gercek: !!k?.gercek?.ogrenci || onayli, onayli, bitti: anlat && dene && gorev, adim: k?.anlat?.adim ?? 0 };
 }
 
 export const XP = { anlat: 10, dene: 10, gorev: 20, yildiz: 10, gercek: 20, onay: 10 } as const;
@@ -214,5 +215,7 @@ export const PARCALAR: Record<string, string> = {
   kenshin: "Kenshin mini sumo robotu",
   rizbot: "RizBot labirent robotu",
   "siyah-elektrik-bandi": "Siyah elektrik bandı",
-  "beyaz-a4-kagit": "Beyaz A4 kâğıt"
+  "beyaz-a4-kagit": "Beyaz A4 kâğıt",
+  "cizgi-pisti": "Sınıfın çizgi pisti (siyah zemin, beyaz bant)",
+  "kamerali-telefon": "Kameralı bir telefon ya da tablet"
 };

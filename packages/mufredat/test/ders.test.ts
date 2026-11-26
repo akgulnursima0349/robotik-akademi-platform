@@ -49,7 +49,9 @@ describe("ders ilerlemesi", () => {
     const s = dersDurumu(SIROLINE_SENSOR, { ...k, gorev: { yildiz: 3 } }, 2);
     expect([s.gorevYildiz, s.bitti]).toEqual([2, true]); // yerleşik yıldız yok sayılır, Lab'ınki geçerli
     expect(dersDurumu(SIROLINE_SENSOR, { ...k, gercek: { ogrenci: true } }, 1, true).onayli).toBe(true);
-    expect(dersDurumu(SIROLINE_SENSOR, k, 1, true).onayli).toBe(false); // öğrenci yapmadıysa onay sayılmaz
+    /* öğrenci işaretlemeyi unuttuysa öğretmenin onayı yine sayılır ve gerçek robot etkinliğini bitirir */
+    expect(dersDurumu(SIROLINE_SENSOR, k, 1, true)).toMatchObject({ onayli: true, gercek: true });
+    expect(dersXp(dersDurumu(SIROLINE_SENSOR, k, 1, true)) - dersXp(dersDurumu(SIROLINE_SENSOR, k, 1, false))).toBe(XP.gercek + XP.onay);
   });
   it("XP ve seviye", () => {
     const s = dersDurumu(SIROLINE_SENSOR, { anlat: { adim: 4, bitti: true }, dene: { degerler: 3, bitti: true }, gercek: { ogrenci: true } }, 2, true);

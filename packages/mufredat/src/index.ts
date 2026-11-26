@@ -6,3 +6,4 @@ export * from "./ders";
 export { DERSLER, dersBul, dersOgesi } from "./dersler";
 export { DersDeposu } from "./ders-deposu";
 export * from "./gorseller";
+export * from "./ders-raporu";
