@@ -123,6 +123,8 @@ function bayrakKolu(renk: number): THREE.Group {
 
 export interface KenshinModeli {
   kok: THREE.Group;
+  /** derslerde vurgulanan parçalar */
+  parcalar: Record<"bicak" | "tekerler" | "yanSensorler" | "baslatma", THREE.Group>;
   tekerleriDondur(sol: number, sag: number): void;
   /** 0: bayraklar kapalı (dik, yukarıda), 1: açık (yana) */
   bayraklar(acik: number): void;
@@ -136,10 +138,10 @@ export function kenshin(renk = 0xd7262e): KenshinModeli {
     ic.add(golgeli(kutu(58, h, 96, m, 0, y, 0)));
     ic.add(golgeli(kutu(28, h, 48, m, -43, y, 0)));
   }
-  ic.add(golgeli(bicak()));
+  const bicakG = golgeli(bicak()); ic.add(bicakG);
   /* tekerlekler (motorlar göbeklerin içinde, görünmez) */
-  const tekerler: THREE.Group[] = [];
-  for (const s of [-1, 1]) { const t = tekerlek(); t.position.set(TEKER_X, R, s * (50 - TEKER_EN / 2)); if (s < 0) t.rotation.y = Math.PI; ic.add(t); tekerler.push(t); }
+  const tekerler: THREE.Group[] = [], tekerG = new THREE.Group(); ic.add(tekerG);
+  for (const s of [-1, 1]) { const t = tekerlek(); t.position.set(TEKER_X, R, s * (50 - TEKER_EN / 2)); if (s < 0) t.rotation.y = Math.PI; tekerG.add(t); tekerler.push(t); }
   /* servo yuvası (siyah baskı) ve dik duran mikro servo */
   ic.add(golgeli(kutu(16, 30, 30, M.baski, -38, 21, 0)));
   const servo = new THREE.Group();
@@ -161,10 +163,11 @@ export function kenshin(renk = 0xd7262e): KenshinModeli {
   const kubbe = new THREE.Mesh(new THREE.SphereGeometry(2.6, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), M.lens); kubbe.position.y = 4.5; bm.add(kubbe);
   bm.position.set(-12, 21, 36); ic.add(golgeli(bm));
   /* yan rakip sensörleri: iki yanda siyah kutu, iki mercek dışa bakar */
+  const yanSensorG = new THREE.Group(); ic.add(yanSensorG);
   for (const s of [-1, 1]) {
     const ys = new THREE.Group(); ys.add(kutu(13, 9, 7, M.baski));
     for (const dx of [-3, 3]) { const m = silindir(1.6, 1, M.lens, 14); m.rotation.x = Math.PI / 2; m.position.set(dx, 0, s * 3.6); ys.add(m); }
-    ys.position.set(8, 11, s * 44); ic.add(golgeli(ys));
+    ys.position.set(8, 11, s * 44); yanSensorG.add(golgeli(ys));
   }
   /* kart üstü: XT30 (sarı), sürgü anahtar, kırmızı DIP anahtar, kondansatörler */
   ic.add(golgeli(kutu(9, 6, 16, M.sari, -16, 9.5, -33)));
@@ -191,6 +194,7 @@ export function kenshin(renk = 0xd7262e): KenshinModeli {
   const kok = new THREE.Group(); kok.add(ic); kok.scale.setScalar(0.001);
   const model: KenshinModeli = {
     kok,
+    parcalar: { bicak: bicakG, tekerler: tekerG, yanSensorler: yanSensorG, baslatma: bm },
     tekerleriDondur(sol, sag) { tekerler[0].rotation.z = sol / R; tekerler[1].rotation.z = -sag / R; },
     bayraklar(acik) {
       const a = Math.max(0, Math.min(1, acik));

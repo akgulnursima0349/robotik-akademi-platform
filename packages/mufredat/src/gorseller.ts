@@ -26,6 +26,26 @@ export const SAHNE_ANLARI: Record<string, SahneAni> = {
     vurgu: { parca: "sensor", etiket: "Sensörler bandın üstünde" },
     aciklama: "SiroLine beyaz kâğıttaki siyah bandın üstünde yavaşça sağa sola kayıyor; sensörler bandı tarıyor."
   },
+  "kenshin-ring": {
+    robot: "Kenshin", aci: "onden", zemin: "ring",
+    vurgu: { parca: "bicak", etiket: "Bıçak" },
+    aciklama: "Kenshin 77 cm'lik dohyonun ortasında: siyah zemin, kenarda beyaz çizgi, ortada kahverengi başlangıç çizgileri. Öndeki bıçak vurgulu."
+  },
+  "kenshin-sensorler": {
+    robot: "Kenshin", aci: "yakin", zemin: "ring", hareket: "nabiz",
+    vurgu: { parca: "yanSensorler", etiket: "Yan rakip sensörleri" },
+    aciklama: "Kenshin yakından: iki yanındaki siyah kutular yan rakip sensörleri; öndeki sensörler bıçağın arkasında."
+  },
+  "kenshin-tekerler": {
+    robot: "Kenshin", aci: "yandan", zemin: "ring",
+    vurgu: { parca: "tekerler", etiket: "Geniş lastik tekerler" },
+    aciklama: "Kenshin yandan: geniş lastik tekerler zemine iyi tutunur; bıçak önde yere çok yakın."
+  },
+  "kenshin-baslatma": {
+    robot: "Kenshin", aci: "yakin", zemin: "ring",
+    vurgu: { parca: "baslatma", etiket: "Start modülü" },
+    aciklama: "Kenshin yakından: üstündeki küçük kart, hakemin kumandasından gelen başla sinyalini alan start modülü."
+  },
   "siroline-siyah-zemin": {
     robot: "SiroLine", aci: "onden", zemin: "beyaz-bant", hareket: "salinim",
     vurgu: { parca: "sensor", etiket: "Siyah zemin, beyaz bant" },
@@ -35,7 +55,7 @@ export const SAHNE_ANLARI: Record<string, SahneAni> = {
 
 /* ---------- adım adım çizim ---------- */
 /** Çizim alanı 400 × 260 birim. Renkler v2 paletinden ad olarak. */
-export type CizimRengi = "murekkep" | "kirmizi" | "mor" | "yesil" | "sari" | "gri" | "beyaz" | "siyah";
+export type CizimRengi = "murekkep" | "kirmizi" | "mor" | "yesil" | "sari" | "gri" | "beyaz" | "siyah" | "kahve";
 export type Sekil =
   | { tur: "kutu"; x: number; y: number; g: number; y2: number; dolgu?: CizimRengi; kose?: number }
   | { tur: "daire"; x: number; y: number; r: number; dolgu?: CizimRengi }
@@ -233,6 +253,127 @@ Object.assign(CIZIMLER, {
       { sekil: { tur: "kutu", x: 18, y: 104, g: 128, y2: 38, dolgu: "beyaz", kose: 12 }, renk: "mor", kelime: 17 },
       { sekil: { tur: "etiket", x: 82, y: 129, metin: "Deftere yaz", hiza: "orta" }, renk: "murekkep", kelime: 19 },
       { sekil: { tur: "ok", noktalar: [[88, 100], [128, 42]] }, renk: "mor", kelime: 20 }
+    ]
+  }
+} satisfies Record<string, Cizim>);
+
+/* ---------- Mini Sumo modülünün çizimleri ---------- */
+const satir = (y: number, durum: string, hamle: string, kd: number, kh: number): Katman[] => [
+  { sekil: { tur: "kutu", x: 14, y, g: 166, y2: 30, dolgu: "beyaz", kose: 8 }, renk: "mor", kelime: kd },
+  { sekil: { tur: "etiket", x: 97, y: y + 21, metin: durum, hiza: "orta" }, renk: "murekkep", kelime: kd },
+  { sekil: { tur: "ok", noktalar: [[184, y + 15], [206, y + 15]] }, renk: "mor", kelime: kh },
+  { sekil: { tur: "kutu", x: 210, y, g: 176, y2: 30, dolgu: "beyaz", kose: 8 }, renk: "kirmizi", kelime: kh },
+  { sekil: { tur: "etiket", x: 298, y: y + 21, metin: hamle, hiza: "orta" }, renk: "kirmizi", kelime: kh }
+];
+Object.assign(CIZIMLER, {
+  /* "Mini sumoda iki robot yuvarlak bir ringde karşılaşır… kenarında 2,5 santimetrelik beyaz bir çizgi var." */
+  "dohyo-olculeri": {
+    aciklama: "Üstten dohyo: siyah zeminli daire, kenarında beyaz çizgi, ortada iki kahverengi başlangıç çizgisi; çapı 77 cm.",
+    katmanlar: [
+      { sekil: { tur: "daire", x: 125, y: 130, r: 112, dolgu: "beyaz" }, renk: "gri", kelime: 4 },
+      { sekil: { tur: "daire", x: 125, y: 130, r: 102, dolgu: "siyah" }, renk: "siyah", kelime: 6 },
+      { sekil: { tur: "kutu", x: 104, y: 116, g: 5, y2: 28, dolgu: "kahve", kose: 1 }, renk: "kahve", kelime: 9 },
+      { sekil: { tur: "kutu", x: 141, y: 116, g: 5, y2: 28, dolgu: "kahve", kose: 1 }, renk: "kahve", kelime: 9 },
+      { sekil: { tur: "cizgi", noktalar: [[13, 252], [237, 252]] }, renk: "mor", kelime: 15 },
+      { sekil: { tur: "cizgi", noktalar: [[13, 244], [13, 258]] }, renk: "mor", kelime: 15 },
+      { sekil: { tur: "cizgi", noktalar: [[237, 244], [237, 258]] }, renk: "mor", kelime: 15 },
+      { sekil: { tur: "etiket", x: 250, y: 70, metin: "dohyo: 77 cm", hiza: "sol" }, renk: "mor", kelime: 16 },
+      { sekil: { tur: "etiket", x: 250, y: 115, metin: "siyah zemin", hiza: "sol" }, renk: "murekkep", kelime: 19 },
+      { sekil: { tur: "etiket", x: 250, y: 160, metin: "beyaz çizgi", hiza: "sol" }, renk: "murekkep", kelime: 24 },
+      { sekil: { tur: "etiket", x: 250, y: 182, metin: "2,5 cm", hiza: "sol" }, renk: "murekkep", kelime: 24 },
+      { sekil: { tur: "etiket", x: 250, y: 226, metin: "başlangıç", hiza: "sol" }, renk: "kahve", kelime: 27 },
+      { sekil: { tur: "etiket", x: 250, y: 248, metin: "çizgileri", hiza: "sol" }, renk: "kahve", kelime: 27 }
+    ]
+  },
+  /* "Kenshin'in beş rakip sensörü var… Her biri dar bir çizgi boyunca bakar ve 60 santimetreye kadar görür." */
+  "sensor-gorus-alani": {
+    aciklama: "Üstten Kenshin ve beş rakip sensörünün görüş çizgileri: iki yana birer çizgi, önde üç çizgi (sol ön, orta, sağ ön). Çizgilerin arasında kalan yerler kör nokta.",
+    katmanlar: [
+      { sekil: { tur: "kutu", x: 175, y: 160, g: 50, y2: 50, dolgu: "mor", kose: 6 }, renk: "murekkep", kelime: 0 },
+      { sekil: { tur: "kutu", x: 175, y: 156, g: 50, y2: 6, dolgu: "gri", kose: 1 }, renk: "murekkep", kelime: 0 },
+      { sekil: { tur: "ok", noktalar: [[175, 185], [28, 185]] }, renk: "sari", kelime: 9 },
+      { sekil: { tur: "etiket", x: 28, y: 176, metin: "sol yan", hiza: "sol" }, renk: "murekkep", kelime: 9 },
+      { sekil: { tur: "ok", noktalar: [[225, 185], [372, 185]] }, renk: "sari", kelime: 9 },
+      { sekil: { tur: "etiket", x: 372, y: 176, metin: "sağ yan", hiza: "sag" }, renk: "murekkep", kelime: 10 },
+      { sekil: { tur: "ok", noktalar: [[188, 156], [160, 26]] }, renk: "sari", kelime: 12 },
+      { sekil: { tur: "etiket", x: 152, y: 34, metin: "sol ön", hiza: "sag" }, renk: "murekkep", kelime: 13 },
+      { sekil: { tur: "ok", noktalar: [[200, 156], [200, 18]] }, renk: "sari", kelime: 14 },
+      { sekil: { tur: "ok", noktalar: [[212, 156], [240, 26]] }, renk: "sari", kelime: 16 },
+      { sekil: { tur: "etiket", x: 248, y: 34, metin: "sağ ön", hiza: "sol" }, renk: "murekkep", kelime: 17 },
+      { sekil: { tur: "etiket", x: 92, y: 110, metin: "kör nokta", hiza: "orta" }, renk: "kirmizi", kelime: 20 },
+      { sekil: { tur: "etiket", x: 308, y: 110, metin: "kör nokta", hiza: "orta" }, renk: "kirmizi", kelime: 20 },
+      { sekil: { tur: "etiket", x: 200, y: 245, metin: "menzil 60 cm", hiza: "orta" }, renk: "mor", kelime: 26 }
+    ]
+  },
+  /* "Kenshin'in altında, önde iki zemin sensörü var… beyaz kenar çizgisine gelince bir olur." */
+  "zemin-sensoru-kenar": {
+    aciklama: "Üstten ringin kenarı: solda siyah zemin, ortada beyaz kenar çizgisi. Kenshin kenara gelmiş; önündeki iki zemin sensörü beyazı görüyor. Oklar geri çekilip dönmeyi gösteriyor.",
+    katmanlar: [
+      { sekil: { tur: "kutu", x: 0, y: 0, g: 300, y2: 260, dolgu: "siyah", kose: 0 }, renk: "siyah", kelime: 0 },
+      { sekil: { tur: "kutu", x: 300, y: 0, g: 30, y2: 260, dolgu: "beyaz", kose: 0 }, renk: "gri", kelime: 0 },
+      { sekil: { tur: "kutu", x: 212, y: 90, g: 80, y2: 80, dolgu: "mor", kose: 8 }, renk: "murekkep", kelime: 1 },
+      { sekil: { tur: "kutu", x: 292, y: 90, g: 8, y2: 80, dolgu: "gri", kose: 1 }, renk: "murekkep", kelime: 1 },
+      { sekil: { tur: "daire", x: 308, y: 104, r: 8, dolgu: "gri" }, renk: "murekkep", kelime: 4 },
+      { sekil: { tur: "etiket", x: 288, y: 80, metin: "sol", hiza: "sag" }, renk: "beyaz", kelime: 8 },
+      { sekil: { tur: "daire", x: 308, y: 156, r: 8, dolgu: "gri" }, renk: "murekkep", kelime: 4 },
+      { sekil: { tur: "etiket", x: 288, y: 194, metin: "sağ", hiza: "sag" }, renk: "beyaz", kelime: 10 },
+      { sekil: { tur: "daire", x: 308, y: 104, r: 8, dolgu: "sari" }, renk: "kirmizi", kelime: 19 },
+      { sekil: { tur: "daire", x: 308, y: 156, r: 8, dolgu: "sari" }, renk: "kirmizi", kelime: 19 },
+      { sekil: { tur: "etiket", x: 365, y: 136, metin: "dışarı", hiza: "orta" }, renk: "murekkep", kelime: 16 },
+      { sekil: { tur: "ok", noktalar: [[205, 130], [110, 130]] }, renk: "sari", kelime: 20 },
+      { sekil: { tur: "etiket", x: 158, y: 116, metin: "geri çekil", hiza: "orta" }, renk: "beyaz", kelime: 20 },
+      { sekil: { tur: "ok", noktalar: [[100, 140], [80, 205]] }, renk: "sari", kelime: 20 },
+      { sekil: { tur: "etiket", x: 92, y: 232, metin: "sonra dön", hiza: "orta" }, renk: "beyaz", kelime: 20 }
+    ]
+  },
+  /* "İki robot burun buruna ittiğinde tekerlekler zemine tutunarak iter…" */
+  "itme-kuvvetleri": {
+    aciklama: "Yandan iki robot burun buruna: oklar itmeyi, tekerleklerin zemine tutunmasını ve robotun ağırlığını gösteriyor. Bıçaklar öne doğru eğik.",
+    katmanlar: [
+      { sekil: { tur: "cizgi", noktalar: [[10, 208], [390, 208]] }, renk: "murekkep", kelime: 0 },
+      { sekil: { tur: "kutu", x: 50, y: 140, g: 120, y2: 52, dolgu: "mor", kose: 8 }, renk: "murekkep", kelime: 0 },
+      { sekil: { tur: "cizgi", noktalar: [[170, 148], [194, 206]] }, renk: "gri", kelime: 0 },
+      { sekil: { tur: "daire", x: 80, y: 194, r: 14, dolgu: "siyah" }, renk: "siyah", kelime: 1 },
+      { sekil: { tur: "daire", x: 140, y: 194, r: 14, dolgu: "siyah" }, renk: "siyah", kelime: 1 },
+      { sekil: { tur: "kutu", x: 230, y: 140, g: 120, y2: 52, dolgu: "kirmizi", kose: 8 }, renk: "murekkep", kelime: 2 },
+      { sekil: { tur: "cizgi", noktalar: [[230, 148], [206, 206]] }, renk: "gri", kelime: 2 },
+      { sekil: { tur: "daire", x: 260, y: 194, r: 14, dolgu: "siyah" }, renk: "siyah", kelime: 2 },
+      { sekil: { tur: "daire", x: 320, y: 194, r: 14, dolgu: "siyah" }, renk: "siyah", kelime: 2 },
+      { sekil: { tur: "ok", noktalar: [[70, 126], [170, 126]] }, renk: "mor", kelime: 4 },
+      { sekil: { tur: "etiket", x: 120, y: 114, metin: "itme", hiza: "orta" }, renk: "mor", kelime: 4 },
+      { sekil: { tur: "ok", noktalar: [[330, 126], [230, 126]] }, renk: "kirmizi", kelime: 4 },
+      { sekil: { tur: "ok", noktalar: [[95, 226], [55, 226]] }, renk: "yesil", kelime: 7 },
+      { sekil: { tur: "etiket", x: 50, y: 252, metin: "tutunma", hiza: "sol" }, renk: "yesil", kelime: 7 },
+      { sekil: { tur: "ok", noktalar: [[110, 24], [110, 84]] }, renk: "murekkep", kelime: 18 },
+      { sekil: { tur: "etiket", x: 122, y: 56, metin: "ağırlık", hiza: "sol" }, renk: "murekkep", kelime: 18 }
+    ]
+  },
+  /* "Strateji, her durumda ne yapacağını önceden seçmektir… Sonra tablodaki hamleyi yapar." */
+  "durum-hamle-tablosu": {
+    aciklama: "İki sütunlu tablo: solda durumlar (kenar solda, kenar sağda, rakip önde, rakip solda, hiçbir şey), sağda her durumun hamlesi.",
+    katmanlar: [
+      { sekil: { tur: "etiket", x: 97, y: 22, metin: "durum", hiza: "orta" }, renk: "mor", kelime: 2 },
+      { sekil: { tur: "etiket", x: 298, y: 22, metin: "hamle", hiza: "orta" }, renk: "kirmizi", kelime: 4 },
+      ...satir(36, "Kenar solda", "Geri + sağa dön", 12, 19),
+      ...satir(80, "Kenar sağda", "Geri + sola dön", 12, 19),
+      ...satir(124, "Rakip önde", "Tam ileri", 15, 19),
+      ...satir(168, "Rakip solda", "Sola dön", 15, 19),
+      ...satir(212, "Hiçbir şey", "Dönerek ara", 16, 19)
+    ]
+  },
+  /* "Lab'daki ligde robotlar Python ile yazılır… fonksiyon iki motorun gücünü döndürür." */
+  "kartlardan-koda": {
+    aciklama: "Solda bir kart: 'Rakip önde → Tam ileri'. Ok, sağdaki Python koduna gidiyor: def hamle(robot), if r[2] == 1, return [255, 255].",
+    katmanlar: [
+      { sekil: { tur: "kutu", x: 12, y: 64, g: 150, y2: 70, dolgu: "beyaz", kose: 12 }, renk: "mor", kelime: 0 },
+      { sekil: { tur: "etiket", x: 87, y: 92, metin: "Rakip önde", hiza: "orta" }, renk: "murekkep", kelime: 0 },
+      { sekil: { tur: "etiket", x: 87, y: 120, metin: "Tam ileri", hiza: "orta" }, renk: "kirmizi", kelime: 0 },
+      { sekil: { tur: "ok", noktalar: [[166, 99], [194, 99]] }, renk: "mor", kelime: 3 },
+      { sekil: { tur: "kutu", x: 198, y: 30, g: 194, y2: 170, dolgu: "siyah", kose: 12 }, renk: "murekkep", kelime: 3 },
+      { sekil: { tur: "etiket", x: 210, y: 64, metin: "def hamle(robot):", hiza: "sol" }, renk: "beyaz", kelime: 10 },
+      { sekil: { tur: "etiket", x: 226, y: 104, metin: "if r[2] == 1:", hiza: "sol" }, renk: "sari", kelime: 12 },
+      { sekil: { tur: "etiket", x: 242, y: 144, metin: "return [255,255]", hiza: "sol" }, renk: "beyaz", kelime: 13 },
+      { sekil: { tur: "etiket", x: 295, y: 236, metin: "iki motorun gücü", hiza: "orta" }, renk: "mor", kelime: 15 }
     ]
   }
 } satisfies Record<string, Cizim>);

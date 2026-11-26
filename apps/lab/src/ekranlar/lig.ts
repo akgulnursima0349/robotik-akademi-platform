@@ -14,17 +14,24 @@ const bekle = () => new Promise((r) => setTimeout(r, 30));
 const DIZILIS_AD = { karsi: "karşı karşıya", yan: "yan yana", sirt: "sırt sırta" } as const;
 const SEBEP_AD = { dustu: "halkadan düştü", sure: "süre bitti, berabere", ikisi_dustu: "ikisi de düştü" } as const;
 
+/** Platformdaki ders, strateji kartlarından üretilen robotu bu anahtarla Lab'a bırakır */
+export const LIG_TASLAK_ANAHTARI = "sra-lig-taslak";
+
 export async function lig(root: HTMLElement) {
   const ben = uygulama.kullanici;
   const kayitli = ilerleme.lig();
   const eskiKod = kayitli?.kod && !/return\s+["']/.test(kayitli.kod) ? kayitli.kod : null; // eski kar topu ligi kodları yüklenmez
-  const adAlan = alan({ etiket: "Robotunun adı", id: "l-robot-ad", ozellik: { maxlength: "40", value: kayitli?.ad ?? "Benim Kenshin'im" } });
+  /* Platformdaki Mini Sumo dersinden (strateji kartları) gönderilen robot: bir kez yüklenir, ilk kayıtta lige yazılır */
+  let taslak: { ad: string; kod: string } | null = null;
+  try { const t = JSON.parse(localStorage.getItem(LIG_TASLAK_ANAHTARI) ?? "null"); if (t && typeof t.kod === "string") taslak = { ad: String(t.ad ?? "").slice(0, 40), kod: t.kod }; localStorage.removeItem(LIG_TASLAK_ANAHTARI); } catch { /* bozuk ya da erişilemez */ }
+  const adAlan = alan({ etiket: "Robotunun adı", id: "l-robot-ad", ozellik: { maxlength: "40", value: taslak?.ad || kayitli?.ad || "Benim Kenshin'im" } });
   const adGirdi = adAlan.querySelector("input")!;
-  const editor = new Editor(eskiKod ?? ILK_ROBOT, "Robotunun Python kodu");
+  const editor = new Editor(taslak?.kod ?? eskiKod ?? ILK_ROBOT, "Robotunun Python kodu");
   const kaydet = () => ilerleme.ligKaydet(adGirdi.value.trim() || "Benim Kenshin'im", editor.kod);
   editor.degisince = kaydet; adGirdi.addEventListener("input", kaydet);
 
   const mesaj = el("div", "l-cikti", { "aria-live": "polite" });
+  if (taslak) mesaj.replaceChildren(uyari("Strateji kartlarından gelen robotun yüklendi. Turnuvayı başlatınca ligde kaydedilir.", "bilgi"));
   const baslatB = dugme({ metin: "Turnuvayı başlat", ikon: "ok-sag", ikonSonda: true, id: "l-turnuva" }) as HTMLButtonElement;
   const eylem = el("div", "l-eylem", {}, baslatB);
 
@@ -173,6 +180,7 @@ export async function lig(root: HTMLElement) {
 
   baslatB.addEventListener("click", async () => {
     editor.temizle();
+    kaydet(); // turnuvaya çıkan robot kaydedilir (dersten gelen taslak da)
     const b = pythonBeyin(editor.kod);
     if (b.hata) { editor.hataSatiri(b.hata.satir); mesaj.replaceChildren(hataKutusu(b.hata.satir, b.hata.mesaj)); return; }
     baslatB.disabled = true;

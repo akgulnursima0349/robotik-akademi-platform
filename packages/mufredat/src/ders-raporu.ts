@@ -1,6 +1,6 @@
 /* Öğretmen raporu için ders ilerlemesi: öğrencinin ders kaydı, Lab kaydı ve öğretmenin onayından hücre durumu ve özet. */
-import { dersDurumu, dersKayitlariOku, labAnahtari, type DersDurumuOzeti, type DersTanimi } from "./ders";
-import { kayitOku } from "./model";
+import { dersDurumu, dersKayitlariOku, type DersDurumuOzeti, type DersTanimi } from "./ders";
+import { kayitOku, labGorevYildizi } from "./model";
 
 export type HucreDurumu = "baslamadi" | "suruyor" | "bitti" | "onay-bekliyor" | "onaylandi";
 export const HUCRE_DURUMLARI: Record<HucreDurumu, { ad: string; simge: string }> = {
@@ -24,7 +24,7 @@ export interface DersRaporGirdisi { dersler?: unknown; lab?: unknown; onaylar?: 
 export function dersHucresi(d: DersTanimi, g: DersRaporGirdisi): DersHucresi {
   const k = dersKayitlariOku(g.dersler && typeof g.dersler === "object" ? g.dersler : null).dersler[d.kimlik];
   const lab = kayitOku(g.lab && typeof g.lab === "object" ? JSON.stringify(g.lab) : null);
-  const labYildizi = d.gorev.tur === "lab" ? lab.gorevler[labAnahtari(d.gorev)]?.yildiz ?? 0 : 0;
+  const labYildizi = labGorevYildizi(d, lab);
   const onayli = !!g.onaylar && d.kimlik in g.onaylar;
   const s = dersDurumu(d, k, labYildizi, onayli);
   const basladi = !!k && (!!k.anlat || !!k.dene || !!k.gorev || !!k.gercek) || labYildizi > 0;

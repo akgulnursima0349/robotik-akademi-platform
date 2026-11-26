@@ -4,7 +4,7 @@ import { el } from "@sra/tasarim/v2";
 import { gorunenKatmanlar, type Cizim, type CizimRengi, type Sekil } from "@sra/mufredat";
 
 const RENK: Record<CizimRengi, string> = {
-  murekkep: "#17144A", kirmizi: "#E3262F", mor: "#6A48F0", yesil: "#0A7A71", sari: "#F5A300", gri: "#D9D1C2", beyaz: "#FFFFFF", siyah: "#1D1B19"
+  murekkep: "#17144A", kirmizi: "#E3262F", mor: "#6A48F0", yesil: "#0A7A71", sari: "#F5A300", gri: "#D9D1C2", beyaz: "#FFFFFF", siyah: "#1D1B19", kahve: "#8B5A2B"
 };
 const NS = "http://www.w3.org/2000/svg";
 const svgEl = (ad: string, a: Record<string, string | number>) => { const e = document.createElementNS(NS, ad); for (const [k, v] of Object.entries(a)) e.setAttribute(k, String(v)); return e; };

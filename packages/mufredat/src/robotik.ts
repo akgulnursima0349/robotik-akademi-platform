@@ -3,7 +3,7 @@
    İlerleme Lab'ın kaydından (sra-lab-v1) okunur. */
 import { CIZGI_GOREVLERI, GOREVLER, LABIRENT_GOREVLERI } from "@sra/robot-motoru";
 import type { Atolye } from "./model";
-import { CIZGI_DERSLERI, dersOgesi } from "./dersler";
+import { CIZGI_DERSLERI, dersOgesi, SUMO_DERSLERI } from "./dersler";
 
 export const LAB_KAYIT_ANAHTARI = "sra-lab-v1";
 
@@ -33,9 +33,9 @@ export const ROBOTIK: Atolye = {
       dersler: LABIRENT_GOREVLERI.map((g) => ({ kimlik: g.kimlik, ad: g.ad, ogretir: g.ogrettigi, tur: "gorev", adres: `lab/#labirent/${g.kimlik}`, enCokYildiz: 3, anahtar: g.kimlik }))
     },
     {
-      kimlik: "sumo", ad: "Mini Sumo Ligi", robot: "Kenshin", seviyeler: ["ortaokul", "lise"],
-      aciklama: "Sensörlerini oku, taktiğini yaz, rakiplerini ringden çıkar. Sınıf ligi.",
-      dersler: [{ kimlik: "lig", ad: "Ligde yarış", ogretir: "Robotunu yaz ve kaydet", tur: "lig", adres: "lab/#lig", enCokYildiz: 0, anahtar: "lig" }]
+      kimlik: "sumo", ad: "Mini Sumo", robot: "Kenshin", seviyeler: ["ortaokul", "lise"],
+      aciklama: "Kurallar, sensörler, itme fiziği ve strateji; sonunda sınıf ligi.",
+      dersler: [...SUMO_DERSLERI.map(dersOgesi), { kimlik: "lig", ad: "Ligde yarış", ogretir: "Robotunu yaz ve kaydet", tur: "lig", adres: "lab/#lig", enCokYildiz: 0, anahtar: "lig" }]
     }
   ]
 };

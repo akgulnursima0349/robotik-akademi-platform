@@ -38,6 +38,12 @@ export interface IlerlemeKaydi {
   /** ders motoru kayıtları (sra-ders-v1) */
   dersler?: Record<string, DersKaydi>;
 }
+/** Dersin Lab görevinin yıldızı Lab kaydından; lig görevi robot ligde kayıtlıysa yapılmış sayılır (1) */
+export function labGorevYildizi(t: DersTanimi, k: IlerlemeKaydi): number {
+  if (t.gorev.tur !== "lab") return 0;
+  if (t.gorev.modul === "lig") return k.lig ? 1 : 0;
+  return k.gorevler[labAnahtari(t.gorev)]?.yildiz ?? 0;
+}
 export const BOS_KAYIT: IlerlemeKaydi = { gorevler: {}, bayrak: {}, lig: null };
 
 /** Bozuk ya da eksik kayıtta boş kayıt; tanınmayan alanlar yok sayılır */
@@ -64,7 +70,7 @@ export interface ModulIlerlemesi { modul: Modul; dersler: DersIlerlemesi[]; bite
 
 function dersOzeti(k: IlerlemeKaydi, d: Ders) {
   const t = d.tanim!;
-  return dersDurumu(t, k.dersler?.[t.kimlik], t.gorev.tur === "lab" ? k.gorevler[labAnahtari(t.gorev)]?.yildiz ?? 0 : 0);
+  return dersDurumu(t, k.dersler?.[t.kimlik], labGorevYildizi(t, k));
 }
 const yildizi = (k: IlerlemeKaydi, d: Ders) => (d.tur === "ders" && d.tanim ? dersOzeti(k, d).gorevYildiz : k.gorevler[d.anahtar]?.yildiz ?? 0);
 function bittiMi(k: IlerlemeKaydi, d: Ders): boolean {

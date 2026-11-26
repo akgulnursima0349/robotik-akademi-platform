@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { CIZGI_GOREVLERI, GOREVLER, LABIRENT_GOREVLERI } from "@sra/robot-motoru";
-import { atolyeOzeti, BOS_KAYIT, CIZGI_DERSLERI, kaldigiYer, kayitOku, modulIlerlemesi, ROBOTIK, seviyeSirasi, type IlerlemeKaydi } from "../src";
+import { atolyeOzeti, BOS_KAYIT, CIZGI_DERSLERI, DERSLER, SUMO_DERSLERI, kaldigiYer, kayitOku, modulIlerlemesi, ROBOTIK, seviyeSirasi, type IlerlemeKaydi } from "../src";
 
 /** Çizgi modülünün bütün derslerinde anlat ve dene bitmiş; ayar görevli derslerde görev yıldızı da var (Lab görevinin yıldızı Lab kaydında) */
-const tumDersler = { dersler: Object.fromEntries(CIZGI_DERSLERI.map((d) => [d.kimlik, { anlat: { adim: d.anlat.length - 1, bitti: true }, dene: { degerler: d.dene.enAzFarkliDeger, bitti: true }, ...(d.gorev.tur === "ayar" ? { gorev: { yildiz: 2 } } : {}) }])) };
+const tumDersler = { dersler: Object.fromEntries(DERSLER.map((d) => [d.kimlik, { anlat: { adim: d.anlat.length - 1, bitti: true }, dene: { degerler: d.dene.enAzFarkliDeger, bitti: true }, ...(d.gorev.tur !== "lab" ? { gorev: { yildiz: 2 } } : {}) }])) };
 
 const modul = (k: string) => ROBOTIK.moduller.find((m) => m.kimlik === k)!;
 const kayit = (gorevler: Record<string, number>, ek: Partial<IlerlemeKaydi> = {}): IlerlemeKaydi => ({ gorevler: Object.fromEntries(Object.entries(gorevler).map(([k, y]) => [k, { yildiz: y }])), bayrak: {}, lig: null, ...ek });
@@ -15,7 +15,7 @@ describe("Robotik atölyesi Lab ile aynı", () => {
     const c = modul("cizgi").dersler.filter((d) => d.tur === "gorev");
     expect(c.map((d) => [d.anahtar, d.ad, d.adres])).toEqual(CIZGI_GOREVLERI.map((g) => ["cizgi-" + g.kimlik, g.ad, `lab/#cizgi/${g.kimlik}`]));
     expect(modul("cizgi").dersler.slice(-2).map((d) => [d.tur, d.adres, d.anahtar])).toEqual([["rehber", "lab/#cizgi/kurulum", "siro-kurulum"], ["serbest", "lab/#cizgi/ayar", ""]]);
-    expect(modul("sumo").dersler.map((d) => [d.tur, d.adres])).toEqual([["lig", "lab/#lig"]]);
+    expect(modul("sumo").dersler.map((d) => [d.tur, d.adres])).toEqual([...SUMO_DERSLERI.map((d) => ["ders", `#ders/${d.kimlik}`]), ["lig", "lab/#lig"]]);
     expect(ROBOTIK.moduller.map((m) => m.kimlik)).toEqual(["kar", "cizgi", "labirent", "sumo"]);
   });
   it("ders kimlikleri modül içinde benzersiz", () => {

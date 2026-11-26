@@ -19,6 +19,13 @@ const ACILAR: Record<SahneAni["aci"], [[number, number, number], [number, number
   yakin: [[0.3, 0.09, 0.12], [0.15, 0.01, 0]]
 };
 
+/** Kenshin küçük (10 cm) ama bayrakları uzun: kamera biraz daha uzakta ve yukarıda */
+const KENSHIN_ACILARI: Partial<typeof ACILAR> = {
+  onden: [[0.36, 0.24, 0.26], [0.09, 0.03, 0]],
+  yakin: [[0.28, 0.16, 0.18], [0.1, 0.03, 0]],
+  yandan: [[0.12, 0.16, 0.4], [0.09, 0.03, 0]]
+};
+
 export function sahneAniKur(ad: string, an: SahneAni): SahneOynatici {
   const kap = el("figure", "sa", { style: "margin:0", "data-sahne": ad, role: "img", "aria-label": an.aciklama });
   if (!webglVar()) {
@@ -48,13 +55,28 @@ export function sahneAniKur(ad: string, an: SahneAni): SahneOynatici {
     s.sahne.add(kagit, bant);
   }
 
+  if (an.zemin === "ring") {
+    /* 77 cm dohyo: siyah zemin, kenarında 2,5 cm beyaz çizgi; ortada kahverengi başlangıç çizgileri */
+    const halka = new THREE.Mesh(new THREE.CylinderGeometry(0.385, 0.385, 0.001, 96), new THREE.MeshStandardMaterial({ color: 0xf4f4f0, roughness: 0.8 }));
+    const ic = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.36, 0.0012, 96), new THREE.MeshStandardMaterial({ color: 0x1d1b19, roughness: 0.6 }));
+    halka.position.set(0.09, 0.0005, 0); ic.position.set(0.09, 0.0008, 0);
+    halka.receiveShadow = ic.receiveShadow = true;
+    s.sahne.add(halka, ic);
+    for (const x of [-0.05, 0.05]) {
+      const cizgi = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.0014, 0.1), new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.7 }));
+      cizgi.position.set(0.09 + x, 0.0009, 0); s.sahne.add(cizgi);
+    }
+  }
+
   /* robot */
   let kok: THREE.Object3D, vurgulanan: THREE.Object3D | null = null;
   if (an.robot === "SiroLine") { const r = siroline(); kok = r.kok; if (an.vurgu) vurgulanan = (r.parcalar as Record<string, THREE.Group>)[an.vurgu.parca] ?? null; }
-  else if (an.robot === "Kenshin") kok = kenshin().kok;
+  else if (an.robot === "Kenshin") { const r = kenshin(); r.bayraklar(0); kok = r.kok; if (an.vurgu) vurgulanan = (r.parcalar as Record<string, THREE.Group>)[an.vurgu.parca] ?? null; }
   else kok = rizbot().kok;
   const tasiyici = new THREE.Group(); tasiyici.add(kok); s.sahne.add(tasiyici);
   if (an.aci === "alttan") { tasiyici.rotation.x = Math.PI; tasiyici.position.y = 0.06; }
+  /* Kenshin'in merkezi gövdesinin ortasında; kameralar SiroLine'a göre (merkez önde) ayarlı */
+  if (an.robot === "Kenshin") tasiyici.position.x += 0.09;
 
   /* vurgu: parçanın malzemeleri kendine ait kopyalara geçer ve kırmızı parlar; öbür parçalar soluklaşır */
   const parlayan: THREE.MeshStandardMaterial[] = [];
@@ -74,7 +96,7 @@ export function sahneAniKur(ad: string, an: SahneAni): SahneOynatici {
     m.material = Array.isArray(m.material) ? kopya : kopya[0];
   });
 
-  const [kp, hd] = ACILAR[an.aci];
+  const [kp, hd] = (an.robot === "Kenshin" ? KENSHIN_ACILARI[an.aci] : undefined) ?? ACILAR[an.aci];
   /* sönümleme kapatılıp açılır ki dönmenin artakalan hızı baştaki açıyı bozmasın */
   const basaDon = () => { s.kontrol.enableDamping = false; s.kontrol.update(); s.kamera.position.set(...kp); s.kontrol.target.set(...hd); s.kontrol.update(); s.kontrol.enableDamping = true; };
   basaDon();

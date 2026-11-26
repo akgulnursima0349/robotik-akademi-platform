@@ -7,10 +7,12 @@ import { P_KONTROL } from "./p-kontrol";
 import { D_KONTROL } from "./d-kontrol";
 import { HIZ_KARARLILIK } from "./hiz-kararlilik";
 import { PIST_YARISI } from "./pist-yarisi";
+import { SUMO_DERSLERI } from "./sumo";
 
 /** Çizgi İzleyen Robot modülünün altı dersi, sırasıyla */
 export const CIZGI_DERSLERI: DersTanimi[] = [SIROLINE_SENSOR, CIZGI_KONUMU, P_KONTROL, D_KONTROL, HIZ_KARARLILIK, PIST_YARISI];
-export const DERSLER: DersTanimi[] = [...CIZGI_DERSLERI];
+export { SUMO_DERSLERI };
+export const DERSLER: DersTanimi[] = [...CIZGI_DERSLERI, ...SUMO_DERSLERI];
 export const dersBul = (kimlik: string) => DERSLER.find((d) => d.kimlik === kimlik);
 
 /** Ders tanımından atölye sayfasındaki ders ögesi */

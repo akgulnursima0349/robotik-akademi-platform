@@ -31,14 +31,23 @@ const G = 9810;                       // mm/sn²
 export interface SumoGirdi { rakip: number[]; kenar: number[]; zaman: number }
 export type SumoBeyni = (g: SumoGirdi) => [number, number];
 
+/** İtme deneyi için robotun değiştirilebilen özellikleri; verilmeyen KENSHIN'den gelir (lig hep varsayılanla oynar) */
+export interface SumoOzellik { kutle: number; tutunma: number; kaldirilmisTutunma: number; bicak: boolean }
+const VARSAYILAN_OZELLIK: SumoOzellik = { kutle: KENSHIN.kutle, tutunma: KENSHIN.tutunma, kaldirilmisTutunma: KENSHIN.kaldirilmisTutunma, bicak: true };
+
 class Govde {
   x: number; y: number; yon: number;
+  readonly oz: SumoOzellik;
   vx = 0; vy = 0; w = 0;
   pwm: [number, number] = [0, 0];
   kaldirildi = false;
   solYol = 0; sagYol = 0;
-  readonly I = KENSHIN.kutle * (KENSHIN.en ** 2 + KENSHIN.boy ** 2) / 12;
-  constructor(x: number, y: number, yon: number) { this.x = x; this.y = y; this.yon = yon; }
+  readonly I: number;
+  constructor(x: number, y: number, yon: number, oz: Partial<SumoOzellik> = {}) {
+    this.x = x; this.y = y; this.yon = yon;
+    this.oz = { ...VARSAYILAN_OZELLIK, ...oz };
+    this.I = this.oz.kutle * (KENSHIN.en ** 2 + KENSHIN.boy ** 2) / 12;
+  }
   get ileri(): [number, number] { return [Math.cos(this.yon), Math.sin(this.yon)]; }
   /** robot eksenindeki bir noktanın dünya konumu */
   dunya(px: number, py: number): [number, number] { const c = Math.cos(this.yon), s = Math.sin(this.yon); return [this.x + c * px - s * py, this.y + s * px + c * py]; }
@@ -47,7 +56,7 @@ class Govde {
   /** iki tekerleğin kuvvetleriyle bir fizik adımı */
   adim(dt: number) {
     const [fx, fy] = this.ileri, nx = -fy, ny = fx;
-    const m = KENSHIN.kutle, mu = this.kaldirildi ? KENSHIN.kaldirilmisTutunma : KENSHIN.tutunma;
+    const m = this.oz.kutle, mu = this.kaldirildi ? this.oz.kaldirilmisTutunma : this.oz.tutunma;
     const Fmax = mu * m * G / 2;
     let Fx = 0, Fy = 0, T = 0;
     for (const [i, yan] of [[0, KENSHIN.tekerYanal], [1, -KENSHIN.tekerYanal]] as const) {
@@ -106,7 +115,9 @@ function carpismaPayli(a: Govde, b: Govde): Temas | null {
 }
 
 function coz(a: Govde, b: Govde, t: Temas) {
-  const m = KENSHIN.kutle;
+  const ma = a.oz.kutle, mb = b.oz.kutle;
+  /* kütleler eşitse (lig) eski ifade: aynı sayılar, aynı maç */
+  const ters = ma === mb ? 2 / ma : 1 / ma + 1 / mb;
   /* konum düzeltmesi: yarı yarıya */
   const d = t.derinlik / 2 + 0.01;
   a.x -= t.nx * d; a.y -= t.ny * d; b.x += t.nx * d; b.y += t.ny * d;
@@ -118,22 +129,22 @@ function coz(a: Govde, b: Govde, t: Temas) {
   const vn = rv[0] * t.nx + rv[1] * t.ny;
   if (vn > 0) return;
   const raXn = ra[0] * t.ny - ra[1] * t.nx, rbXn = rb[0] * t.ny - rb[1] * t.nx;
-  const payda = 2 / m + raXn ** 2 / a.I + rbXn ** 2 / b.I;
+  const payda = ters + raXn ** 2 / a.I + rbXn ** 2 / b.I;
   const j = -(1 + e) * vn / payda;
   const uygula = (jx: number, jy: number) => {
-    a.vx -= jx / m; a.vy -= jy / m; a.w -= (ra[0] * jy - ra[1] * jx) / a.I;
-    b.vx += jx / m; b.vy += jy / m; b.w += (rb[0] * jy - rb[1] * jx) / b.I;
+    a.vx -= jx / ma; a.vy -= jy / ma; a.w -= (ra[0] * jy - ra[1] * jx) / a.I;
+    b.vx += jx / mb; b.vy += jy / mb; b.w += (rb[0] * jy - rb[1] * jx) / b.I;
   };
   uygula(j * t.nx, j * t.ny);
   /* teğetsel sürtünme */
   const tx = -t.ny, ty = t.nx, vt = rv[0] * tx + rv[1] * ty;
   const raXt = ra[0] * ty - ra[1] * tx, rbXt = rb[0] * ty - rb[1] * tx;
-  const jt = Math.max(-mu * j, Math.min(mu * j, -vt / (2 / m + raXt ** 2 / a.I + rbXt ** 2 / b.I)));
+  const jt = Math.max(-mu * j, Math.min(mu * j, -vt / (ters + raXt ** 2 / a.I + rbXt ** 2 / b.I)));
   uygula(jt * tx, jt * ty);
 }
 
 /** a'nın bıçağı (ön yüzü) b'ye mi değiyor: temas normali a'nın ileri yönüne yakın */
-const bicakla = (a: Govde, nx: number, ny: number) => { const [fx, fy] = a.ileri; return fx * nx + fy * ny > 0.82; };
+const bicakla = (a: Govde, nx: number, ny: number) => { if (!a.oz.bicak) return false; const [fx, fy] = a.ileri; return fx * nx + fy * ny > 0.82; };
 
 /* ---------- sensörler ---------- */
 /** Işının kutuya uzaklığı (yoksa Infinity): kutunun kendi ekseninde dilim yöntemi */
@@ -191,9 +202,9 @@ export function baslangic(d: Dizilis, tohum: number): [[number, number, number],
   return [a, [130, 0, a[2] + Math.PI]]; // merkeze göre nokta simetrisi
 }
 
-export function rauntOyna(beyinler: [SumoBeyni, SumoBeyni], d: Dizilis, tohum: number, sure = RAUNT_SURESI): RauntSonucu {
-  const [p0, p1] = baslangic(d, tohum);
-  const g: [Govde, Govde] = [new Govde(...p0), new Govde(...p1)];
+export function rauntOyna(beyinler: [SumoBeyni, SumoBeyni], d: Dizilis, tohum: number, sure = RAUNT_SURESI, ozellikler: [Partial<SumoOzellik>, Partial<SumoOzellik>] = [{}, {}], konumlar?: [[number, number, number], [number, number, number]]): RauntSonucu {
+  const [p0, p1] = konumlar ?? baslangic(d, tohum);
+  const g: [Govde, Govde] = [new Govde(...p0, ozellikler[0]), new Govde(...p1, ozellikler[1])];
   const hatalar: [string | null, string | null] = [null, null];
   const kareler: SumoKaresi[] = [];
   const adim = Math.round(KARAR / FIZIK);
@@ -271,4 +282,16 @@ export function sumoTurnuvasi(oyuncular: SumoOyuncu[], tohum = 1): SumoTurnuvaSo
   }
   const tablo = satir.slice().sort((x, y) => y.puan - x.puan || (y.alinan - y.verilen) - (x.alinan - x.verilen) || y.alinan - x.alinan || x.ad.localeCompare(y.ad, "tr"));
   return { tablo, maclar };
+}
+
+/* ---------- ders deneyleri için ---------- */
+/** Verilen konumlardaki iki robot için birinci robotun sensör okuması (sensör görüş göstergesi). Konum: [x, y, yön] mm ve radyan. */
+export function sumoSensorOkumasi(robot: [number, number, number], rakip: [number, number, number]): SumoGirdi {
+  return okuma(new Govde(...robot), new Govde(...rakip), 0);
+}
+/** Sensörün ışınının dünya üstündeki başlangıcı ve yönü (çizim için) */
+export function sumoSensorIsini(robot: [number, number, number], i: number): { x: number; y: number; aci: number } {
+  const g = new Govde(...robot), s = KENSHIN.sensorler[i];
+  const [x, y] = g.dunya(s.x, s.y);
+  return { x, y, aci: g.yon + s.aci * Math.PI / 180 };
 }

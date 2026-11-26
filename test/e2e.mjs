@@ -206,7 +206,7 @@ for (const [ad, g, y] of BOYUTLAR) {
   await p.evaluate(() => localStorage.setItem("sra-lab-v1", JSON.stringify({ gorevler: { "ilk-sokak": { yildiz: 3 }, kose: { yildiz: 2 }, "cizgi-oval": { yildiz: 1 } }, lig: null, bayrak: { "siro-kurulum": true } })));
   await p.reload(); await p.waitForSelector("#at-ozet");
   const ozet = await p.textContent("#at-ozet");
-  ok(/4 \/ 23\s*ders bitti/.test(ozet) && /6 \/ 45 yıldız/.test(ozet), "Lab kaydından: 23 dersin 4'ü bitti (iki Kar, bir Çizgi, kurulum rehberi), 6 yıldız (" + ozet.replace(/\s+/g, " ").slice(0, 60) + ")");
+  ok(/4 \/ 29\s*ders bitti/.test(ozet) && /6 \/ 45 yıldız/.test(ozet), "Lab kaydından: 29 dersin 4'ü bitti (iki Kar, bir Çizgi, kurulum rehberi), 6 yıldız (" + ozet.replace(/\s+/g, " ").slice(0, 60) + ")");
   ok(await p.getAttribute('.at-ders[aria-current="step"]', "data-ders") === "uzun-cadde" && /devam/i.test(await p.textContent("#at-devam")), "kaldığın yer üçüncü görev; düğme 'Kaldığın yerden devam et'");
   ok((await p.$$('[data-modul="kar"] .at-ders.bitti')).length === 2 && (await p.$$('[data-modul="cizgi"] .at-ders.bitti')).length === 2, "biten dersler yeşil (rehber dahil)");
   await p.screenshot({ path: resolve(EKRAN, `atolye-robotik-${ad}.png`), fullPage: true });
@@ -483,6 +483,87 @@ for (const [ad, g, y] of BOYUTLAR) {
   await p.click(".cs-kos");
   ok((await p.getAttribute(".cs", "data-sonuc")) === "bitti" && (await p.getAttribute(".cs", "data-yildiz")) === "3", "hareketi azaltta sonuç hemen; siyah zeminli pistte 3 yıldız");
   ok(hatalar.length === 0, "konsol hatası yok" + (hatalar.length ? ": " + hatalar.slice(0, 2).join(" | ") : ""));
+  await ctx.close();
+}
+
+/* Mini Sumo modülü: altı ders; ring simülasyonu, sensör görüşü, itme deneyi, strateji görevi, kartlardan kod ve Lab'daki lig */
+for (const [ad, g, y] of BOYUTLAR) {
+  console.log(`\nmini sumo dersleri · ${ad}`);
+  const { ctx, p, hatalar } = await sayfaAc(g, y, {}, ad !== "masaustu");
+  const tasmasiz = async () => (await tasmaYok(p)) && p.evaluate(() => [...document.querySelectorAll(".dr-govde *")].filter((e) => !e.closest("svg") && !e.closest("pre")).every((e) => e.getBoundingClientRect().right <= innerWidth + 1));
+  const dersler = ["sumo-kurallari", "rakibi-gormek", "ringde-kalmak", "itme-fizigi", "sumo-strateji", "sumo-lig"];
+  await p.goto(ADRES + "#atolye/robotik"); await p.waitForSelector("#at-ozet");
+  ok((await Promise.all(dersler.map((k) => p.$(`[data-ders="${k}"]`)))).every(Boolean), "atölye sayfasında Mini Sumo'nun altı dersi");
+  const kayit = (k) => p.evaluate((k) => localStorage.setItem("sra-ders-v1", JSON.stringify({ dersler: k })), k);
+  const ac = async (ders, bolum) => { await p.goto(ADRES + "#ders/" + ders); await p.reload(); await p.waitForSelector(".dr-govde"); await p.click(`[data-bolum="${bolum}"]`); await p.waitForSelector(".dr-kart [data-deney]"); };
+  const kart = (d, h) => p.selectOption(`.dr-kart .sk-sec[data-durum="${d}"]`, h);
+  const sonucBekle = (n) => p.waitForFunction((n) => document.querySelector('[data-deney="ring-simulasyonu"]')?.dataset.raunt === String(n) && !document.querySelector("#rs-oyna").disabled, n, { timeout: 20000 });
+  /* 1. ders: kurallar; ring simülasyonu → strateji görevi */
+  await kayit({ "sumo-kurallari": { anlat: { adim: 3, bitti: true } } });
+  await ac("sumo-kurallari", "dene");
+  ok(await p.isDisabled('.sk-sec[data-durum="kenar-sol"]') && !(await p.isDisabled('.sk-sec[data-durum="hicbiri"]')), "1. ders: yalnız iki kart açık, ötekiler sabit");
+  await kart("rakip-onde", "tam-ileri"); await kart("hicbiri", "tam-ileri");
+  await p.click("#rs-oyna"); await sonucBekle(1);
+  ok(/Kazandın|Kaybettin|Berabere/.test(await p.textContent(".rs-sonuc")), "raunt oynandı, sonuç yazıldı");
+  await kart("hicbiri", "sola-don"); await p.click('.rs-secimler [data-deger="yan"]'); await p.click("#rs-oyna"); await sonucBekle(2);
+  await p.click('.rs-secimler [data-deger="sirt"]'); await p.click("#rs-oyna"); await sonucBekle(3);
+  ok(/3 \/ 3 denendi/.test(await p.textContent(".dr-denendi")) && !(await p.isDisabled('[data-bolum="gorev"]')), "üç deneme: Görev açıldı");
+  ok(await tasmasiz(), "ring simülasyonunda taşma yok");
+  await p.screenshot({ path: resolve(EKRAN, `sumo-dene-${ad}.png`), fullPage: true });
+  await p.click("#dr-goreve"); await p.waitForSelector("#sg-oyna");
+  ok((await p.inputValue('.sk-sec[data-durum="hicbiri"]')) === "sola-don", "görevde kartlar denemeden kalanla başlıyor");
+  await p.click("#sg-oyna"); await p.waitForSelector("#dr-bitti");
+  ok((await p.getAttribute('[data-deney="strateji-gorevi"]', "data-yildiz")) === "3" && (await p.$$(".rs-rauntlar li")).length === 3 && await p.isVisible("#sg-oyna"), "strateji görevi: üç yıldız, ders bitti, görev ekranı yerinde");
+  await p.screenshot({ path: resolve(EKRAN, `sumo-gorev-${ad}.png`), fullPage: true });
+  /* 2. ders: sensör görüşü klavyeyle */
+  await kayit({ "rakibi-gormek": { anlat: { adim: 2, bitti: true } } });
+  await ac("rakibi-gormek", "dene");
+  await p.focus(".sgo-svg");
+  for (const k of ["ArrowUp", "ArrowUp", "ArrowUp", "ArrowUp", "ArrowLeft", "ArrowLeft", "ArrowDown", "ArrowDown", "ArrowDown", "ArrowDown", "ArrowDown", "ArrowDown", "ArrowDown", "ArrowDown", "ArrowRight", "ArrowRight", "ArrowRight", "ArrowRight"]) await p.keyboard.press(k);
+  const ds = await p.textContent(".dr-denendi");
+  ok(/\d \/ 4 denendi/.test(ds) && /\[\d, \d, \d, \d, \d\]/.test(await p.textContent(".sgo-dizi")), `sensör görüşü: rakip klavyeyle kayıyor, okumalar değişiyor (${ds.trim()})`);
+  ok(await tasmasiz(), "sensör görüşünde taşma yok");
+  /* 4. ders: itme deneyi */
+  await kayit({ "itme-fizigi": { anlat: { adim: 2, bitti: true } } });
+  await ac("itme-fizigi", "dene");
+  const it = async () => { await p.click("#it-oyna"); await p.waitForFunction(() => !document.querySelector("#it-oyna").disabled && document.querySelector('[data-deney="itme-deneyi"]').dataset.sonuc, null, { timeout: 20000 }); return p.getAttribute('[data-deney="itme-deneyi"]', "data-sonuc"); };
+  const s1 = await it();
+  await p.evaluate(() => { const g = document.querySelector(".it-ayarlar input"); g.value = "500"; g.dispatchEvent(new Event("input")); });
+  const s2 = await it();
+  await p.click('.it-ayarlar [data-deger="yok"]');
+  await p.evaluate(() => { const g = document.querySelector(".it-ayarlar input"); g.value = "470"; g.dispatchEvent(new Event("input")); });
+  const s3 = await it();
+  ok(s1 === "berabere" && s2 === "kazandi" && s3 === "kaybetti" && /3 \/ 3 denendi/.test(await p.textContent(".dr-denendi")), "itme: eşitler itemez, ağır olan iter, bıçaksız olan itilir");
+  ok(await tasmasiz(), "itme deneyinde taşma yok");
+  /* 6. ders: kartlardan kod → Lab'daki lig → görev */
+  await kayit({ "sumo-lig": { anlat: { adim: 2, bitti: true } } });
+  await ac("sumo-lig", "dene");
+  await kart("rakip-onde", "tam-ileri");
+  ok(/def hamle\(robot\):/.test(await p.textContent(".kk-kod")) && /return \[255, 255\]/.test(await p.textContent(".kk-kod")), "kartlardan Python kodu üretiliyor");
+  ok(await tasmasiz(), "kod ekranında taşma yok");
+  if (ad === "masaustu") {
+    await p.click("#kk-gonder"); await p.waitForURL(/\/lab\/#lig$/); await p.waitForSelector("#l-turnuva");
+    ok(/Strateji kartlarından gelen robotun/.test(await p.textContent(".l-cikti")) && /Strateji kartlarından üretildi/.test(await p.inputValue("textarea.e-alan")), "Lab'daki lige gitti: kartlardan gelen kod editörde");
+    await p.click("#l-turnuva"); await p.waitForSelector(".l-tablo tbody tr", { timeout: 60000 });
+    await p.goto(ADRES + "#ders/sumo-lig"); await p.reload(); await p.waitForSelector(".dr-govde"); await p.click('[data-bolum="gorev"]');
+    ok(/ligde kayıtlı/.test(await p.textContent("#dr-gorev-yildiz")) && await p.isVisible("#dr-bitti"), "turnuva oynandı: robot ligde kayıtlı, ders bitti");
+  }
+  /* bütün anlatımlar görselli */
+  for (const k of dersler) {
+    await kayit({});
+    await p.goto(ADRES + "#ders/" + k); await p.reload(); await p.waitForSelector(".dr-anlat");
+    let adimlar = 0;
+    for (;;) {
+      await p.waitForSelector(".dr-gorsel--dolu");
+      adimlar++;
+      if (!(await p.isEnabled("#dr-ileri"))) for (const b of await p.$$("#dr-soru .dr-secenekler button")) { await b.click(); if (await p.isEnabled("#dr-ileri")) break; }
+      const son = /bitir/.test(await p.textContent("#dr-ileri"));
+      await p.click("#dr-ileri");
+      if (son) break;
+    }
+    ok(adimlar >= 3, `${k}: anlatım ${adimlar} adım, hepsi görselli`);
+  }
+  ok(hatalar.length === 0, "Mini Sumo derslerinde konsol hatası yok" + (hatalar.length ? ": " + hatalar.slice(0, 2).join(" | ") : ""));
   await ctx.close();
 }
 

@@ -5,7 +5,7 @@
 import { bildirim, dugme, el, hap, ikon, kok, konusmaBalonu, maskot, parcaliIlerleme, sesServisi, seviyeGostergesi, yildizlar } from "@sra/tasarim/v2";
 import { IlerlemeEsitleyici, Ogrenci, Ogretmen } from "@sra/bulut";
 import {
-  bolumAcik, DERS_BOLUMLERI, DersDeposu, dersBul, dersDurumu, DERSLER, dersXp, ilkBolum, kayitOku, LAB_KAYIT_ANAHTARI, labAnahtari, PARCALAR, ROBOTIK,
+  bolumAcik, DERS_BOLUMLERI, DersDeposu, dersBul, dersDurumu, DERSLER, dersXp, ilkBolum, kayitOku, LAB_KAYIT_ANAHTARI, labGorevYildizi, PARCALAR, ROBOTIK,
   seviyeHesapla, XP, type DersBolumu, type DersTanimi
 } from "@sra/mufredat";
 import { uygulama } from "../uygulama";
@@ -14,6 +14,7 @@ import { stilEkle, ustCubuk } from "./ana-sayfa";
 import { cizimGorseli, sahneGorseli } from "../gorsel";
 import { DENEYLER, stilEkle as deneyStiliEkle } from "../deney";
 import { cizgiSimulasyonu } from "../deney/cizgi-simulasyonu";
+import { stratejiGorevi } from "../deney/sumo";
 
 /** Deney bileşenleri (deney/): ayar ve "bu değer denendi" bildirimiyle bir öğe kurar */
 export type DeneyBileseni = (ayar: Record<string, unknown>, denendi: (deger: string | number) => void) => HTMLElement;
@@ -37,7 +38,7 @@ export function dersDeposu(): DersDeposu {
   return depo;
 }
 const labKaydi = () => { try { return kayitOku(localStorage.getItem(LAB_KAYIT_ANAHTARI)); } catch { return kayitOku(null); } };
-const labYildizi = (d: DersTanimi) => (d.gorev.tur === "lab" ? labKaydi().gorevler[labAnahtari(d.gorev)]?.yildiz ?? 0 : 0);
+const labYildizi = (d: DersTanimi) => labGorevYildizi(d, labKaydi());
 /* öğretmen onayları: yalnız giriş yapmış öğrencide sunucudan okunur, bellekte tutulur (misafirde ve çevrimdışıyken yok) */
 let onaylar: Record<string, string> = {};
 let onayOkundu: Promise<boolean> | null = null;
@@ -257,12 +258,37 @@ export function dersSayfasi(root: HTMLElement, kimlik: string): boolean {
   const gorev = () => {
     const kap = el("section", "s2-kart dr-kart", { "aria-label": "Görev" }, el("h2", "s2-baslik", {}, "Görev"));
     const g = d.gorev;
-    if (g.tur === "lab") {
+    if (g.tur === "lab" && g.modul === "lig") {
+      /* Lab'daki Mini Sumo Ligi: robot ligde kayıtlıysa görev yapılmış */
+      const y = labYildizi(d);
+      kap.append(konusmaBalonu({ metin: g.yonerge, hal: "anlatiyor", ses }),
+        el("div", "dr-son", {}, el("span", "", { style: "font-weight:800", id: "dr-gorev-yildiz" }, y ? "Robotun ligde kayıtlı" : "Henüz ligde robotun yok"),
+          dugme({ metin: y ? "Lige git" : "Lab'daki lige git", tur: "ana", ikon: "oynat", ikonSonda: true, href: "lab/#lig", id: "dr-lab" })));
+      if (y && !durum().dene) kap.append(bildirim("ipucu", "Görev tamam.", " Dersi bitirmek için Dene bölümü de bitmeli."));
+    } else if (g.tur === "lab") {
       const y = labYildizi(d);
       kap.append(konusmaBalonu({ metin: g.yonerge, hal: "anlatiyor", ses }),
         el("div", "dr-son", {}, yildizlar(3, y), el("span", "", { style: "font-weight:800", id: "dr-gorev-yildiz" }, y ? `${y} / 3 yıldız` : "Henüz yıldız yok"),
           dugme({ metin: y ? "Lab'da tekrar dene" : "Lab'da aç", tur: "ana", ikon: "oynat", ikonSonda: true, href: `lab/#${g.modul}/${g.gorev}`, id: "dr-lab" })));
       if (y && !durum().dene) kap.append(bildirim("ipucu", "Görev tamam.", " Dersi bitirmek için Dene bölümü de bitmeli."));
+    } else if (g.tur === "strateji") {
+      /* strateji görevi: kartlar hazır rakiplere karşı oynar; en iyi yıldız ders kaydına */
+      deneyStiliEkle();
+      if (gorevOnbellek) return gorevOnbellek;
+      const enIyi = () => dp.kayit(d.kimlik).gorev?.yildiz ?? 0;
+      const rekor = el("span", "", { style: "font-weight:800", id: "dr-gorev-yildiz" }, "");
+      const rekorYaz = () => { rekor.textContent = enIyi() ? `En iyi: ${enIyi()} / 3 yıldız` : "Henüz yıldız yok"; };
+      rekorYaz();
+      kap.append(konusmaBalonu({ metin: g.yonerge, hal: "anlatiyor", ses }), el("div", "dr-son", {}, rekor),
+        stratejiGorevi(g.acik, g.sabit, g.degerlendirme, (n) => {
+          if (n <= enIyi()) return;
+          const once = durum();
+          ilerle({ gorev: { yildiz: n } });
+          rekorYaz();
+          if (durum().bitti && !once.bitti) ciz(); else ustBolum();
+        }));
+      if (enIyi() && !durum().dene) kap.append(bildirim("ipucu", "Görev tamam.", " Dersi bitirmek için Dene bölümü de bitmeli."));
+      gorevOnbellek = kap;
     } else if (g.tur === "ayar") {
       /* ayar görevi: kaydırıcılarla kitin değerleri; en iyi yıldız ders kaydına yazılır */
       const enIyi = () => dp.kayit(d.kimlik).gorev?.yildiz ?? 0;
