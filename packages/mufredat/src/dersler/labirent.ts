@@ -108,11 +108,11 @@ export const SAG_EL_KURALI: DersTanimi = {
     malzeme: [{ parca: "maskeleme-bandi", adet: 1 }, { parca: "karton-duvar", adet: 10 }],
     adimlar: [
       "Yerde kâğıt bantla 4 × 4 hücrelik bir labirent kurun; duvarlar için karton şeritleri ya da kitapları dik koyun. Bir yol ayrımı ve bir çıkmaz olsun.",
-      "Bir arkadaşın \"robot\" olur: gözlerini kapatır, sağ elini duvara değdirir ve kuralla yürür. Her hücrede bir adım atar.",
+      "Bir arkadaşın \"robot\" olur: gözleri açık, sağ elini duvara değdirir ve kuralla yürür. Robot gibi yalnız bulunduğu hücrenin duvarlarına bakar, her hücrede bir adım atar.",
       "Başka biri her adımda kuralın hangi satırının çalıştığını söyler: \"sağ açık, sağa dön ve ilerle\", \"ön açık, ilerle\" ya da \"sola dön\".",
       "Bitişe vardınız mı? Kaç adım sürdü? Defterinize yazın, sonra görevleri değişin."
     ],
-    guvenlik: "Gözü kapalı yürüyen arkadaşının yanında biri dursun. Labirenti masa ve sandalyelerden uzakta kurun.",
+    guvenlik: "Koşmak yok, yavaş yürünür. Labirenti masa ve sandalyelerden uzakta kurun.",
     ogretmenNotu: BANT_LABIRENT + " Kuralı yüksek sesle söyletmek, Python'daki if, elif, else sırasını oturtur: önce sağa bakılır."
   }
 };
