@@ -40,8 +40,8 @@ export const SIROLINE_SENSOR: DersTanimi = {
   ],
   dene: {
     bilesen: "sensor-gostergesi",
-    ayar: { robot: "SiroLine", sensorSayisi: 8, zemin: "beyaz-uzerinde-siyah-bant", surukle: true },
-    yonerge: "SiroLine'ı bandın üstünde sağa sola kaydır ve sensör ışıklarını izle. Çizgiyi en az üç farklı sensörün altına getir.",
+    ayar: { robot: "SiroLine", sensorSayisi: 8, zemin: "beyaz-uzerinde-siyah-bant", zeminSecilir: true, surukle: true },
+    yonerge: "SiroLine'ı bandın üstünde sağa sola kaydır ve sensör ışıklarını izle. Çizgiyi en az üç farklı sensörün altına getir. Sonra sınıftaki pisti seç: siyah zeminde beyaz bant varken sayılar nasıl değişiyor?",
     enAzFarkliDeger: 3
   },
   gorev: {
@@ -49,14 +49,14 @@ export const SIROLINE_SENSOR: DersTanimi = {
     yonerge: "Oval pistte ilk turu at. Ortadaki sensörlerden hangisi siyahı görüyorsa robotu o yöne çevir."
   },
   gercek: {
-    malzeme: [{ parca: "siroline", adet: 1 }, { parca: "siyah-elektrik-bandi", adet: 1 }, { parca: "beyaz-a4-kagit", adet: 2 }],
+    malzeme: [{ parca: "siroline", adet: 1 }, { parca: "cizgi-pisti", adet: 1 }, { parca: "kamerali-telefon", adet: 1 }],
     adimlar: [
-      "Beyaz kâğıdın ortasına boydan boya siyah elektrik bandı yapıştır.",
-      "SiroLine'ı aç ve kâğıdın üstüne koy. Motorları çalıştırma; robotu elinle hareket ettireceksin.",
-      "Robotu bandın üstünden yavaşça sağdan sola geçir. Sensör değerlerinin nasıl değiştiğini izle.",
-      "Robotu öyle bir yere koy ki bant tam ortadaki iki sensörün altında kalsın. Bu konumu defterine çiz."
+      "SiroLine'ı aç ve pistin üstüne koy. Motorları çalıştırma; robotu elinle hareket ettireceksin.",
+      "Telefonun ön kamerasını aç ve robotun altındaki sensörlere tut. Gözünle göremediğin kızılötesi lambalar ekranda mor ışık olarak parlar.",
+      "Robotu öyle bir yere koy ki beyaz bant tam ortadaki iki sensörün, s[3] ile s[4]'ün altında kalsın. Robotu, bandı ve sensörleri defterine çiz.",
+      "Öğretmenin çizgi izleme programını yükleyince robotu pistte çalıştır. Robot banttan kaçarken hangi yöne döndüğünü izle ve defterine yaz."
     ],
     guvenlik: "Robotu kaldırırken tekerlekleri tut; motorlar beklenmedik anda çalışırsa robot masadan düşebilir.",
-    ogretmenNotu: "Değerleri sınıfla birlikte izleyebilmek için robota sensör okuma programını dersten önce yükleyin."
+    ogretmenNotu: "Son adım için robota kitin çizgi izleme programını (Zemin: Siyah) dersten önce yükleyin. Kızılötesi ışığı çoğu telefonun ön kamerası gösterir; arka kamera çoğu zaman filtreler, önceden bir telefonla deneyin."
   }
 };

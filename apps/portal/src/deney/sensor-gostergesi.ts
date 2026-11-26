@@ -1,7 +1,7 @@
 /* Sensör göstergesi: SiroLine'ın önü ve 8 sensörlük şeridi, siyah bandın üstünde, üstten bakış. Öğrenci robotu sağa sola
    sürükler (ya da ok tuşlarıyla kaydırır); her sensörün ışığı, okuması (0–1000) ve robotun hesapladığı konum (0–7000)
    anında değişir. Okumalar Lab'daki çizgi robotunun hesabıyla aynıdır (robot-motoru: banttaOkumalar, qtrOkuyucu). */
-import { el, canliGrafik } from "@sra/tasarim/v2";
+import { el, canliGrafik, secici } from "@sra/tasarim/v2";
 import { banttaOkumalar, qtrOkuyucu, sensorYani, CIZGI_GENISLIGI, SIROLINE, type Zemin } from "@sra/robot-motoru";
 
 export const KAYMA_SINIRI = 55; // mm: bant en fazla bu kadar yana kayar (sensör şeridi ±33 mm)
@@ -22,10 +22,10 @@ export function konumYazisi(konum: number): string {
 }
 
 export function sensorGostergesi(ayar: Record<string, unknown>, denendi: (d: number) => void): HTMLElement {
-  const zemin: Zemin = ayar.zemin === "siyah-uzerinde-beyaz-bant" ? "siyah" : "beyaz";
+  let zemin: Zemin = ayar.zemin === "siyah-uzerinde-beyaz-bant" ? "siyah" : "beyaz";
   const NS = "http://www.w3.org/2000/svg";
   const s = (ad: string, at: Record<string, string | number>) => { const e = document.createElementNS(NS, ad); for (const [k, v] of Object.entries(at)) e.setAttribute(k, String(v)); return e; };
-  const okuyucu = qtrOkuyucu();
+  let okuyucu = qtrOkuyucu();
   let kayma = 0; // bandın robotun orta çizgisine göre yeri (mm, + sola)
 
   /* çizim: kâğıt, bant (sabit), robotun önü (kayar) */
@@ -37,11 +37,21 @@ export function sensorGostergesi(ayar: Record<string, unknown>, denendi: (d: num
     "aria-label": "SiroLine'ın bant üstündeki yeri. Sol ve sağ ok tuşlarıyla kaydır.",
     "aria-valuemin": -KAYMA_SINIRI, "aria-valuemax": KAYMA_SINIRI
   });
-  svg.append(s("rect", { x: 0, y: 0, width: G, height: Y, fill: zemin === "beyaz" ? "#F7F7F4" : "#1D1B19" }));
-  svg.append(s("rect", { x: ORTA - (CIZGI_GENISLIGI * OLCEK) / 2, y: 0, width: CIZGI_GENISLIGI * OLCEK, height: Y, fill: zemin === "beyaz" ? "#141414" : "#F7F7F4", class: "sg-bant" }));
+  const zeminRect = s("rect", { x: 0, y: 0, width: G, height: Y });
+  const bantRect = s("rect", { x: ORTA - (CIZGI_GENISLIGI * OLCEK) / 2, y: 0, width: CIZGI_GENISLIGI * OLCEK, height: Y, class: "sg-bant" });
+  svg.append(zeminRect, bantRect);
   const robot = s("g", { class: "sg-robot" });
   /* önündeki levha: yarı saydam, altındaki bant görünsün */
-  robot.append(s("path", { d: "M-104 230 L-104 120 Q-104 92 -76 92 L76 92 Q104 92 104 120 L104 230", fill: "rgba(23,20,74,.62)", stroke: "#17144A", "stroke-width": 3 }));
+  const levha = s("path", { d: "M-104 230 L-104 120 Q-104 92 -76 92 L76 92 Q104 92 104 120 L104 230", fill: "rgba(23,20,74,.62)", "stroke-width": 3 });
+  robot.append(levha);
+  const renklendir = () => {
+    const beyaz = zemin === "beyaz";
+    zeminRect.setAttribute("fill", beyaz ? "#F7F7F4" : "#1D1B19");
+    bantRect.setAttribute("fill", beyaz ? "#141414" : "#F7F7F4");
+    levha.setAttribute("stroke", beyaz ? "#17144A" : "#B8B0F0");
+    kapRef?.setAttribute("data-zemin", zemin);
+  };
+  let kapRef: HTMLElement | null = null;
   robot.append(s("rect", { x: -82, y: 104, width: 164, height: 40, rx: 8, fill: "rgba(23,20,74,.35)", stroke: "#E3262F", "stroke-width": 2.5 }));
   const tl = s("text", { x: 0, y: 176, "text-anchor": "middle", class: "sg-yazi" }); tl.textContent = "SiroLine · ön"; robot.append(tl);
   const isiklar: SVGElement[] = [];
@@ -65,7 +75,14 @@ export function sensorGostergesi(ayar: Record<string, unknown>, denendi: (d: num
   const konumYazi = el("span", "sg-konum__yazi", {}, "");
   const grafik = canliGrafik({ baslik: "Konum, son 10 saniye", en: 0, ust: 7000 });
   const durumMetni = el("p", "s2-gizli", { "aria-live": "polite" }, "");
+  /* zemin seçimi: Lab'daki gibi beyaz zemin ya da sınıftaki pist gibi siyah zemin; sayılar tersine döner */
+  const zeminSecici = ayar.zeminSecilir
+    ? secici("Pist", [["beyaz", "Beyaz zemin, siyah bant"], ["siyah", "Siyah zemin, beyaz bant"]], zemin, (z) => {
+        zemin = z; okuyucu = qtrOkuyucu(); renklendir(); guncelle(true);
+      })
+    : null;
   const kap = el("div", "sg", { "data-deney": "sensor-gostergesi" },
+    ...(zeminSecici ? [el("div", "sg-zemin", {}, el("span", "sg-zemin__etiket", {}, "Pist"), zeminSecici)] : []),
     svg,
     el("div", "sg-cubuklar", { role: "group", "aria-label": "Sensör okumaları, 0 ile 1000 arası" }, ...cubuklar.map((c) => c.kap)),
     el("div", "sg-alt", {},
@@ -125,12 +142,15 @@ export function sensorGostergesi(ayar: Record<string, unknown>, denendi: (d: num
     if (yeni !== kutu) { kutu = yeni; svg.setAttribute("viewBox", kutu.join(" ")); }
   };
   if (typeof ResizeObserver === "function") new ResizeObserver(boyutla).observe(kap);
+  kapRef = kap; renklendir();
   guncelle(false);
   return kap;
 }
 
 export const SENSOR_GOSTERGESI_STILI = `
 .sg{display:grid;gap:14px;margin:6px auto 0;max-width:760px;width:100%}
+.sg-zemin{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.sg-zemin__etiket{font-weight:800;color:var(--sra2-murekkep-2)}
 .sg-svg{width:100%;height:auto;display:block;border-radius:var(--sra2-kose-2);border:3px solid var(--sra2-murekkep);touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
 .sg-svg.suruklenen{cursor:grabbing}
 .sg-svg:focus-visible{outline:3px solid var(--sra2-mor);outline-offset:3px}

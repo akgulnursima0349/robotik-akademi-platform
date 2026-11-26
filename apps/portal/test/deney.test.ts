@@ -52,4 +52,18 @@ describe("sensör göstergesi", () => {
     expect(g.querySelectorAll(".sg-cubuk__sayi")[7].textContent).not.toBe("45");
     g.remove();
   });
+  it("zemin seçilince sayılar tersine döner, çizgiyi gören sensörler aynı kalır", () => {
+    const g = sensorGostergesi({ zemin: "beyaz-uzerinde-siyah-bant", zeminSecilir: true }, () => {});
+    document.body.append(g);
+    const yanik = () => [...g.querySelectorAll(".sg-isik")].map((x, i) => (x.classList.contains("yanik") ? i : -1)).filter((i) => i >= 0);
+    const sayi = (i: number) => g.querySelectorAll(".sg-cubuk__sayi")[i].textContent;
+    expect([sayi(3), sayi(0)]).toEqual(["950", "45"]);
+    expect(yanik()).toEqual([3, 4]);
+    (g.querySelector('[data-deger="siyah"]') as HTMLButtonElement).click();
+    expect([sayi(3), sayi(0)]).toEqual(["45", "950"]);
+    expect(yanik()).toEqual([3, 4]);
+    expect(g.dataset.konum).toBe("3500");
+    expect(g.dataset.zemin).toBe("siyah");
+    g.remove();
+  });
 });
