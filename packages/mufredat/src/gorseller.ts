@@ -50,9 +50,13 @@ export const SAHNE_ANLARI: Record<string, SahneAni> = {
     aciklama: "Kenshin yakından: üstündeki küçük kart, hakemin kumandasından gelen başla sinyalini alan start modülü."
   },
   "mbot-onden": {
+    robot: "mBot", aci: "onden", zemin: "duz",
+    aciklama: "mBot önden: mavi alüminyum gövde ve gülen yüz, üstte yarı saydam kutuda kartı, önde iki gümüş gözlü mesafe sensörü, arkada iki siyah teker."
+  },
+  "mbot-ultrasonik": {
     robot: "mBot", aci: "onden", zemin: "duz", hareket: "nabiz",
     vurgu: { parca: "ultrasonik", etiket: "Mesafe sensörü" },
-    aciklama: "mBot önden: mavi alüminyum gövde, üstte şeffaf kapaklı kart, önde iki gümüş gözlü ultrasonik mesafe sensörü."
+    aciklama: "mBot önden, mesafe sensörü vurgulu: siyah kartın üstünde iki gümüş göz; biri dalgayı yollar, öteki geri geleni dinler."
   },
   "mbot-tekerler": {
     robot: "mBot", aci: "yandan", zemin: "duz",
@@ -65,9 +69,9 @@ export const SAHNE_ANLARI: Record<string, SahneAni> = {
     aciklama: "mBot ters çevrilmiş, altı görünüyor: önde çizgi sensörü ve yere bakan iki gözü; arkada iki teker."
   },
   "mbot-kart": {
-    robot: "mBot", aci: "ustten", zemin: "duz", hareket: "nabiz",
-    vurgu: { parca: "isikSensoru", etiket: "Işık sensörü ve iki ışık (LED)" },
-    aciklama: "mBot üstten: şeffaf kapağın altında mCore kartı (robotun beyni); önünde iki renkli ışık ve ortada ışık sensörü."
+    robot: "mBot", aci: "yakin", zemin: "duz", hareket: "nabiz",
+    vurgu: { parca: "isikSensoru", etiket: "Işık sensörü" },
+    aciklama: "mBot yakından: yarı saydam kutunun içinde mCore kartı (robotun beyni); kartın önünde iki renkli ışık ve ortada ışık sensörü."
   },
   "rizbot-labirentte": {
     robot: "RizBot", aci: "onden", zemin: "labirent", hareket: "nabiz",

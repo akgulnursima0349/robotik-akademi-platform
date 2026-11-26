@@ -37,11 +37,11 @@ const RIZBOT_ACILARI: Partial<typeof ACILAR> = {
 
 /** mBot büyük (17 cm) ve yüksek: kamera daha uzakta; robotun ortası x ≈ 0,03 */
 const MBOT_ACILARI: Partial<typeof ACILAR> = {
-  onden: [[0.42, 0.24, 0.3], [0.03, 0.04, 0]],
+  onden: [[0.36, 0.2, -0.24], [0.04, 0.04, 0]],
   yandan: [[0.04, 0.22, 0.46], [0.03, 0.03, 0]],
   ustten: [[0.06, 0.48, 0.1], [0.04, 0, 0]],
   alttan: [[0.28, 0.3, 0.24], [0.06, 0.06, 0]],
-  yakin: [[0.3, 0.12, 0.14], [0.08, 0.05, 0]]
+  yakin: [[0.2, 0.17, -0.1], [0.05, 0.05, 0]]
 };
 
 export function sahneAniKur(ad: string, an: SahneAni): SahneOynatici {

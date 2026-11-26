@@ -96,7 +96,7 @@ export const SENSOR_NE_GORUR: DersTanimi = {
     { bit: "sasiriyor", metin: M.yanki, gorsel: { tur: "cizim", ad: "ultrasonik-yanki" } },
     {
       bit: "dusunuyor", metin: "Yarasalar da karanlıkta böyle yol bulur! Peki robot bir duvara yaklaşırsa ne olur?",
-      gorsel: { tur: "sahne", ad: "mbot-onden" },
+      gorsel: { tur: "sahne", ad: "mbot-ultrasonik" },
       soru: {
         soru: "mBot duvara yaklaştı. Mesafe sensörü ne gösterir?",
         secenekler: [{ metin: "Daha küçük bir sayı", dogru: true }, { metin: "Daha büyük bir sayı" }, { metin: "Hiç değişmez" }],
