@@ -2,7 +2,7 @@
    Belirteçler (renk, kontrast, yazı ölçeği), her bileşen bütün durumlarıyla, dört seviye anahtarı ve bileşenlerden kurulmuş
    küçük bir örnek ana sayfa şeridi. */
 import {
-  adimGostergesi, atolyeKarti, bildirim, konusmaBalonu, maskot, MASKOT_HALLERI, sesAyarlari, dugme, el, hap, kodCercevesi, kok, parcaliIlerleme, rozet, secici, sekmeler,
+  adimGostergesi, atolyeKarti, bildirim, canliGrafik, kaydirici, konusmaBalonu, maskot, MASKOT_HALLERI, sesAyarlari, dugme, el, hap, kodCercevesi, kok, parcaliIlerleme, rozet, secici, sekmeler,
   SEVIYELER, seviyeGostergesi, xpHap, yildizlar, type AtolyeKimligi, type Seviye
 } from "@sra/tasarim/v2";
 import logo from "@sra/tasarim/logo.webp";
@@ -59,6 +59,12 @@ export function tasarimVitrini(root: HTMLElement) {
     secici("Seviye", [["", "Varsayılan"], ...SEVIYELER] as [string, string][], "", (s) => { kok(sayfa, (s || undefined) as Seviye | undefined); }));
   ust.querySelector(".s2-secici")!.id = "tv-seviye";
 
+  const deneyOrnegi = () => {
+    const g = canliGrafik({ baslik: "Motor hızı (PWM), son 10 saniye", en: 0, ust: 255 });
+    const k = kaydirici({ etiket: "Motor hızı", en: 0, ust: 255, adim: 5, birim: "PWM", baslangic: 120, degisince: (d) => g.ekle(d) });
+    g.ekle(120);
+    return el("div", "tv-deney", { style: "display:grid;gap:20px;max-width:560px" }, k, g.kap);
+  };
   const bolum = (baslik: string, aciklama: string, ...icerik: Node[]) => el("section", "tv-bolum", { "aria-label": baslik }, el("h2", "s2-baslik", {}, baslik), el("p", "", {}, aciklama), ...icerik);
   const renkler = el("div", "tv-izgara", {}, ...RENKLER.map(([ad, ne]) => el("div", "tv-renk", {}, el("i", "", { style: `background:var(--sra2-${ad})` }), el("code", "", { "data-renk": ad }, ""), el("small", "", {}, ne), el("small", "", { "data-kontrast": ad }, ""))));
   const olcek = el("div", "tv-olcek", {}, ...[8, 7, 6, 5, 4, 3, 2, 1].map((n) => el("div", "", {}, el("code", "", {}, `boy-${n}`),
@@ -106,6 +112,8 @@ export function tasarimVitrini(root: HTMLElement) {
         konusmaBalonu({ metin: "Kırmızı yıldızı bul, üstüne dokun!", hal: "anlatiyor", kendiliginden: false }),
         konusmaBalonu({ metin: "Kenshin dört kez ileri gidip sola dönecek. Çalıştır, sonra dönüş süresini değiştirip ringin içinde kalan bir kare çiz.", hal: "ipucu", kendiliginden: false }),
         konusmaBalonu({ metin: "Süper! Dört yıldızın üçünü topladın.", hal: "seviniyor", kendiliginden: false }))),
+    bolum("Deney: kaydırıcı ve canlı grafik", "Kaydırıcı klavyeyle de çalışır; bırakınca deneyin \"denendi\" sayacına yazar. Grafik bir değerin son 10 saniyesini çizer; hareketi azaltta kaymaz.",
+      deneyOrnegi()),
     bolum("Örnek", "Aynı parçalarla kurulmuş küçük bir ana sayfa şeridi.",
       el("div", "tv-ornek", {},
         el("div", "", {}, el("h3", "s2-baslik", {}, "Robotunu kur, kodla, ", el("span", "", { style: "color:var(--sra2-kirmizi)" }, "kazan!")),

@@ -150,3 +150,26 @@
 .s2-anahtar[aria-checked="true"] .s2-anahtar__yuva { background: var(--sra2-yesil) }
 .s2-anahtar[aria-checked="true"] .s2-anahtar__yuva::after { transform: translateX(18px) }
 .s2-anahtar:focus-visible { box-shadow: 0 var(--sra2-taban-1) 0 var(--sra2-kart-taban), var(--sra2-odak) }
+
+/* ---------- deney: kaydırıcı ---------- */
+.s2-kaydirici{--doluluk:0%;display:grid;gap:6px;max-width:520px}
+.s2-kaydirici__ust{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.s2-kaydirici__etiket{font-weight:800;color:var(--sra2-murekkep)}
+.s2-kaydirici__deger{font:800 var(--sra2-boy-4) var(--sra2-yazi-baslik);color:var(--sra2-mor)}
+.s2-kaydirici__sinirlar{display:flex;justify-content:space-between;font-size:var(--sra2-boy-1);color:var(--sra2-murekkep-2);font-weight:700}
+.s2-kaydirici__girdi{-webkit-appearance:none;appearance:none;width:100%;height:44px;margin:0;background:transparent;cursor:pointer}
+.s2-kaydirici__girdi::-webkit-slider-runnable-track{height:14px;border-radius:999px;background:linear-gradient(to right,var(--sra2-mor) var(--doluluk),var(--sra2-lavanta-2) var(--doluluk))}
+.s2-kaydirici__girdi::-moz-range-track{height:14px;border-radius:999px;background:linear-gradient(to right,var(--sra2-mor) var(--doluluk),var(--sra2-lavanta-2) var(--doluluk))}
+.s2-kaydirici__girdi::-webkit-slider-thumb{-webkit-appearance:none;width:34px;height:34px;margin-top:-10px;border-radius:50%;background:#fff;border:4px solid var(--sra2-mor);box-shadow:0 3px 0 var(--sra2-mor-taban)}
+.s2-kaydirici__girdi::-moz-range-thumb{width:26px;height:26px;border-radius:50%;background:#fff;border:4px solid var(--sra2-mor);box-shadow:0 3px 0 var(--sra2-mor-taban)}
+.s2-kaydirici__girdi:focus-visible{outline:3px solid var(--sra2-mor);outline-offset:4px;border-radius:12px}
+
+/* ---------- deney: canlı grafik ---------- */
+.s2-grafik{margin:0;display:grid;gap:4px}
+.s2-grafik__baslik{font-weight:800;font-size:var(--sra2-boy-1);color:var(--sra2-murekkep-2)}
+.s2-grafik__svg{width:100%;height:auto;display:block}
+.s2-grafik__izgara{stroke:#E6E1F2;stroke-width:1}
+.s2-grafik__eksen{fill:var(--sra2-murekkep-2);font:700 11px var(--sra2-yazi)}
+.s2-grafik__cizgi{fill:none;stroke:var(--sra2-mor);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.s2-grafik__uc{fill:var(--sra2-mor);stroke:#fff;stroke-width:2}
+.s2-grafik__son{fill:var(--sra2-murekkep);font:800 13px var(--sra2-yazi)}

@@ -27,6 +27,21 @@ export type PistTanimi = { parcalar: PistParca[] } | { noktalar: Nokta[] };
 /** Zemin rengi: "beyaz" = beyaz halı, siyah bant (yarışma standardı); "siyah" = siyah zemin, beyaz bant (akademinin sınıf pisti) */
 export type Zemin = "beyaz" | "siyah";
 
+/* ---------- sensör okuması (Lab'ın robotu ve dersin sensör göstergesi aynı hesabı kullanır) ---------- */
+/** Bir QTR sensörünün okuması (0–1000), sensörün bant merkezine uzaklığından (mm). Koyu yüzey büyük sayı:
+    beyaz zeminde bant siyah, siyah zeminde bant beyaz. Sensörün görüş alanı ~8 mm. */
+export function sensorOkumasi(uzaklik: number, zemin: Zemin, gurultu = 0): number {
+  const ortu = Math.max(0, Math.min(1, (CIZGI_GENISLIGI / 2 - uzaklik) / 8 + 0.5));
+  const koyuluk = zemin === "beyaz" ? ortu : 1 - ortu;
+  return Math.round(Math.max(0, Math.min(1000, 45 + 905 * koyuluk + gurultu)));
+}
+/** i. sensörün robotun orta çizgisine yan uzaklığı (mm, + sola; 0 en solda) */
+export const sensorYani = (i: number) => (3.5 - i) * SIROLINE.sensorAralik;
+/** Düz bant robotun önünden dik geçerken 8 okuma (gürültüsüz). kayma: bandın robotun orta çizgisine göre yeri (mm, + sola). */
+export function banttaOkumalar(kayma: number, zemin: Zemin = "beyaz"): number[] {
+  return Array.from({ length: SIROLINE.sensorSayisi }, (_, i) => sensorOkumasi(Math.abs(sensorYani(i) - kayma), zemin));
+}
+
 /* ---------- pist ---------- */
 export class Pist {
   /** 2 mm aralıkla örneklenmiş kapalı orta çizgi */
@@ -186,7 +201,7 @@ export class CizgiRobotu {
 
   /** i. sensörün dünyadaki konumu (0 en solda) */
   sensorKonumu(i: number): Nokta {
-    const ileri = SIROLINE.sensorOnde, yan = (3.5 - i) * SIROLINE.sensorAralik; // + sola
+    const ileri = SIROLINE.sensorOnde, yan = sensorYani(i); // + sola
     const c = Math.cos(this.yon), s = Math.sin(this.yon);
     return [this.x + c * ileri - s * yan, this.y + s * ileri + c * yan];
   }
@@ -195,12 +210,7 @@ export class CizgiRobotu {
     const out: number[] = [];
     for (let i = 0; i < SIROLINE.sensorSayisi; i++) {
       const [sx, sy] = this.sensorKonumu(i);
-      const d = this.pist.uzaklik(sx, sy);
-      const ortu = Math.max(0, Math.min(1, (CIZGI_GENISLIGI / 2 - d) / 8 + 0.5)); // sensörün ~8 mm'lik görüş alanı
-      const g = (this.gurultu() - 0.5) * 30;
-      /* QTR: koyu yüzey büyük sayı. Beyaz zeminde bant siyah, siyah zeminde bant beyaz. */
-      const koyuluk = this.pist.zemin === "beyaz" ? ortu : 1 - ortu;
-      out.push(Math.round(Math.max(0, Math.min(1000, 45 + 905 * koyuluk + g))));
+      out.push(sensorOkumasi(this.pist.uzaklik(sx, sy), this.pist.zemin, (this.gurultu() - 0.5) * 30));
     }
     return out;
   }

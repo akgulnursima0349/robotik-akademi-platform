@@ -252,3 +252,4 @@ export function sesAyarlari(ses: SesServisi = sesServisi()): HTMLElement {
   if (!ses.var) kap.append(el("span", "", { style: "font-weight:700;color:var(--sra2-murekkep-2)" }, "Bu tarayıcıda Türkçe ses yok; metinler ekranda."));
   return kap;
 }
+export { kaydirici, adimaOturt, canliGrafik, pencereKirp, type KaydiriciAyari, type CanliGrafikAyari, type CanliGrafik, type GrafikNoktasi } from "./deney";

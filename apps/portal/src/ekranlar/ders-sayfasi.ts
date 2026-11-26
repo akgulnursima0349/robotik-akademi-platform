@@ -12,10 +12,11 @@ import { uygulama } from "../uygulama";
 import { acilisSeviyesi } from "../atolyeler";
 import { stilEkle, ustCubuk } from "./ana-sayfa";
 import { cizimGorseli, sahneGorseli } from "../gorsel";
+import { DENEYLER } from "../deney";
 
-/** Deney bileşenleri (E4'te eklenir): ayar ve "bu değer denendi" bildirimiyle bir öğe kurar */
+/** Deney bileşenleri (deney/): ayar ve "bu değer denendi" bildirimiyle bir öğe kurar */
 export type DeneyBileseni = (ayar: Record<string, unknown>, denendi: (deger: string | number) => void) => HTMLElement;
-export const DENEY_BILESENLERI: Record<string, DeneyBileseni> = {};
+export const DENEY_BILESENLERI: Record<string, DeneyBileseni> = DENEYLER;
 /** Anlatım görselleri: çizim kelimeye göre belirsin diye okuma olaylarını alır; adım değişince kapatılır */
 export interface GorselOynatici { kap: HTMLElement; olay?: { basladi?: () => void; kelime?: (i: number) => void; bitti?: () => void }; kapat?: () => void }
 export type GorselCizici = (ad: string, ayar: Record<string, unknown> | undefined) => GorselOynatici;
@@ -54,6 +55,7 @@ const STIL = `
 .dr-govde{flex:1;width:100%;max-width:1232px;margin:0 auto;padding:28px clamp(16px,4vw,48px) 56px;display:flex;flex-direction:column;gap:20px}
 .dr-anlat{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:24px;align-items:start}
 .dr-gorsel{aspect-ratio:4/3;border-radius:var(--sra2-kose-3);background:var(--sra2-gece);color:var(--sra2-murekkep-acik);display:grid;place-items:center;text-align:center;padding:20px;box-shadow:0 var(--sra2-taban-2) 0 var(--sra2-gece-taban);overflow:hidden}
+.dr-adimsay.dr-denendi{align-self:flex-start;display:inline-flex;margin:4px 0 0;padding:6px 14px;border-radius:999px;background:var(--sra2-lavanta);color:var(--sra2-mor-taban);font-weight:800;font-size:var(--sra2-boy-2)}
 .dr-gorsel--dolu{padding:0;display:block;position:relative}
 .dr-gorsel--dolu[data-tur=cizim]{aspect-ratio:auto;align-self:start;background:#FFF8EC;box-shadow:0 var(--sra2-taban-2) 0 var(--sra2-kart-taban)}
 .dr-yukleniyor{position:absolute;inset:0;display:grid;place-items:center;font-weight:800}
@@ -122,9 +124,8 @@ export function dersSayfasi(root: HTMLElement, kimlik: string): boolean {
   root.replaceChildren(sayfa);
   document.title = `${d.ad} · Sivas Robotik Akademi`;
 
-  const ciz = () => {
-    ses.durdur();
-    aktifGorsel?.kapat?.(); aktifGorsel = null;
+  /** XP göstergesi ve bölüm düğmeleri (içerik yeniden kurulmadan da güncellenebilir) */
+  const ustBolum = () => {
     const s = durum();
     const xp = toplamXp(), sv = seviyeHesapla(xp);
     xpYeri.replaceChildren(seviyeGostergesi(sv.seviye, `${xp} XP`, sv.doluluk));
@@ -137,6 +138,12 @@ export function dersSayfasi(root: HTMLElement, kimlik: string): boolean {
       btn.addEventListener("click", () => { bolum = b; if (b === "anlat") adim = 0; ciz(); icerik.focus({ preventScroll: true }); });
       return el("li", "", {}, btn);
     }));
+  };
+  const ciz = () => {
+    ses.durdur();
+    aktifGorsel?.kapat?.(); aktifGorsel = null;
+    const s = durum();
+    ustBolum();
     const parcalar: Node[] = [];
     if (s.bitti) parcalar.push(bitisPaneli());
     parcalar.push(bolum === "anlat" ? anlatim() : bolum === "dene" ? deneme() : bolum === "gorev" ? gorev() : gercek());
@@ -199,17 +206,31 @@ export function dersSayfasi(root: HTMLElement, kimlik: string): boolean {
       kap.querySelector("#dr-goreve")!.addEventListener("click", () => { bolum = "gorev"; ciz(); });
       return kap;
     }
+    /* farklı değerler bu oturumda sayılır; kayıttaki sayı (önceki oturum) altına düşülmez */
     const gorulen = new Set<string>();
-    const sayac = el("p", "dr-adimsay", { "aria-live": "polite" }, "");
-    const yaz = () => { sayac.textContent = `${Math.min(gorulen.size, d.dene.enAzFarkliDeger)} / ${d.dene.enAzFarkliDeger} denendi`; };
+    const kayitli = () => dp.kayit(d.kimlik).dene?.degerler ?? 0;
+    const sayac = el("p", "dr-adimsay dr-denendi", { "aria-live": "polite" }, "");
+    const yaz = () => { sayac.textContent = `${Math.min(Math.max(gorulen.size, kayitli()), d.dene.enAzFarkliDeger)} / ${d.dene.enAzFarkliDeger} denendi`; };
+    const sonBlok = () => {
+      if (kap.querySelector("#dr-goreve")) return;
+      const b = el("div", "dr-son", {}, bildirim("basari", "Deneme tamam.", " Şimdi görev seni bekliyor."), dugme({ metin: "Göreve geç", tur: "mor", ikon: "ileri", ikonSonda: true, href: "#ders/" + d.kimlik, id: "dr-goreve" }));
+      b.querySelector("#dr-goreve")!.addEventListener("click", (e) => { e.preventDefault(); bolum = "gorev"; ciz(); icerik.focus({ preventScroll: true }); });
+      kap.append(b);
+    };
     yaz();
-    kap.append(bilesen(d.dene.ayar, (v) => {
-      gorulen.add(String(v)); yaz();
-      ilerle({ dene: { degerler: gorulen.size, bitti: gorulen.size >= d.dene.enAzFarkliDeger } });
-      if (gorulen.size === d.dene.enAzFarkliDeger) { bolum = "dene"; ciz(); }
-    }), sayac);
-    if (durum().dene) kap.append(el("div", "dr-son", {}, bildirim("basari", "Deneme tamam.", " Şimdi görev seni bekliyor."), dugme({ metin: "Göreve geç", tur: "mor", ikon: "ileri", ikonSonda: true, href: "#ders/" + d.kimlik, id: "dr-goreve" })));
-    kap.querySelector("#dr-goreve")?.addEventListener("click", (e) => { e.preventDefault(); bolum = "gorev"; ciz(); });
+    kap.append(sayac, bilesen(d.dene.ayar, (v) => {
+      const once = durum();
+      gorulen.add(String(v));
+      if (gorulen.size > kayitli()) ilerle({ dene: { degerler: gorulen.size, bitti: gorulen.size >= d.dene.enAzFarkliDeger } });
+      yaz();
+      const simdi = durum();
+      /* deney sürerken içerik yeniden kurulmaz (öğrencinin elindeki robot kaybolmasın); yalnız üst kısım ve bitiş bildirimi */
+      if (simdi.dene && !once.dene) {
+        if (simdi.bitti) { ciz(); return; }
+        ustBolum(); sonBlok();
+      }
+    }));
+    if (durum().dene) sonBlok();
     return kap;
   };
 

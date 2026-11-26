@@ -13,6 +13,7 @@
     "@sra/analitik": "*",
     "@sra/mufredat": "*",
     "@sra/sahne": "*",
-    "three": "^0.187.0"
+    "three": "^0.187.0",
+    "@sra/robot-motoru": "*"
   }
 }

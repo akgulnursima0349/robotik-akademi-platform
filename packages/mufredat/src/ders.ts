@@ -24,8 +24,10 @@ export interface AnlatimAdimi {
   gorsel?: { tur: "sahne" | "cizim"; ad: string; ayar?: Record<string, unknown> };
   soru?: Soru;
 }
+/** Ders sayfasının tanıdığı deney bileşenleri (portaldaki kayıt defteri bu adlarla kurulur) */
+export const DENEY_BILESEN_ADLARI = ["sensor-gostergesi", "kaydirici"] as const;
 export interface Deney {
-  /** deney bileşeni (E4): kaydırıcı, canlı grafik, sensör göstergesi… */
+  /** deney bileşeni: DENEY_BILESEN_ADLARI'ndan biri */
   bilesen: string;
   ayar: Record<string, unknown>;
   yonerge: string;
@@ -86,6 +88,11 @@ export function dersiDogrula(d: DersTanimi): string[] {
   if (!d.dene) y("Dene bölümü eksik");
   else {
     if (!d.dene.bilesen?.trim()) y("Dene: deney bileşeni belirtilmemiş");
+    else if (!(DENEY_BILESEN_ADLARI as readonly string[]).includes(d.dene.bilesen)) y(`Dene: deney bileşeni tanınmıyor (${d.dene.bilesen})`);
+    else if (d.dene.bilesen === "kaydirici") {
+      const a = d.dene.ayar as { en?: number; ust?: number; adim?: number };
+      if (!(typeof a.en === "number" && typeof a.ust === "number" && a.en < a.ust && (a.adim ?? 1) > 0)) y("Dene: kaydırıcının alt ve üst sınırı ya da adımı geçersiz");
+    }
     if (!d.dene.yonerge?.trim()) y("Dene: yönerge boş");
     if (!(d.dene.enAzFarkliDeger >= 1)) y("Dene: en az bir değer denenmeli");
   }
