@@ -2,7 +2,7 @@
    Önce: npm run derle  (ayar fark etmez; ayarlar.js her testte ağ katmanında değiştirilir)
    Çalıştır: npm run e2e     ·  SADECE=masaustu  ·  EKRAN=klasör (ekran görüntüleri) */
 import { chromium } from "playwright";
-import { spawn } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { mkdirSync } from "node:fs";
 import { resolve } from "node:path";
 
@@ -206,7 +206,7 @@ for (const [ad, g, y] of BOYUTLAR) {
   await p.evaluate(() => localStorage.setItem("sra-lab-v1", JSON.stringify({ gorevler: { "ilk-sokak": { yildiz: 3 }, kose: { yildiz: 2 }, "cizgi-oval": { yildiz: 1 } }, lig: null, bayrak: { "siro-kurulum": true } })));
   await p.reload(); await p.waitForSelector("#at-ozet");
   const ozet = await p.textContent("#at-ozet");
-  ok(/4 \/ 29\s*ders bitti/.test(ozet) && /6 \/ 45 yıldız/.test(ozet), "Lab kaydından: 29 dersin 4'ü bitti (iki Kar, bir Çizgi, kurulum rehberi), 6 yıldız (" + ozet.replace(/\s+/g, " ").slice(0, 60) + ")");
+  ok(/4 \/ 35\s*ders bitti/.test(ozet) && /6 \/ 45 yıldız/.test(ozet), "Lab kaydından: 35 dersin 4'ü bitti (iki Kar, bir Çizgi, kurulum rehberi), 6 yıldız (" + ozet.replace(/\s+/g, " ").slice(0, 60) + ")");
   ok(await p.getAttribute('.at-ders[aria-current="step"]', "data-ders") === "uzun-cadde" && /devam/i.test(await p.textContent("#at-devam")), "kaldığın yer üçüncü görev; düğme 'Kaldığın yerden devam et'");
   ok((await p.$$('[data-modul="kar"] .at-ders.bitti')).length === 2 && (await p.$$('[data-modul="cizgi"] .at-ders.bitti')).length === 2, "biten dersler yeşil (rehber dahil)");
   await p.screenshot({ path: resolve(EKRAN, `atolye-robotik-${ad}.png`), fullPage: true });
@@ -564,6 +564,134 @@ for (const [ad, g, y] of BOYUTLAR) {
     ok(adimlar >= 3, `${k}: anlatım ${adimlar} adım, hepsi görselli`);
   }
   ok(hatalar.length === 0, "Mini Sumo derslerinde konsol hatası yok" + (hatalar.length ? ": " + hatalar.slice(0, 2).join(" | ") : ""));
+  await ctx.close();
+}
+
+/* Labirent modülü: altı ders; duvar sensörü, kural adım adım, sisli labirent, ada, hız profili ve rota, MEB puanı.
+   Kodsuz görevlerin çözümleri motordan okunur: sisli labirentte sağ el kuralının yolu, rotada en hızlı yol. */
+const LB_COZUM = JSON.parse(execFileSync("npx", ["tsx", "-e", `
+  import { DERS_LABIRENTLERI, enHizliRota, kuralKos, ROTA_GOREVLERI, SIS_GOREVLERI } from "./packages/robot-motoru/src";
+  const TUS = ["ArrowUp", "ArrowRight", "ArrowDown", "ArrowLeft"], DX = [0, 1, 0, -1], DY = [-1, 0, 1, 0];
+  const tuslar = (yol) => yol.slice(1).map(([x, y], i) => TUS[[0, 1, 2, 3].find((d) => DX[d] === x - yol[i][0] && DY[d] === y - yol[i][1])]);
+  const kural = (m) => { const k = kuralKos(m, "sag-el"); return [[k.sim.h.baslangic.x, k.sim.h.baslangic.y], ...k.sim.iz.filter((z) => z.olay === "ileri").map((z) => [z.x, z.y])]; };
+  console.log(JSON.stringify({ sis: SIS_GOREVLERI["sis-1"].haritalar.map((h) => tuslar(kural(DERS_LABIRENTLERI[h]))), rota: tuslar(enHizliRota(DERS_LABIRENTLERI[ROTA_GOREVLERI["rota-1"].harita]).yol) }));
+`], { cwd: KOK, encoding: "utf8" }));
+for (const [ad, g, y] of BOYUTLAR) {
+  console.log(`\nlabirent dersleri · ${ad}`);
+  const azHareket = ad !== "masaustu";
+  const { ctx, p, hatalar } = await sayfaAc(g, y, {}, azHareket);
+  const tasmasiz = async () => (await tasmaYok(p)) && p.evaluate(() => [...document.querySelectorAll(".dr-govde *")].filter((e) => !e.closest("svg") && !e.closest("pre") && !e.closest(".lb-kod")).every((e) => e.getBoundingClientRect().right <= innerWidth + 1));
+  const dersler = ["duvar-sensorleri", "sag-el-kurali", "cikmazi-hatirlamak", "ada-problemi", "hiz-profili", "meb-pisti"];
+  await p.goto(ADRES + "#atolye/robotik"); await p.waitForSelector("#at-ozet");
+  ok((await Promise.all(dersler.map((k) => p.$(`[data-ders="${k}"]`)))).every(Boolean), "atölye sayfasında Labirent'in altı dersi");
+  const kayit = (k) => p.evaluate((k) => localStorage.setItem("sra-ders-v1", JSON.stringify({ dersler: k })), k);
+  const ac = async (ders, bolum, secici = ".dr-kart [data-deney]") => { await p.goto(ADRES + "#ders/" + ders); await p.reload(); await p.waitForSelector(".dr-govde"); await p.click(`[data-bolum="${bolum}"]`); await p.waitForSelector(secici); };
+  const denendi = () => p.textContent(".dr-denendi");
+  const anlatBitti = (k) => ({ [k]: { anlat: { adim: 3, bitti: true } } });
+  /* 1. ders: duvar sensörü — kenarlar tıklama ve klavyeyle, robot döner */
+  await kayit(anlatBitti("duvar-sensorleri"));
+  await ac("duvar-sensorleri", "dene");
+  const okuma = () => p.getAttribute('[data-deney="duvar-sensoru"]', "data-okuma");
+  const o1 = await okuma();
+  await p.click('.lb-kenar[data-kenar="1"]');
+  const o2 = await okuma();
+  await p.focus('.lb-kenar[data-kenar="0"]'); await p.keyboard.press("Enter");
+  await p.click("#lb-don"); await p.click("#lb-don");
+  ok(o1 === "110" && o2 === "111" && /4 \/ 4 denendi/.test(await denendi()) && !(await p.isDisabled('[data-bolum="gorev"]')), `duvar sensörü: okumalar değişiyor (${o1} → ${o2}), dört durum denendi, Görev açıldı`);
+  ok(/sağa dön/i.test(await p.textContent(".lb-karar")) || /sola dön|ilerle|çıkmaz/i.test(await p.textContent(".lb-karar")), "robotun kararı yazıyor");
+  ok(await tasmasiz(), "duvar sensörü deneyinde taşma yok");
+  await p.screenshot({ path: resolve(EKRAN, `labirent-duvar-${ad}.png`), fullPage: true });
+  await p.click("#dr-goreve");
+  ok((await p.getAttribute("#dr-lab", "href")) === "lab/#labirent/lb-duvara-bak", "görev Lab'daki 'Duvara bak'a gidiyor");
+  /* 2. ders: kural adım adım */
+  await kayit(anlatBitti("sag-el-kurali"));
+  await ac("sag-el-kurali", "dene");
+  for (let i = 0; i < 10; i++) await p.click("#ka-adim");
+  const aktif = await p.$$eval(".lb-kod li.aktif", (l) => l.map((x) => x.dataset.satir).join(","));
+  ok(/10 \/ 10 denendi/.test(await denendi()) && aktif.length > 0 && (await p.getAttribute('[data-deney="kural-adim"]', "data-adim")) === "10", `kural adım adım: on adım, çalışan satırlar vurgulu (${aktif})`);
+  await p.click("#ka-geri");
+  ok((await p.getAttribute('[data-deney="kural-adim"]', "data-adim")) === "9", "geri adım");
+  await p.click("#ka-oynat");
+  await p.waitForFunction(() => document.querySelector('[data-deney="kural-adim"]').dataset.bitti === "true", null, { timeout: 30000 });
+  ok(/Bitişe vardı/.test(await p.textContent(".lb-karar")), "oynatınca robot bitişe varıyor");
+  ok(await tasmasiz(), "kural deneyinde taşma yok");
+  await p.screenshot({ path: resolve(EKRAN, `labirent-kural-${ad}.png`), fullPage: true });
+  /* 3. ders: sisli labirent deneyi (klavye) ve görevi (iki labirent, sağ el yolu üç yıldız) */
+  await kayit(anlatBitti("cikmazi-hatirlamak"));
+  await ac("cikmazi-hatirlamak", "dene");
+  await p.focus('[data-deney="sisli-labirent"] .lb-svg');
+  for (const t of LB_COZUM.sis[0].slice(0, 20)) await p.keyboard.press(t);
+  await p.keyboard.press("ArrowLeft");
+  ok(/8 \/ 8 denendi/.test(await denendi()) && /duvar var|daha önce|Yeni/.test(await p.textContent('[data-deney="sisli-labirent"] .lb-karar')), "sisli labirent: klavyeyle sürülüyor, hücreler sayılıyor");
+  ok(await p.evaluate(() => document.querySelectorAll('[data-deney="sisli-labirent"] .lb-svg rect[fill="#3A365E"]').length) > 5, "görülmeyen hücreler örtülü");
+  ok(await tasmasiz(), "sisli labirentte taşma yok");
+  await p.click("#dr-goreve"); await p.waitForSelector('[data-gorev="sis"] .lb-svg');
+  for (const [i, tuslar] of LB_COZUM.sis.entries()) {
+    if (i) { await p.click("#sg-sonraki"); await p.waitForSelector('[data-gorev="sis"] .lb-svg'); }
+    for (const t of tuslar) await p.click(`[data-gorev="sis"] .lb-ok[data-yon="${["ArrowUp", "ArrowRight", "ArrowDown", "ArrowLeft"].indexOf(t)}"]`);
+  }
+  await p.waitForSelector("#dr-bitti");
+  ok((await p.getAttribute('[data-gorev="sis"]', "data-yildiz")) === "3" && /3 \/ 3 yıldız/.test(await p.textContent("#dr-gorev-yildiz")), "sisli labirent görevi: iki labirent, üç yıldız, ders bitti");
+  ok(await tasmasiz(), "sisli labirent görevinde taşma yok");
+  await p.screenshot({ path: resolve(EKRAN, `labirent-sis-gorev-${ad}.png`), fullPage: true });
+  /* 4. ders: ada deneyi */
+  await kayit(anlatBitti("ada-problemi"));
+  await ac("ada-problemi", "dene");
+  await p.click("#ada-oynat");
+  await p.waitForFunction(() => document.querySelector('[data-robot="hafiza"]').dataset.bitti === "true" && !document.querySelector("#ada-oynat").disabled, null, { timeout: 60000 });
+  const tur = Number(await p.getAttribute('[data-robot="sag-el"]', "data-tur"));
+  ok(tur >= 3 && /3 \/ 3 denendi/.test(await denendi()), `ada: sağ el başlangıca ${tur} kez döndü, hafızalı robot bitişe vardı`);
+  ok(await tasmasiz(), "ada deneyinde taşma yok");
+  await p.screenshot({ path: resolve(EKRAN, `labirent-ada-${ad}.png`), fullPage: true });
+  /* 5. ders: hız profili (kaydırıcılar) ve rota görevi (klavye) */
+  await kayit(anlatBitti("hiz-profili"));
+  await ac("hiz-profili", "dene");
+  const kaydir = (i, v) => p.evaluate(([i, v]) => { const g = document.querySelectorAll('[data-deney="hiz-profili"] input[type=range]')[i]; g.value = String(v); g.dispatchEvent(new Event("input")); g.dispatchEvent(new Event("change")); }, [i, v]);
+  ok((await p.getAttribute('[data-deney="hiz-profili"]', "data-hizli")) === "kenar", "uzun ama az dönüşlü yol daha hızlı");
+  await kaydir(0, 1.6); await kaydir(1, 4); await kaydir(0, 0.6);
+  ok(/3 \/ 3 denendi/.test(await denendi()) && (await p.$$('.lb-grafik polyline')).length === 2, "hız profili: üç ayar denendi, iki yolun hız eğrisi çizili");
+  ok(await tasmasiz(), "hız profili deneyinde taşma yok");
+  await p.screenshot({ path: resolve(EKRAN, `labirent-hiz-${ad}.png`), fullPage: true });
+  await p.click("#dr-goreve"); await p.waitForSelector('[data-gorev="rota"] .lb-svg');
+  /* önce yanlış hamle: duvar ya da kopuk yol eklenmez */
+  await p.focus('[data-gorev="rota"] .lb-svg');
+  await p.keyboard.press("ArrowLeft");
+  ok((await p.getAttribute('[data-gorev="rota"]', "data-hucre")) === "0", "rota: dış duvardan geçilemiyor");
+  for (const t of LB_COZUM.rota) await p.keyboard.press(t);
+  await p.waitForSelector("#dr-bitti");
+  ok((await p.getAttribute('[data-gorev="rota"]', "data-yildiz")) === "3", "rota görevi: en hızlı yol üç yıldız, ders bitti");
+  await p.focus('[data-gorev="rota"] .lb-svg'); await p.keyboard.press("Backspace");
+  ok(!(await p.getAttribute('[data-gorev="rota"]', "data-yildiz")), "silme tuşuyla rota geri alınıyor");
+  ok(await tasmasiz(), "rota görevinde taşma yok");
+  await p.screenshot({ path: resolve(EKRAN, `labirent-rota-${ad}.png`), fullPage: true });
+  /* 6. ders: MEB puanı */
+  await kayit(anlatBitti("meb-pisti"));
+  await ac("meb-pisti", "dene");
+  await p.click('[data-deney="puan-hesaplayici"] [data-deger="hayir"]');
+  ok((await p.getAttribute('[data-deney="puan-hesaplayici"]', "data-puan")) === "270", "bitiremeyen robot, 9. satır: 270 puan");
+  await p.evaluate(() => { const g = document.querySelectorAll('[data-deney="puan-hesaplayici"] .lb-ayarlar:not([hidden]) input[type=range]')[0]; g.value = "12"; g.dispatchEvent(new Event("input")); g.dispatchEvent(new Event("change")); });
+  ok((await p.getAttribute('[data-deney="puan-hesaplayici"]', "data-puan")) === "240", "12. satır: 240 puan");
+  await p.click('[data-deney="puan-hesaplayici"] [data-deger="evet"]');
+  ok(/3 \/ 3 denendi/.test(await denendi()) && /58 puan/.test(await p.textContent(".lb-puan")), "bitiren robot: puan = süre; üç puan denendi");
+  ok(await tasmasiz(), "puan hesaplayıcıda taşma yok");
+  await p.click("#dr-goreve");
+  ok((await p.getAttribute("#dr-lab", "href")) === "lab/#labirent/lb-meb", "görev Lab'daki MEB pistine gidiyor");
+  /* bütün anlatımlar görselli */
+  for (const k of dersler) {
+    await kayit({});
+    await p.goto(ADRES + "#ders/" + k); await p.reload(); await p.waitForSelector(".dr-anlat");
+    let adimlar = 0;
+    for (;;) {
+      await p.waitForSelector(".dr-gorsel--dolu");
+      adimlar++;
+      if (!(await p.isEnabled("#dr-ileri"))) for (const b of await p.$$("#dr-soru .dr-secenekler button")) { await b.click(); if (await p.isEnabled("#dr-ileri")) break; }
+      const son = /bitir/.test(await p.textContent("#dr-ileri"));
+      await p.click("#dr-ileri");
+      if (son) break;
+    }
+    ok(adimlar >= 4, `${k}: anlatım ${adimlar} adım, hepsi görselli`);
+  }
+  ok(hatalar.length === 0, "Labirent derslerinde konsol hatası yok" + (hatalar.length ? ": " + hatalar.slice(0, 2).join(" | ") : ""));
   await ctx.close();
 }
 

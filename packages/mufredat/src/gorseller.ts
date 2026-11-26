@@ -1,6 +1,8 @@
 /* Anlatım görselleri kataloğu: 3D sahne anları ve adım adım çizimler. Saf veri: çizdiren kod portalda (gorsel/), 3D modeller
    @sra/sahne paketinde. Derslerin anlatım adımları bu adlara başvurur; doğrulayıcı olmayan adı hata sayar. */
 
+import { LABIRENT_CIZIMLERI } from "./gorseller-labirent";
+
 /* ---------- 3D sahne anı ---------- */
 export type SahneAcisi = "onden" | "yandan" | "ustten" | "alttan" | "yakin";
 export interface SahneAni {
@@ -8,8 +10,8 @@ export interface SahneAni {
   aci: SahneAcisi;
   /** vurgulanan parça grubu (robot modelinin parça adı) ve sahnedeki etiketi */
   vurgu?: { parca: string; etiket: string };
-  /** bant: beyaz kâğıtta siyah bant; beyaz-bant: siyah zeminde beyaz bant (sınıf pisti) */
-  zemin: "duz" | "bant" | "beyaz-bant" | "ring";
+  /** bant: beyaz kâğıtta siyah bant; beyaz-bant: siyah zeminde beyaz bant (sınıf pisti); labirent: MEB hücresi (siyah zemin, beyaz duvarlar) */
+  zemin: "duz" | "bant" | "beyaz-bant" | "ring" | "labirent";
   /** küçük hareket: robot bandın üstünde yavaşça sağa sola kayar / sensörler nabız gibi parlar */
   hareket?: "salinim" | "nabiz";
   /** WebGL yokken ve ekran okuyucu için kısa açıklama */
@@ -45,6 +47,26 @@ export const SAHNE_ANLARI: Record<string, SahneAni> = {
     robot: "Kenshin", aci: "yakin", zemin: "ring",
     vurgu: { parca: "baslatma", etiket: "Start modülü" },
     aciklama: "Kenshin yakından: üstündeki küçük kart, hakemin kumandasından gelen başla sinyalini alan start modülü."
+  },
+  "rizbot-labirentte": {
+    robot: "RizBot", aci: "onden", zemin: "labirent", hareket: "nabiz",
+    vurgu: { parca: "sensorler", etiket: "Kızılötesi duvar sensörleri" },
+    aciklama: "RizBot bir labirent hücresinde: siyah zemin, solunda ve önünde 8 cm yüksek beyaz duvar, sağı açık. Sensörleri vurgulu."
+  },
+  "rizbot-sensorler": {
+    robot: "RizBot", aci: "ustten", zemin: "labirent", hareket: "nabiz",
+    vurgu: { parca: "sensorler", etiket: "Öne, çapraza ve yanlara bakan sensörler" },
+    aciklama: "RizBot üstten: önde ileri bakan iki sensör, köşelerde çapraz bakan iki sensör, yanlarda birer yan sensör."
+  },
+  "rizbot-tekerler": {
+    robot: "RizBot", aci: "yandan", zemin: "labirent",
+    vurgu: { parca: "tekerler", etiket: "İki motor, iki teker" },
+    aciklama: "RizBot yandan: iki motor iki tekeri ayrı ayrı çevirir; robot yerinde dönebilir."
+  },
+  "rizbot-fan": {
+    robot: "RizBot", aci: "yakin", zemin: "labirent",
+    vurgu: { parca: "fan", etiket: "Vakum fanı" },
+    aciklama: "RizBot yakından: önündeki köprüde dik duran fan motoru ve altında fan çarkı. Fan robotu zemine bastırır, hızlı dönüşlerde kaymasın."
   },
   "siroline-siyah-zemin": {
     robot: "SiroLine", aci: "onden", zemin: "beyaz-bant", hareket: "salinim",
@@ -382,6 +404,9 @@ export const gorselVarMi = (tur: "sahne" | "cizim", ad: string) => (tur === "sah
 
 /** Hangi katmanlar görünür. Ses okurken kelimeye göre (kelime: okunan kelimenin sırası), yoksa saniyeye göre (her katman
     sırası gelince, saniyede bir). Hareketi azalt açıksa ya da okuma bittiyse hepsi. Sonuç: görünen katmanların sıraları. */
+/* labirent modülünün çizimleri ayrı dosyada (metinleriyle birlikte) */
+Object.assign(CIZIMLER, LABIRENT_CIZIMLERI);
+
 export function gorunenKatmanlar(c: Cizim, o: { kelime?: number; saniye?: number; bitti?: boolean; azHareket?: boolean }): number[] {
   const hepsi = c.katmanlar.map((_, i) => i);
   if (o.azHareket || o.bitti) return hepsi;

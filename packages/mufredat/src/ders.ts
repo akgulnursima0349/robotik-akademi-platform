@@ -6,7 +6,7 @@
    İlerleme kaydı ders başına bölüm durumlarını tutar; iki cihazdaki kayıt "ileri olan kalır" kuralıyla birleşir.
    Öğretmen onayı bu kayıtta tutulmaz: öğrencinin yazdığı kayda güvenilemez. Onay öğretmenin kendi kaydından gelir (E5) ve
    durum hesabına ayrıca verilir. */
-import { AYAR_ARALIKLARI, AYAR_PISTLERI, CIZGI_GOREVLERI, DURUMLAR, GOREVLER, HAMLELER, HAZIR_RAKIPLER, LABIRENT_GOREVLERI, type AyarAdi, type AyarDegerlendirme, type Durum, type StratejiDegerlendirme, type StratejiKartlari } from "@sra/robot-motoru";
+import { AYAR_ARALIKLARI, AYAR_PISTLERI, CIZGI_GOREVLERI, DERS_LABIRENTLERI, DURUMLAR, ROTA_GOREVLERI, SIS_GOREVLERI, GOREVLER, HAMLELER, HAZIR_RAKIPLER, LABIRENT_GOREVLERI, type AyarAdi, type AyarDegerlendirme, type Durum, type StratejiDegerlendirme, type StratejiKartlari } from "@sra/robot-motoru";
 import type { Seviye } from "./model";
 import { gorselVarMi } from "./gorseller";
 
@@ -25,7 +25,8 @@ export interface AnlatimAdimi {
   soru?: Soru;
 }
 /** Ders sayfasının tanıdığı deney bileşenleri (portaldaki kayıt defteri bu adlarla kurulur) */
-export const DENEY_BILESEN_ADLARI = ["sensor-gostergesi", "kaydirici", "cizgi-simulasyonu", "ring-simulasyonu", "sensor-gorusu", "itme-deneyi", "kart-kodu"] as const;
+export const DENEY_BILESEN_ADLARI = ["sensor-gostergesi", "kaydirici", "cizgi-simulasyonu", "ring-simulasyonu", "sensor-gorusu", "itme-deneyi", "kart-kodu",
+  "duvar-sensoru", "kural-adim", "sisli-labirent", "ada-deneyi", "hiz-profili", "puan-hesaplayici"] as const;
 export interface Deney {
   /** deney bileşeni: DENEY_BILESEN_ADLARI'ndan biri */
   bilesen: string;
@@ -41,7 +42,11 @@ export type Gorev =
   /** ayar görevi: kod yok; kitin SiroLine bloğundaki değerler (Taban Hız, Kp, Kd) kaydırıcılarla, ders sayfasında koşulur */
   | { tur: "ayar"; pist: string; acik: AyarAdi[]; sabit: Partial<Record<AyarAdi, number>>; degerlendirme: AyarDegerlendirme; yonerge: string }
   /** strateji görevi: Kenshin'e kod yazmadan strateji kartları; hazır rakiplere karşı oynanır, ders sayfasında */
-  | { tur: "strateji"; acik: Durum[]; sabit: Partial<StratejiKartlari>; degerlendirme: StratejiDegerlendirme; yonerge: string };
+  | { tur: "strateji"; acik: Durum[]; sabit: Partial<StratejiKartlari>; degerlendirme: StratejiDegerlendirme; yonerge: string }
+  /** sisli labirent görevi: kod yok; RizBot yön tuşlarıyla sürülür, yalnız geçilen hücreler görünür (robot-motoru: SIS_GOREVLERI) */
+  | { tur: "sis"; gorev: string; yonerge: string }
+  /** rota görevi: kod yok; hücrelere tıklayarak yol çizilir, süre RizBot'un hız profilinden (robot-motoru: ROTA_GOREVLERI) */
+  | { tur: "rota"; gorev: string; yonerge: string };
 export interface GercekRobotta { malzeme: { parca: string; adet: number }[]; adimlar: string[]; guvenlik?: string; ogretmenNotu?: string }
 
 export interface DersTanimi {
@@ -104,7 +109,16 @@ export function dersiDogrula(d: DersTanimi): string[] {
   }
   if (d.dene?.bilesen === "ring-simulasyonu" || d.dene?.bilesen === "kart-kodu") kartBiciminiDenetle(d.dene.ayar as { acik?: Durum[]; sabit?: Record<string, string> }, (m) => y("Dene: " + m));
   if (d.dene?.bilesen === "cizgi-simulasyonu") ayarBiciminiDenetle(d.dene.ayar as { pist?: string; acik?: AyarAdi[]; sabit?: Record<string, number> }, (m) => y("Dene: " + m));
+  if (["kural-adim", "sisli-labirent"].includes(d.dene?.bilesen)) {
+    const a = d.dene.ayar as { harita?: string; kural?: string };
+    if (!a.harita || !(a.harita in DERS_LABIRENTLERI)) y(`Dene: labirent tanınmıyor (${a.harita})`);
+    if (d.dene.bilesen === "kural-adim" && !["sag-el", "sol-el"].includes(String(a.kural))) y(`Dene: kural tanınmıyor (${a.kural})`);
+  }
   if (!d.gorev) y("Görev bölümü eksik");
+  else if (d.gorev.tur === "sis" || d.gorev.tur === "rota") {
+    if (!((d.gorev.tur === "sis" ? SIS_GOREVLERI : ROTA_GOREVLERI) as Record<string, unknown>)[d.gorev.gorev]) y(`Görev: böyle bir ${d.gorev.tur === "sis" ? "sisli labirent" : "rota"} görevi yok (${d.gorev.gorev})`);
+    if (!d.gorev.yonerge?.trim()) y("Görev: yönerge boş");
+  }
   else if (d.gorev.tur === "lab") {
     if (!LAB_GOREVLERI[d.gorev.modul]?.has(d.gorev.gorev)) y(`Görev: Lab'da böyle bir görev yok (${d.gorev.modul}/${d.gorev.gorev})`);
     if (!d.gorev.yonerge?.trim()) y("Görev: yönerge boş");
@@ -260,5 +274,13 @@ export const PARCALAR: Record<string, string> = {
   "sumo-ringi": "Mini sumo ringi (77 cm dohyo)",
   "cetvel": "Cetvel ya da şerit metre",
   "mutfak-tartisi": "Mutfak tartısı",
-  "karton-kutu": "Küçük karton kutu (yaklaşık 10 cm)"
+  "karton-kutu": "Küçük karton kutu (yaklaşık 10 cm)",
+  "maskeleme-bandi": "Kâğıt bant (yere hücre çizmek için)",
+  "karton-duvar": "Karton şerit ya da kitap (labirent duvarı için)",
+  "el-feneri": "El feneri (telefonunki de olur)",
+  "beyaz-karton": "Beyaz karton",
+  "siyah-karton": "Siyah karton",
+  "yapiskan-not": "Yapışkan not kâğıdı (bir deste)",
+  "renkli-kalem": "Kurşun kalem ve renkli kalem",
+  "kagit-labirent": "Yazdırılmış ya da çizilmiş kâğıt labirent"
 };

@@ -9,13 +9,14 @@ export const HUCRE_MM = 200;
 export const DUVAR_MM = 18;
 export const DUVAR_YUKSEKLIK_MM = 80;
 /** RizBot hız profili (tahmini; ürün sayfasında hız bilgisi yok): düzde en çok 1 m/s, ivme 2,5 m/s², 90° dönüş 0,35 sn, 180° dönüş 0,6 sn */
-export const RIZBOT = { azamiHiz: 1.0, ivme: 2.5, donus90: 0.35, donus180: 0.6 } as const;
+export interface HizAyari { azamiHiz: number; ivme: number; donus90: number; donus180: number }
+export const RIZBOT: Readonly<HizAyari> = { azamiHiz: 1.0, ivme: 2.5, donus90: 0.35, donus180: 0.6 };
 export const LABIRENT_ADIM_SINIRI = 1500;
 
 /** Bir düz koşunun süresi (duruştan duruşa, yamuk hız profili). */
-export function kosuSuresi(hucre: number): number {
+export function kosuSuresi(hucre: number, p: Readonly<HizAyari> = RIZBOT): number {
   if (hucre <= 0) return 0;
-  const d = (hucre * HUCRE_MM) / 1000, { azamiHiz: v, ivme: a } = RIZBOT;
+  const d = (hucre * HUCRE_MM) / 1000, { azamiHiz: v, ivme: a } = p;
   return d >= (v * v) / a ? d / v + v / a : 2 * Math.sqrt(d / a);
 }
 /** Koşunun başından itibaren s metre gidildiğinde geçen süre (koşu toplam d metre). */

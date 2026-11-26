@@ -15,6 +15,7 @@ import { cizimGorseli, sahneGorseli } from "../gorsel";
 import { DENEYLER, stilEkle as deneyStiliEkle } from "../deney";
 import { cizgiSimulasyonu } from "../deney/cizgi-simulasyonu";
 import { stratejiGorevi } from "../deney/sumo";
+import { rotaGorevi, sisGorevi } from "../deney/labirent";
 
 /** Deney bileşenleri (deney/): ayar ve "bu değer denendi" bildirimiyle bir öğe kurar */
 export type DeneyBileseni = (ayar: Record<string, unknown>, denendi: (deger: string | number) => void) => HTMLElement;
@@ -309,6 +310,24 @@ export function dersSayfasi(root: HTMLElement, kimlik: string): boolean {
             if (durum().bitti && !once.bitti) ciz(); else ustBolum();
           }
         }));
+      if (enIyi() && !durum().dene) kap.append(bildirim("ipucu", "Görev tamam.", " Dersi bitirmek için Dene bölümü de bitmeli."));
+      gorevOnbellek = kap;
+    } else if (g.tur === "sis" || g.tur === "rota") {
+      /* labirentin kodsuz görevleri: sisli labirent ve rota çizme; en iyi yıldız ders kaydına */
+      deneyStiliEkle();
+      if (gorevOnbellek) return gorevOnbellek;
+      const enIyi = () => dp.kayit(d.kimlik).gorev?.yildiz ?? 0;
+      const rekor = el("span", "", { style: "font-weight:800", id: "dr-gorev-yildiz" }, "");
+      const rekorYaz = () => { rekor.textContent = enIyi() ? `En iyi: ${enIyi()} / 3 yıldız` : "Henüz yıldız yok"; };
+      rekorYaz();
+      const yildiz = (n: number) => {
+        if (n <= enIyi()) return;
+        const once = durum();
+        ilerle({ gorev: { yildiz: n } });
+        rekorYaz();
+        if (durum().bitti && !once.bitti) ciz(); else ustBolum();
+      };
+      kap.append(konusmaBalonu({ metin: g.yonerge, hal: "anlatiyor", ses }), el("div", "dr-son", {}, rekor), g.tur === "sis" ? sisGorevi(g.gorev, yildiz) : rotaGorevi(g.gorev, yildiz));
       if (enIyi() && !durum().dene) kap.append(bildirim("ipucu", "Görev tamam.", " Dersi bitirmek için Dene bölümü de bitmeli."));
       gorevOnbellek = kap;
     } else kap.append(bildirim("bilgi", "Bu görev hazırlanıyor.", ""));

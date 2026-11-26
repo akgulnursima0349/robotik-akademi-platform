@@ -101,16 +101,20 @@ export interface RizbotModeli {
   led(durum: "hazir" | "bitti" | "hata"): void;
   /** sensör ışınlarının çıkış noktaları ve yönleri (mm, robot ekseninde) */
   sensorler: Record<"on" | "sol" | "sag", { x: number; z: number; yon: number }[]>;
+  /** ders anlatımında vurgulanan parça grupları */
+  parcalar: Record<"sensorler" | "tekerler" | "fan" | "beyin", THREE.Group>;
 }
 
 export function rizbot(): RizbotModeli {
   if (!puruzHazir) { const t = puruzDokusu(); PURUZ.bumpMap = t; PURUZ.bumpScale = 1.6; PURUZ.roughnessMap = t; puruzHazir = true; }
   const ic = new THREE.Group();
   ic.add(golgeli(kart()));
+  const parcalar = { sensorler: new THREE.Group(), tekerler: new THREE.Group(), fan: new THREE.Group(), beyin: new THREE.Group() };
+  ic.add(parcalar.sensorler, parcalar.tekerler, parcalar.fan, parcalar.beyin);
   const ust = KART_Y + 1.6;
   /* tekerler */
   const tekerler: THREE.Group[] = [];
-  for (const s of [-1, 1]) { const t = teker(); t.position.set(0, R, s * TEKER_Z); if (s < 0) t.rotation.y = Math.PI; ic.add(t); tekerler.push(t); }
+  for (const s of [-1, 1]) { const t = teker(); t.position.set(0, R, s * TEKER_Z); if (s < 0) t.rotation.y = Math.PI; parcalar.tekerler.add(t); tekerler.push(t); }
   /* motorlar: ortadaki boşlukta gümüş uçları görünür; üstlerinde pürüzlü kapaklı 3D baskı yuvalar */
   for (const s of [-1, 1]) {
     const m = silindir(6, 20, M.motor, 18); m.rotation.x = Math.PI / 2; m.position.set(0, R, s * 15); ic.add(golgeli(m));
@@ -127,17 +131,18 @@ export function rizbot(): RizbotModeli {
   const merkezDelik = new THREE.Path(); merkezDelik.absarc(0, 0, 4.6, 0, Math.PI * 2, true); plakaS.holes.push(merkezDelik);
   const plakaG = new THREE.ExtrudeGeometry(plakaS, { depth: 3, bevelEnabled: false, curveSegments: 16 }); plakaG.rotateX(Math.PI / 2);
   const plaka = new THREE.Mesh(plakaG, M.baski); plaka.position.set(32, ust + 21, 0); ic.add(golgeli(plaka));
+  const fanG = parcalar.fan;
   /* fan: kartın üstünde beyaz halka ve dönen çark; köprünün üstünde dik gümüş fan motoru */
-  const halka = new THREE.Mesh(new THREE.RingGeometry(13, 14.2, 40), M.beyaz); halka.rotation.x = -Math.PI / 2; halka.position.set(32, ust + 0.05, 0); ic.add(halka);
+  const halka = new THREE.Mesh(new THREE.RingGeometry(13, 14.2, 40), M.beyaz); halka.rotation.x = -Math.PI / 2; halka.position.set(32, ust + 0.05, 0); fanG.add(halka);
   const cark = new THREE.Group(); cark.position.set(32, ust + 2.5, 0);
   cark.add(silindir(3.5, 3, M.baski, 14));
   for (let i = 0; i < 8; i++) { const k = kutu(9, 3.4, 0.8, M.baski); const a = (i / 8) * Math.PI * 2; k.position.set(Math.cos(a) * 7, 0, Math.sin(a) * 7); k.rotation.y = -a + 0.5; cark.add(k); }
-  ic.add(golgeli(cark));
+  fanG.add(golgeli(cark));
   const fm = new THREE.Group();
   fm.add(silindir(4.3, 19, M.fanMotor, 20));
   const bant = silindir(4.4, 4, M.etiket, 20); bant.position.y = 3; fm.add(bant);
   const cizgi = silindir(4.45, 0.8, M.etiketMavi, 20); cizgi.position.y = 3.6; fm.add(cizgi);
-  fm.position.set(32, ust + 21 + 9.5, 0); ic.add(golgeli(fm));
+  fm.position.set(32, ust + 21 + 9.5, 0); fanG.add(golgeli(fm));
   kablo([[32, ust + 40, 1.5], [36, ust + 42, 6], [40, ust + 30, 14], [44, ust + 12, 20], [48, ust + 1, 22]], M.kablo, 0.7);
   /* kuyruk: Pro Micro (enine), kondansatörler, sürgü anahtar, beyaz JST */
   const pm = new THREE.Group();
@@ -145,7 +150,7 @@ export function rizbot(): RizbotModeli {
   pm.add(kutu(7, 1.1, 7, M.cip, 0, 1.3, 2));
   pm.add(kutu(6, 3, 8, M.usb, 0, 2.3, -15));
   for (const x of [-7.6, 7.6]) for (let i = 0; i < 12; i++) pm.add(kutu(1.4, 0.3, 1.4, M.altin, x, 0.9, -14 + i * 2.54));
-  pm.position.set(-31, ust + 4.2, -14); ic.add(golgeli(pm));
+  pm.position.set(-31, ust + 4.2, -14); parcalar.beyin.add(golgeli(pm));
   for (const z of [-28, -2]) ic.add(golgeli(kutu(18, 2.6, 2.5, M.makaron, -31, ust + 1.3, z)));   // başlık pinleri
   for (const [x, z] of [[-24, 9], [-30, 11]]) ic.add(golgeli(kutu(3.5, 2.5, 6, M.tantal, x, ust + 1.25, z)));
   const elko = silindir(3.2, 6, M.elko, 16); elko.position.set(-37, ust + 3, 9); ic.add(golgeli(elko));
@@ -155,7 +160,7 @@ export function rizbot(): RizbotModeli {
   for (const z of [-30, -22, -14]) ic.add(kutu(3, 0.15, 1.2, M.beyaz, -44, ust + 0.08, z));      // A0 A1 A2 yazıları
   /* sensörler */
   const sensorler: RizbotModeli["sensorler"] = { on: [], sol: [], sag: [] };
-  const koy = (x: number, z: number, yon: number) => { const s = irSensor(); s.position.set(x, ust + 4, z); s.rotation.y = yon; ic.add(s); return { x: x + Math.cos(yon) * 10, z: z - Math.sin(yon) * 10, yon }; };
+  const koy = (x: number, z: number, yon: number) => { const s = irSensor(); s.position.set(x, ust + 4, z); s.rotation.y = yon; parcalar.sensorler.add(s); return { x: x + Math.cos(yon) * 10, z: z - Math.sin(yon) * 10, yon }; };
   for (const s of [-1, 1]) {
     sensorler.on.push(koy(60, s * 11, 0));
     koy(55, s * 30, s < 0 ? Math.PI / 4 : -Math.PI / 4);   // çapraz (görsel)
@@ -168,7 +173,7 @@ export function rizbot(): RizbotModeli {
 
   const kok = new THREE.Group(); kok.add(ic); kok.scale.setScalar(0.001);
   const model: RizbotModeli = {
-    kok, sensorler, fanHizi: 0,
+    kok, sensorler, parcalar, fanHizi: 0,
     tekerleriDondur(sol, sag) { tekerler[0].rotation.z = sol / R; tekerler[1].rotation.z = -sag / R; },
     guncelle(dt) { cark.rotation.y += model.fanHizi * dt; },
     led(d) { const r = d === "bitti" ? 0x2bd47a : d === "hata" ? 0xe0262e : 0x3aa0ff; ledM.color.setHex(r); ledM.emissive.setHex(r); }

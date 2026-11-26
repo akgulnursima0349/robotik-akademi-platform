@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CIZGI_GOREVLERI, GOREVLER, LABIRENT_GOREVLERI } from "@sra/robot-motoru";
-import { atolyeOzeti, BOS_KAYIT, CIZGI_DERSLERI, DERSLER, SUMO_DERSLERI, kaldigiYer, kayitOku, modulIlerlemesi, ROBOTIK, seviyeSirasi, type IlerlemeKaydi } from "../src";
+import { atolyeOzeti, BOS_KAYIT, CIZGI_DERSLERI, DERSLER, LABIRENT_DERSLERI, SUMO_DERSLERI, kaldigiYer, kayitOku, modulIlerlemesi, ROBOTIK, seviyeSirasi, type IlerlemeKaydi } from "../src";
 
 /** Çizgi modülünün bütün derslerinde anlat ve dene bitmiş; ayar görevli derslerde görev yıldızı da var (Lab görevinin yıldızı Lab kaydında) */
 const tumDersler = { dersler: Object.fromEntries(DERSLER.map((d) => [d.kimlik, { anlat: { adim: d.anlat.length - 1, bitti: true }, dene: { degerler: d.dene.enAzFarkliDeger, bitti: true }, ...(d.gorev.tur !== "lab" ? { gorev: { yildiz: 2 } } : {}) }])) };
@@ -11,7 +11,11 @@ const kayit = (gorevler: Record<string, number>, ek: Partial<IlerlemeKaydi> = {}
 describe("Robotik atölyesi Lab ile aynı", () => {
   it("modüller ve görevler Lab'ın listeleriyle birebir (sıra, ad, anahtar, adres)", () => {
     expect(modul("kar").dersler.map((d) => [d.anahtar, d.ad, d.adres])).toEqual(GOREVLER.map((g) => [g.kimlik, g.ad, `lab/#kar/${g.kimlik}`]));
-    expect(modul("labirent").dersler.map((d) => [d.anahtar, d.ad, d.adres])).toEqual(LABIRENT_GOREVLERI.map((g) => [g.kimlik, g.ad, `lab/#labirent/${g.kimlik}`]));
+    /* labirent: önce altı ders, ardından Lab'daki görevler aynı sırayla */
+    expect(modul("labirent").dersler.map((d) => [d.anahtar, d.ad, d.adres])).toEqual([
+      ...LABIRENT_DERSLERI.map((d) => [d.kimlik, d.ad, `#ders/${d.kimlik}`]),
+      ...LABIRENT_GOREVLERI.map((g) => [g.kimlik, g.ad, `lab/#labirent/${g.kimlik}`])
+    ]);
     const c = modul("cizgi").dersler.filter((d) => d.tur === "gorev");
     expect(c.map((d) => [d.anahtar, d.ad, d.adres])).toEqual(CIZGI_GOREVLERI.map((g) => ["cizgi-" + g.kimlik, g.ad, `lab/#cizgi/${g.kimlik}`]));
     expect(modul("cizgi").dersler.slice(-2).map((d) => [d.tur, d.adres, d.anahtar])).toEqual([["rehber", "lab/#cizgi/kurulum", "siro-kurulum"], ["serbest", "lab/#cizgi/ayar", ""]]);
@@ -53,7 +57,7 @@ describe("ilerleme", () => {
     expect(kaldigiYer(ROBOTIK, kayit(hepsi), "lise")!.ders.kimlik).toBe("siroline-sensor");
     expect(kaldigiYer(ROBOTIK, kayit(hepsi, dersBitti), "lise")!.ders.kimlik).toBe("cizgi-konumu"); // sıradaki ders
     expect(kaldigiYer(ROBOTIK, kayit(hepsi, tumDersler), "lise")!.ders.kimlik).toBe("kurulum");
-    expect(kaldigiYer(ROBOTIK, kayit(hepsi, { ...tumDersler, bayrak: { "siro-kurulum": true } }), "lise")!.ders.anahtar).toBe(LABIRENT_GOREVLERI[0].kimlik);
+    expect(kaldigiYer(ROBOTIK, kayit(hepsi, { ...tumDersler, bayrak: { "siro-kurulum": true } }), "lise")!.ders.anahtar).toBe(LABIRENT_DERSLERI[0].kimlik);
   });
   it("her şey bittiyse kaldığın yer yok; özet toplamları doğru", () => {
     const gorevler: Record<string, number> = {};

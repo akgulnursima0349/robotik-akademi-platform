@@ -3,7 +3,7 @@
    İlerleme Lab'ın kaydından (sra-lab-v1) okunur. */
 import { CIZGI_GOREVLERI, GOREVLER, LABIRENT_GOREVLERI } from "@sra/robot-motoru";
 import type { Atolye } from "./model";
-import { CIZGI_DERSLERI, dersOgesi, SUMO_DERSLERI } from "./dersler";
+import { CIZGI_DERSLERI, dersOgesi, LABIRENT_DERSLERI, SUMO_DERSLERI } from "./dersler";
 
 export const LAB_KAYIT_ANAHTARI = "sra-lab-v1";
 
@@ -29,8 +29,11 @@ export const ROBOTIK: Atolye = {
     },
     {
       kimlik: "labirent", ad: "Labirent Ustası", robot: "RizBot", seviyeler: ["ortaokul", "lise"],
-      aciklama: "MEB ölçülerindeki labirentte duvar sensörleri: sağ el kuralından hafızalı aramaya.",
-      dersler: LABIRENT_GOREVLERI.map((g) => ({ kimlik: g.kimlik, ad: g.ad, ogretir: g.ogrettigi, tur: "gorev", adres: `lab/#labirent/${g.kimlik}`, enCokYildiz: 3, anahtar: g.kimlik }))
+      aciklama: "Duvar sensörleri, sağ el kuralı, çıkmazlar, ada ve hız; sonunda MEB ölçülerinde yarışma pisti.",
+      dersler: [
+        ...LABIRENT_DERSLERI.map(dersOgesi),
+        ...LABIRENT_GOREVLERI.map((g) => ({ kimlik: g.kimlik, ad: g.ad, ogretir: g.ogrettigi, tur: "gorev" as const, adres: `lab/#labirent/${g.kimlik}`, enCokYildiz: 3, anahtar: g.kimlik }))
+      ]
     },
     {
       kimlik: "sumo", ad: "Mini Sumo", robot: "Kenshin", seviyeler: ["ortaokul", "lise"],
