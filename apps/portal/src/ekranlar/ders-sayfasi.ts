@@ -18,6 +18,7 @@ import { stratejiGorevi } from "../deney/sumo";
 import { rotaGorevi, sisGorevi } from "../deney/labirent";
 import { kartGorevi, tasarimGorevi } from "../deney/kart-programi";
 import { bilmeceGorevi, cizgiGorevi } from "../deney/mbot";
+import { kontrolGorevi } from "../deney/kontrol";
 
 /** Deney bileşenleri (deney/): ayar ve "bu değer denendi" bildirimiyle bir öğe kurar */
 export type DeneyBileseni = (ayar: Record<string, unknown>, denendi: (deger: string | number) => void) => HTMLElement;
@@ -315,7 +316,7 @@ export function dersSayfasi(root: HTMLElement, kimlik: string): boolean {
         }));
       if (enIyi() && !durum().dene) kap.append(bildirim("ipucu", "Görev tamam.", " Dersi bitirmek için Dene bölümü de bitmeli."));
       gorevOnbellek = kap;
-    } else if (g.tur === "sis" || g.tur === "rota" || g.tur === "kart" || g.tur === "bilmece" || g.tur === "cizgi-tablo" || g.tur === "tasarim") {
+    } else if (g.tur === "sis" || g.tur === "rota" || g.tur === "kart" || g.tur === "bilmece" || g.tur === "cizgi-tablo" || g.tur === "tasarim" || g.tur === "kontrol") {
       /* ders sayfasındaki kodsuz görevler (labirent: sis, rota; ilkokul: kart, bilmece, çizgi tablosu, tasarım); en iyi yıldız ders kaydına */
       deneyStiliEkle();
       if (gorevOnbellek) return gorevOnbellek;
@@ -331,7 +332,7 @@ export function dersSayfasi(root: HTMLElement, kimlik: string): boolean {
         if (durum().bitti && !once.bitti) ciz(); else ustBolum();
       };
       kap.append(konusmaBalonu({ metin: g.yonerge, hal: "anlatiyor", ses }), el("div", "dr-son", {}, rekor), g.tur === "sis" ? sisGorevi(g.gorev, yildiz) : g.tur === "rota" ? rotaGorevi(g.gorev, yildiz) : g.tur === "kart" ? kartGorevi(g.gorev, yildiz)
-        : g.tur === "bilmece" ? bilmeceGorevi(g.sorular, yildiz) : g.tur === "cizgi-tablo" ? cizgiGorevi(yildiz) : tasarimGorevi(yildiz));
+        : g.tur === "bilmece" ? bilmeceGorevi(g.sorular, yildiz) : g.tur === "cizgi-tablo" ? cizgiGorevi(yildiz) : g.tur === "kontrol" ? kontrolGorevi(g.gorev, yildiz) : tasarimGorevi(yildiz));
       if (enIyi() && !durum().dene) kap.append(bildirim("ipucu", "Görev tamam.", " Dersi bitirmek için Dene bölümü de bitmeli."));
       gorevOnbellek = kap;
     } else kap.append(bildirim("bilgi", "Bu görev hazırlanıyor.", ""));

@@ -72,7 +72,9 @@
 
 /* ---------- ilerleme ---------- */
 .s2-ilerleme { display: flex; gap: 8px }
-.s2-ilerleme > span { flex: 1; height: 16px; border-radius: 8px; background: var(--sra2-mor-acik) }
+.s2-ilerleme > span { flex: 1; min-width: 0; height: 16px; border-radius: 8px; background: var(--sra2-mor-acik) }
+.s2-ilerleme--sik { gap: 2px }
+.s2-ilerleme--sik > span { border-radius: 3px }
 .s2-ilerleme > span.bitti { background: var(--sra2-yesil) }
 .s2-ilerleme > span.simdi { background: repeating-linear-gradient(-45deg, var(--sra2-mor) 0 8px, var(--sra2-mor-taban) 8px 16px) }
 .s2-yildizlar { display: inline-flex; gap: 4px }

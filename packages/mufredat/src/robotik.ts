@@ -3,7 +3,7 @@
    İlerleme Lab'ın kaydından (sra-lab-v1) okunur. */
 import { CIZGI_GOREVLERI, GOREVLER, LABIRENT_GOREVLERI } from "@sra/robot-motoru";
 import type { Atolye } from "./model";
-import { CIZGI_DERSLERI, dersOgesi, LABIRENT_DERSLERI, MBOT_DERSLERI, SUMO_DERSLERI } from "./dersler";
+import { CIZGI_DERSLERI, dersOgesi, KONTROL_DERSLERI, LABIRENT_DERSLERI, MBOT_DERSLERI, SUMO_DERSLERI } from "./dersler";
 
 export const LAB_KAYIT_ANAHTARI = "sra-lab-v1";
 
@@ -44,6 +44,11 @@ export const ROBOTIK: Atolye = {
       kimlik: "sumo", ad: "Mini Sumo", robot: "Kenshin", seviyeler: ["ortaokul", "lise"],
       aciklama: "Kurallar, sensörler, itme fiziği ve strateji; sonunda sınıf ligi.",
       dersler: [...SUMO_DERSLERI.map(dersOgesi), { kimlik: "lig", ad: "Ligde yarış", ogretir: "Robotunu yaz ve kaydet", tur: "lig", adres: "lab/#lig", enCokYildiz: 0, anahtar: "lig" }]
+    },
+    {
+      kimlik: "kontrol", ad: "Kontrol", robot: "mBot2", seviyeler: ["lise"],
+      aciklama: "Diferansiyel sürüş, PID'in I terimi, örnekleme, motor modeli ve odometri: formülle hesapla, deneyle gör, ayarla.",
+      dersler: KONTROL_DERSLERI.map(dersOgesi)
     }
   ]
 };

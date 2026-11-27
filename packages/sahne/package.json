@@ -9,6 +9,7 @@
     "./kenshin": "./src/kenshin.ts",
     "./rizbot": "./src/rizbot.ts",
     "./mbot": "./src/mbot.ts",
+    "./mbot2": "./src/mbot2.ts",
     "./an": "./src/an.ts"
   },
   "dependencies": { "three": "^0.187.0", "@sra/robot-motoru": "*" },

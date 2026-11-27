@@ -10,11 +10,12 @@ import { PIST_YARISI } from "./pist-yarisi";
 import { SUMO_DERSLERI } from "./sumo";
 import { LABIRENT_DERSLERI } from "./labirent";
 import { MBOT_DERSLERI } from "./mbot";
+import { KONTROL_DERSLERI } from "./kontrol";
 
 /** Çizgi İzleyen Robot modülünün altı dersi, sırasıyla */
 export const CIZGI_DERSLERI: DersTanimi[] = [SIROLINE_SENSOR, CIZGI_KONUMU, P_KONTROL, D_KONTROL, HIZ_KARARLILIK, PIST_YARISI];
-export { SUMO_DERSLERI, LABIRENT_DERSLERI, MBOT_DERSLERI };
-export const DERSLER: DersTanimi[] = [...MBOT_DERSLERI, ...CIZGI_DERSLERI, ...SUMO_DERSLERI, ...LABIRENT_DERSLERI];
+export { SUMO_DERSLERI, LABIRENT_DERSLERI, MBOT_DERSLERI, KONTROL_DERSLERI };
+export const DERSLER: DersTanimi[] = [...MBOT_DERSLERI, ...CIZGI_DERSLERI, ...SUMO_DERSLERI, ...LABIRENT_DERSLERI, ...KONTROL_DERSLERI];
 export const dersBul = (kimlik: string) => DERSLER.find((d) => d.kimlik === kimlik);
 
 /** Ders tanımından atölye sayfasındaki ders ögesi */

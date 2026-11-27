@@ -20,7 +20,7 @@ describe("Robotik atölyesi Lab ile aynı", () => {
     expect(c.map((d) => [d.anahtar, d.ad, d.adres])).toEqual(CIZGI_GOREVLERI.map((g) => ["cizgi-" + g.kimlik, g.ad, `lab/#cizgi/${g.kimlik}`]));
     expect(modul("cizgi").dersler.slice(-2).map((d) => [d.tur, d.adres, d.anahtar])).toEqual([["rehber", "lab/#cizgi/kurulum", "siro-kurulum"], ["serbest", "lab/#cizgi/ayar", ""]]);
     expect(modul("sumo").dersler.map((d) => [d.tur, d.adres])).toEqual([...SUMO_DERSLERI.map((d) => ["ders", `#ders/${d.kimlik}`]), ["lig", "lab/#lig"]]);
-    expect(ROBOTIK.moduller.map((m) => m.kimlik)).toEqual(["mbot", "kar", "cizgi", "labirent", "sumo"]);
+    expect(ROBOTIK.moduller.map((m) => m.kimlik)).toEqual(["mbot", "kar", "cizgi", "labirent", "sumo", "kontrol"]);
     expect(modul("mbot").dersler.map((d) => [d.anahtar, d.adres])).toEqual(MBOT_DERSLERI.map((d) => [d.kimlik, `#ders/${d.kimlik}`]));
   });
   it("ders kimlikleri modül içinde benzersiz", () => {
@@ -71,7 +71,7 @@ describe("ilerleme", () => {
   });
   it("seviyeye göre sıra: ilkokulda Robot Görevleri ve Kar Küreme önerilir, okul öncesinde öneri yok", () => {
     expect(seviyeSirasi(ROBOTIK, "ilkokul").onerilen.map((m) => m.kimlik)).toEqual(["mbot", "kar"]);
-    expect(seviyeSirasi(ROBOTIK, "lise").onerilen.map((m) => m.kimlik)).toEqual(["cizgi", "labirent", "sumo"]);
+    expect(seviyeSirasi(ROBOTIK, "lise").onerilen.map((m) => m.kimlik)).toEqual(["cizgi", "labirent", "sumo", "kontrol"]);
     expect(seviyeSirasi(ROBOTIK, "okul-oncesi").onerilen).toEqual([]);
   });
 });

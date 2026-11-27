@@ -8,6 +8,7 @@ import { siroline } from "@sra/sahne/siroline";
 import { kenshin } from "@sra/sahne/kenshin";
 import { rizbot } from "@sra/sahne/rizbot";
 import { mbot } from "@sra/sahne/mbot";
+import { mbot2 } from "@sra/sahne/mbot2";
 
 export interface SahneOynatici { kap: HTMLElement; basaDon(): void; kapat(): void }
 
@@ -42,6 +43,16 @@ const MBOT_ACILARI: Partial<typeof ACILAR> = {
   ustten: [[0.06, 0.48, 0.1], [0.04, 0, 0]],
   alttan: [[0.28, 0.3, 0.24], [0.06, 0.06, 0]],
   yakin: [[0.2, 0.17, -0.1], [0.05, 0.05, 0]]
+};
+
+/** mBot2 (18 cm, CyberPi üstte): kamera mBot'tan biraz daha uzakta */
+const MBOT2_ACILARI: Partial<typeof ACILAR> = {
+  onden: [[0.38, 0.22, -0.26], [0.04, 0.045, 0]],
+  /* yandan: arkadan çapraz ve alçaktan, motorlar iki yan duvarın arasından görünsün */
+  yandan: [[-0.26, 0.14, 0.2], [0.0, 0.035, 0]],
+  ustten: [[0.06, 0.5, 0.1], [0.04, 0, 0]],
+  alttan: [[0.24, 0.22, 0.17], [0.08, 0.06, 0]],
+  yakin: [[0.2, 0.2, -0.08], [0.03, 0.06, 0]]
 };
 
 export function sahneAniKur(ad: string, an: SahneAni): SahneOynatici {
@@ -102,10 +113,11 @@ export function sahneAniKur(ad: string, an: SahneAni): SahneOynatici {
   let kok: THREE.Object3D, vurgulanan: THREE.Object3D | null = null;
   if (an.robot === "SiroLine") { const r = siroline(); kok = r.kok; if (an.vurgu) vurgulanan = (r.parcalar as Record<string, THREE.Group>)[an.vurgu.parca] ?? null; }
   else if (an.robot === "Kenshin") { const r = kenshin(); r.bayraklar(0); kok = r.kok; if (an.vurgu) vurgulanan = (r.parcalar as Record<string, THREE.Group>)[an.vurgu.parca] ?? null; }
+  else if (an.robot === "mBot2") { const r = mbot2(); kok = r.kok; if (an.vurgu) vurgulanan = (r.parcalar as Record<string, THREE.Group>)[an.vurgu.parca] ?? null; }
   else if (an.robot === "mBot") { const r = mbot(); kok = r.kok; if (an.vurgu) vurgulanan = (r.parcalar as Record<string, THREE.Group>)[an.vurgu.parca] ?? null; }
   else { const r = rizbot(); kok = r.kok; if (an.vurgu) vurgulanan = (r.parcalar as Record<string, THREE.Group>)[an.vurgu.parca] ?? null; }
   const tasiyici = new THREE.Group(); tasiyici.add(kok); s.sahne.add(tasiyici);
-  if (an.aci === "alttan") { tasiyici.rotation.x = Math.PI; tasiyici.position.y = an.robot === "mBot" ? 0.07 : 0.06; }
+  if (an.aci === "alttan") { tasiyici.rotation.x = Math.PI; tasiyici.position.y = an.robot === "mBot" || an.robot === "mBot2" ? 0.07 : 0.06; }
   /* Kenshin'in merkezi gövdesinin ortasında; kameralar SiroLine'a göre (merkez önde) ayarlı */
   if (an.robot === "Kenshin" || an.robot === "RizBot") tasiyici.position.x += 0.09;
 
@@ -127,7 +139,7 @@ export function sahneAniKur(ad: string, an: SahneAni): SahneOynatici {
     m.material = Array.isArray(m.material) ? kopya : kopya[0];
   });
 
-  const [kp, hd] = (an.robot === "Kenshin" ? KENSHIN_ACILARI[an.aci] : an.robot === "RizBot" ? RIZBOT_ACILARI[an.aci] : an.robot === "mBot" ? MBOT_ACILARI[an.aci] : undefined) ?? ACILAR[an.aci];
+  const [kp, hd] = (an.robot === "Kenshin" ? KENSHIN_ACILARI[an.aci] : an.robot === "RizBot" ? RIZBOT_ACILARI[an.aci] : an.robot === "mBot" ? MBOT_ACILARI[an.aci] : an.robot === "mBot2" ? MBOT2_ACILARI[an.aci] : undefined) ?? ACILAR[an.aci];
   /* sönümleme kapatılıp açılır ki dönmenin artakalan hızı baştaki açıyı bozmasın */
   const basaDon = () => { s.kontrol.enableDamping = false; s.kontrol.update(); s.kamera.position.set(...kp); s.kontrol.target.set(...hd); s.kontrol.update(); s.kontrol.enableDamping = true; };
   basaDon();

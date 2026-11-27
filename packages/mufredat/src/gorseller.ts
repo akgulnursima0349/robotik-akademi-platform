@@ -3,11 +3,12 @@
 
 import { LABIRENT_CIZIMLERI } from "./gorseller-labirent";
 import { MBOT_CIZIMLERI } from "./gorseller-mbot";
+import { KONTROL_CIZIMLERI } from "./gorseller-kontrol";
 
 /* ---------- 3D sahne anı ---------- */
 export type SahneAcisi = "onden" | "yandan" | "ustten" | "alttan" | "yakin";
 export interface SahneAni {
-  robot: "SiroLine" | "Kenshin" | "RizBot" | "mBot";
+  robot: "SiroLine" | "Kenshin" | "RizBot" | "mBot" | "mBot2";
   aci: SahneAcisi;
   /** vurgulanan parça grubu (robot modelinin parça adı) ve sahnedeki etiketi */
   vurgu?: { parca: string; etiket: string };
@@ -72,6 +73,25 @@ export const SAHNE_ANLARI: Record<string, SahneAni> = {
     robot: "mBot", aci: "yakin", zemin: "duz", hareket: "nabiz",
     vurgu: { parca: "isikSensoru", etiket: "Işık sensörü" },
     aciklama: "mBot yakından: yarı saydam kutunun içinde mCore kartı (robotun beyni); kartın önünde iki renkli ışık ve ortada ışık sensörü."
+  },
+  "mbot2-onden": {
+    robot: "mBot2", aci: "onden", zemin: "duz",
+    aciklama: "mBot2 önden: mavi alüminyum şasi, üstte koyu gri pil kutusu (mBot2 Shield) ve onun üstünde ekranlı CyberPi kartı, önde mavi ışıklı iki gözlü mesafe sensörü, arkada iki büyük teker."
+  },
+  "mbot2-motorlar": {
+    robot: "mBot2", aci: "yandan", zemin: "duz",
+    vurgu: { parca: "motorlar", etiket: "Enkoderli motorlar" },
+    aciklama: "mBot2 arkadan çapraz, motorlar vurgulu: her tekeri ayrı bir enkoderli motor çevirir; enkoder motorun kaç derece döndüğünü sayar."
+  },
+  "mbot2-cyberpi": {
+    robot: "mBot2", aci: "yakin", zemin: "duz", hareket: "nabiz",
+    vurgu: { parca: "cyberpi", etiket: "CyberPi" },
+    aciklama: "mBot2 yakından, CyberPi vurgulu: ekranı, joystick'i, iki düğmesi ve beş ışığı olan kart. Kontrol döngüsü burada çalışır; jiroskop da bu kartın içinde."
+  },
+  "mbot2-quad-rgb": {
+    robot: "mBot2", aci: "alttan", zemin: "duz", hareket: "nabiz",
+    vurgu: { parca: "quadRgb", etiket: "Quad RGB sensör" },
+    aciklama: "mBot2 ters çevrilmiş, altı görünüyor: önde dört gözlü Quad RGB sensör yere bakıyor; arkada iki teker ve motorlar."
   },
   "rizbot-labirentte": {
     robot: "RizBot", aci: "onden", zemin: "labirent", hareket: "nabiz",
@@ -430,7 +450,7 @@ export const gorselVarMi = (tur: "sahne" | "cizim", ad: string) => (tur === "sah
 /** Hangi katmanlar görünür. Ses okurken kelimeye göre (kelime: okunan kelimenin sırası), yoksa saniyeye göre (her katman
     sırası gelince, saniyede bir). Hareketi azalt açıksa ya da okuma bittiyse hepsi. Sonuç: görünen katmanların sıraları. */
 /* labirent ve ilkokul (mBot) modüllerinin çizimleri ayrı dosyalarda (metinleriyle birlikte) */
-Object.assign(CIZIMLER, LABIRENT_CIZIMLERI, MBOT_CIZIMLERI);
+Object.assign(CIZIMLER, LABIRENT_CIZIMLERI, MBOT_CIZIMLERI, KONTROL_CIZIMLERI);
 
 export function gorunenKatmanlar(c: Cizim, o: { kelime?: number; saniye?: number; bitti?: boolean; azHareket?: boolean }): number[] {
   const hepsi = c.katmanlar.map((_, i) => i);

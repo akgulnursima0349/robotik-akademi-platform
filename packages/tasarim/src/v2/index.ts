@@ -108,6 +108,8 @@ export function seviyeGostergesi(seviye: number, unvan: string, doluluk: number)
 export function parcaliIlerleme(toplam: number, biten: number, simdiki = false, etiket = "İlerleme"): HTMLElement {
   const p = el("div", "s2-ilerleme", { role: "progressbar", "aria-label": etiket, "aria-valuemin": "0", "aria-valuemax": String(toplam), "aria-valuenow": String(biten), "aria-valuetext": `${toplam} parçadan ${biten} tanesi bitti` });
   for (let i = 0; i < toplam; i++) p.append(el("span", i < biten ? "bitti" : i === biten && simdiki ? "simdi" : ""));
+  /* çok parçada aralık daralır: dar ekranda çubuk taşmasın */
+  if (toplam > 24) p.classList.add("s2-ilerleme--sik");
   return p;
 }
 export function yildizlar(toplam: number, dolu: number): HTMLElement {

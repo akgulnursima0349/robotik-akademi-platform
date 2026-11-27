@@ -7,10 +7,11 @@ import { itmeDeneyi, kartKodu, ringSimulasyonu, sensorGorusu, SUMO_STILI, type R
 import type { Durum } from "@sra/robot-motoru";
 import { haritaTasarimcisi, KART_STILI } from "./kart-programi";
 import { bataryaDeneyi, ikiGozDeneyi, ikiTekerDeneyi, kararDeneyi, MBOT_STILI, sensorGezdirme, sokakDeneyi, tekerDeneyi } from "./mbot";
+import { hizKontroluDeneyi, kinematikDeneyi, KONTROL_STILI, modelFarkiDeneyi, motorDeneyi, odometriDeneyi, orneklemeDeneyi } from "./kontrol";
 import { adaDeneyi, duvarSensoru, hizProfiliDeneyi, kuralAdim, LABIRENT_STILI, puanHesaplayici, sisliLabirent } from "./labirent";
 
 let stil = false;
-export const stilEkle = () => { if (stil) return; stil = true; const s = document.createElement("style"); s.textContent = SENSOR_GOSTERGESI_STILI + CIZGI_SIMULASYONU_STILI + SUMO_STILI + LABIRENT_STILI + KART_STILI + MBOT_STILI; document.head.append(s); };
+export const stilEkle = () => { if (stil) return; stil = true; const s = document.createElement("style"); s.textContent = SENSOR_GOSTERGESI_STILI + CIZGI_SIMULASYONU_STILI + SUMO_STILI + LABIRENT_STILI + KART_STILI + MBOT_STILI + KONTROL_STILI; document.head.append(s); };
 
 export const DENEYLER: Record<string, DeneyBileseni> = {
   "sensor-gostergesi": (ayar, denendi) => { stilEkle(); return sensorGostergesi(ayar, denendi); },
@@ -27,6 +28,12 @@ export const DENEYLER: Record<string, DeneyBileseni> = {
   batarya: (ayar, denendi) => { stilEkle(); return bataryaDeneyi(ayar, denendi); },
   "iki-goz": (ayar, denendi) => { stilEkle(); return ikiGozDeneyi(ayar, denendi); },
   "harita-tasarimcisi": (ayar, denendi) => { stilEkle(); return haritaTasarimcisi(ayar, denendi); },
+  kinematik: (ayar, denendi) => { stilEkle(); return kinematikDeneyi(ayar, denendi); },
+  "hiz-kontrolu": (ayar, denendi) => { stilEkle(); return hizKontroluDeneyi(ayar, denendi); },
+  ornekleme: (ayar, denendi) => { stilEkle(); return orneklemeDeneyi(ayar, denendi); },
+  motor: (ayar, denendi) => { stilEkle(); return motorDeneyi(ayar, denendi); },
+  odometri: (ayar, denendi) => { stilEkle(); return odometriDeneyi(ayar, denendi); },
+  "model-farki": (ayar, denendi) => { stilEkle(); return modelFarkiDeneyi(ayar, denendi); },
   "duvar-sensoru": (ayar, denendi) => { stilEkle(); return duvarSensoru(ayar, denendi); },
   "kural-adim": (ayar, denendi) => { stilEkle(); return kuralAdim(ayar, denendi); },
   "sisli-labirent": (ayar, denendi) => { stilEkle(); return sisliLabirent(ayar, denendi); },

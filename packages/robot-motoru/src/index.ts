@@ -12,3 +12,4 @@ export * from "./labirent-ders";
 export * from "./sumo-strateji";
 export * from "./kart-programi";
 export * from "./mbot";
+export * from "./kontrol";
