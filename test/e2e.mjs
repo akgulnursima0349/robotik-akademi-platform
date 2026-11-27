@@ -1263,16 +1263,20 @@ for (const [ad, g, y] of BOYUTLAR) {
     /* klavye: ileri sür, kutuya bıçakla gir */
     await p.click('button[data-senaryo="kutu"]'); await p.waitForTimeout(300);
     ok(!(await p.isVisible("#kf-dustu")), "senaryo değişince düşme uyarısı kalkıyor");
-    await p.keyboard.down("ArrowUp"); await p.waitForTimeout(700);
+    /* yavaş makinede (CI) fizik kare hızı düşer: sabit süre yerine koşul beklenir */
+    await p.keyboard.down("ArrowUp");
+    await p.waitForFunction(() => parseFloat(document.querySelector("#kf-hiz").textContent.replace(",", ".")) > 0.3, null, { timeout: 15000 }).catch(() => {});
     const hiz = await sayi("#kf-hiz");
     ok(hiz > 0.3, `ok tuşuyla ileri gidiyor (${hiz} m/s)`);
-    await p.waitForTimeout(1500); await p.keyboard.up("ArrowUp");
+    await p.waitForFunction(() => parseFloat((document.querySelector("#kf-hedef").textContent.match(/en çok ([\d.]+) mm/) ?? [])[1] ?? "0") > 0.3, null, { timeout: 20000 }).catch(() => {});
+    await p.keyboard.up("ArrowUp");
     const kalkis = (await p.textContent("#kf-hedef")).match(/en çok ([\d.]+) mm/);
     ok(kalkis && parseFloat(kalkis[1]) > 0.3, "bıçak kutunun kenarını kaldırıyor: " + (kalkis?.[0] ?? "?"));
     await p.screenshot({ path: resolve(EKRAN, `kenshin-fizik-kutu-${ad}.png`) });
     /* rakip senaryosu: arkasından girince rakibin teker yükü düşüyor */
     await p.click('button[data-senaryo="rakip"]'); await p.waitForTimeout(300);
-    await p.keyboard.down("ArrowUp"); await p.waitForTimeout(2500);
+    await p.keyboard.down("ArrowUp");
+    await p.waitForFunction(() => { const s = [...document.querySelector("#kf-hedef").textContent.matchAll(/([\d.]+)/g)].map((m) => parseFloat(m[1])); return s.length >= 2 && s[1] < s[0] * 0.6; }, null, { timeout: 20000 }).catch(() => {});
     const metin = await p.textContent("#kf-hedef"), [, once, enAz] = [...metin.matchAll(/([\d.]+)/g)].map((m) => parseFloat(m[1]));
     ok(enAz < once * 0.6, `rakip kaldırılınca teker yükü düşüyor (${metin})`);
     await p.screenshot({ path: resolve(EKRAN, `kenshin-fizik-rakip-${ad}.png`) });
@@ -1283,7 +1287,7 @@ for (const [ad, g, y] of BOYUTLAR) {
     await p.click('button[data-senaryo="kutu"]'); await p.waitForTimeout(300);
     ok(await p.isVisible("#kf-surgu-sol") && await p.isVisible("#kf-surgu-sag"), "dokunmatik motor sürgüleri görünür");
     await p.evaluate(() => { for (const id of ["kf-surgu-sol", "kf-surgu-sag"]) (document.getElementById(id)).value = "100"; });
-    await p.waitForTimeout(900);
+    await p.waitForFunction(() => parseFloat(document.querySelector("#kf-hiz").textContent.replace(",", ".")) > 0.3, null, { timeout: 15000 }).catch(() => {});
     const hiz = await sayi("#kf-hiz");
     ok(hiz > 0.3, `sürgülerle ileri gidiyor (${hiz} m/s)`);
     await p.screenshot({ path: resolve(EKRAN, `kenshin-fizik-${ad}.png`) });
@@ -1408,6 +1412,9 @@ for (const [ad, g, y] of BOYUTLAR) {
   /* sürükle-bırak: paletten programın en başına */
   await p.click("#bk-temizle");
   await p.click('.bk-palet [data-tur="sag"]');
+  /* sürüklemeden önce palet ve program aynı anda ekranda olsun: yazı tipi farkıyla sayfa uzayınca hedef ekran dışına düşebilir */
+  const ekranaAl = () => p.evaluate(() => { const k = document.querySelector('.bk-palet [data-tur="ileri"]').getBoundingClientRect(); scrollBy(0, k.top - 60); });
+  await ekranaAl();
   const kaynak = await p.locator('.bk-palet [data-tur="ileri"]').boundingBox();
   const hedef = await p.locator(".bk-alan .bk-programda").first().boundingBox();
   await p.mouse.move(kaynak.x + 20, kaynak.y + 20); await p.mouse.down();
@@ -1417,6 +1424,7 @@ for (const [ad, g, y] of BOYUTLAR) {
   const sira = () => p.$$eval(".bk-alan .bk-programda", (e) => e.map((x) => x.getAttribute("aria-label")).join(","));
   const iz = () => p.evaluate(() => document.querySelectorAll(".bk-hayalet, .bk-isaret, .bk-tasiniyor").length);
   const surukleBasla = async () => {
+    await ekranaAl();
     const k = await p.locator('.bk-palet [data-tur="sol"]').boundingBox(), h = await p.locator(".bk-alan .bk-programda").first().boundingBox();
     await p.mouse.move(k.x + 20, k.y + 20); await p.mouse.down(); await p.mouse.move(h.x + 30, h.y + 4, { steps: 8 });
   };
